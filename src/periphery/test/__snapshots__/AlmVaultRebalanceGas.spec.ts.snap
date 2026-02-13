@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ALM Vault Rebalance Gas first rebalance (no prior positions) gas: two narrow ranges [ @skip-on-coverage ] 1`] = `528926`;
+
+exports[`ALM Vault Rebalance Gas first rebalance (no prior positions) gas: wide base + narrow limit [ @skip-on-coverage ] 1`] = `363233`;
+
+exports[`ALM Vault Rebalance Gas full rebalance (dismantle + remint) gas: rebalance to same ticks (re-enter same range) [ @skip-on-coverage ] 1`] = `391293`;
+
+exports[`ALM Vault Rebalance Gas full rebalance (dismantle + remint) gas: rebalance with no fees accrued [ @skip-on-coverage ] 1`] = `567061`;
+
+exports[`ALM Vault Rebalance Gas repeated rebalance cycles gas: second full rebalance after swaps [ @skip-on-coverage ] 1`] = `1137336`;
+
+exports[`ALM Vault Rebalance Gas single position rebalance gas: single rebalance after swaps [ @skip-on-coverage ] 1`] = `727750`;
+
+exports[`ALM Vault Rebalance Gas single position rebalance gas: single rebalance, no fees [ @skip-on-coverage ] 1`] = `561963`;
