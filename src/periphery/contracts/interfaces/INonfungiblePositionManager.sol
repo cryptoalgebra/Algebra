@@ -208,6 +208,58 @@ interface INonfungiblePositionManager is
     /// @dev Requirement: `tokenId` must exist
     function isApprovedOrOwner(address spender, uint256 tokenId) external view returns (bool);
 
+    /// @notice Emitted when a position is rebalanced 
+    /// @param tokenId Pos ID
+    /// @param newTickLower The new lower tick
+    /// @param newTickUpper The new upper tick
+    /// @param liquidity The new liquidity amount
+    /// @param amount0 Amount of token0 used for new position
+    /// @param amount1 Amount of token1 used for new position
+    /// @param fees0 Fees collected in token0 from old position
+    /// @param fees1 Fees collected in token1 from old position
+    event Rebalance(
+        uint256 indexed tokenId,
+        int24 newTickLower,
+        int24 newTickUpper,
+        uint128 liquidity,
+        uint256 amount0,
+        uint256 amount1,
+        uint256 fees0,
+        uint256 fees1
+    );
+
+    struct RebalanceParams {
+        uint256 tokenId;
+        int24 newTickLower;
+        int24 newTickUpper;
+        uint256 amount0Desired;
+        uint256 amount1Desired;
+        uint256 amount0Min;
+        uint256 amount1Min;
+        uint256 deadline;
+    }
+
+    /// @notice Rebalances a position
+    /// @param params The rebalance parameters
+    /// @return liquidity The new liquidity
+    /// @return amount0 Token0 used for new position
+    /// @return amount1 Token1 used for new position
+    /// @return fees0 Fees collected in token0
+    /// @return fees1 Fees collected in token1
+    function rebalance(
+        RebalanceParams calldata params
+    ) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1, uint256 fees0, uint256 fees1);
+
+    /// @notice Rebalances multiple positions in a batch
+    /// @param params Array of rebalance parameters (one per position)
+    /// @param deadline Transaction deadline
+    /// @return totalFees0 Total fees collected in token0 across all positions
+    /// @return totalFees1 Total fees collected in token1 across all positions
+    function rebalanceMultiple(
+        RebalanceParams[] calldata params,
+        uint256 deadline
+    ) external payable returns (uint256 totalFees0, uint256 totalFees1);
+
     /// @notice Returns the address of currently connected farming, if any
     /// @return The address of the farming center contract, which handles farmings logic
     function farmingCenter() external view returns (address);

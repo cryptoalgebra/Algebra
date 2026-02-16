@@ -25,13 +25,11 @@ describe('ALM Vault Rebalance Gas', () => {
   const almFixture = async () => {
     const { factory, tokens, nft, router } = await completeFixture();
 
-    const vaultFactory = await ethers.getContractFactory('MockAlmVault');
-    const vault = await vaultFactory.deploy(nft);
-
     const token0Addr = await tokens[0].getAddress();
     const token1Addr = await tokens[1].getAddress();
 
-    await vault.initialize(token0Addr, token1Addr);
+    const vaultFactory = await ethers.getContractFactory('MockAlmVault');
+    const vault = await vaultFactory.deploy(nft, token0Addr, token1Addr);
 
     await nft.createAndInitializePoolIfNecessary(
       tokens[0],
@@ -47,16 +45,14 @@ describe('ALM Vault Rebalance Gas', () => {
       await token.transfer(await vault.getAddress(), expandTo18Decimals(100_000));
     }
 
-    // Mint a full-range "background" position from wallet to ensure pool has deep
-    // liquidity for swaps and price stays stable across rebalance tests
     await nft.mint({
       token0: token0Addr,
       token1: token1Addr,
       deployer: ZERO_ADDRESS,
       tickLower: getMinTick(TICK_SPACING),
       tickUpper: getMaxTick(TICK_SPACING),
-      amount0Desired: expandTo18Decimals(10_000),
-      amount1Desired: expandTo18Decimals(10_000),
+      amount0Desired: expandTo18Decimals(100_000),
+      amount1Desired: expandTo18Decimals(100_000),
       amount0Min: 0,
       amount1Min: 0,
       recipient: wallet.address,
@@ -80,18 +76,14 @@ describe('ALM Vault Rebalance Gas', () => {
     ({ factory, tokens, nft, router, vault } = await loadFixture(almFixture));
   });
 
-  /** Helper: create initial base + limit positions via first rebalance */
-  async function setupInitialPositions() {
-    // first rebalance creates positions from scratch (basePositionId == 0 → skip dismantle, just mint)
-    await vault.rebalance(
-      getMinTick(TICK_SPACING),
-      getMaxTick(TICK_SPACING),
-      -TICK_SPACING * 100,
-      -TICK_SPACING * 10
-    );
+  async function setupTwoPositions() {
+    await vault.rebalance(-1800, 60, 60, 3600);
   }
 
-  /** Helper: push swaps through the pool to accrue fees */
+  async function setupSinglePosition() {
+    await vault.rebalanceSingle(-1800, 1800);
+  }
+
   async function generateFees(amount: bigint = expandTo18Decimals(1000)) {
     await router.exactInput({
       recipient: wallet.address,
@@ -118,159 +110,249 @@ describe('ALM Vault Rebalance Gas', () => {
     });
   }
 
-  // ================================================
-  // FIRST REBALANCE (no prior positions → just mints)
-  // ================================================
-
   describe('first rebalance (no prior positions)', () => {
-    it('gas: wide base + narrow limit [ @skip-on-coverage ]', async () => {
+    it('gas: first rebalance, 2 pos (base + limit) [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
-        vault.rebalance(
-          getMinTick(TICK_SPACING),
-          getMaxTick(TICK_SPACING),
-          -TICK_SPACING * 100,
-          -TICK_SPACING * 10
-        )
+        vault.rebalance(-1800, 60, 60, 3600)
       );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
     });
 
-    it('gas: two narrow ranges [ @skip-on-coverage ]', async () => {
+    it('gas: first rebalance, 1 pos (rebalanceSingle) [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
-        vault.rebalance(
-          -TICK_SPACING * 10,
-          TICK_SPACING * 10,
-          TICK_SPACING * 10,
-          TICK_SPACING * 100
-        )
+        vault.rebalanceSingle(-1800, 1800)
       );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.equal(0);
     });
   });
 
-  // ================================================
-  // FULL REBALANCE (dismantle + remint)
-  // ================================================
 
-  describe('full rebalance (dismantle + remint)', () => {
-    beforeEach('create initial positions', async () => {
-      await setupInitialPositions();
+  describe('rebalance 2 pos (dismantle + mint)', () => {
+    beforeEach('create initial 2 positions', async () => {
+      await setupTwoPositions();
     });
 
-    it('gas: rebalance with no fees accrued [ @skip-on-coverage ]', async () => {
+    it('gas: no fees [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
-        vault.rebalance(
-          -TICK_SPACING * 50,
-          TICK_SPACING * 50,
-          TICK_SPACING * 10,
-          TICK_SPACING * 30
-        )
+        vault.rebalance(-1200, 60, 60, 1200)
       );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
     });
 
-    it('gas: rebalance after swaps (fees accrued) [ @skip-on-coverage ]', async () => {
+    it('gas: same ticks [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(
+        vault.rebalance(-1800, 60, 60, 3600)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
+    });
+
+    it('gas: after swaps [ @skip-on-coverage ]', async () => {
       await generateFees();
-      
-      await snapshotGasCost(
-        vault.rebalance(
-          -TICK_SPACING * 50,
-          TICK_SPACING * 5000,
-          TICK_SPACING * 10,
-          TICK_SPACING * 3000
-        )
-      );
-    });
 
-    it('gas: rebalance to same ticks (re-enter same range) [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
-        vault.rebalance(
-          getMinTick(TICK_SPACING),
-          getMaxTick(TICK_SPACING),
-          -TICK_SPACING * 100,
-          -TICK_SPACING * 10
-        )
+        vault.rebalance(-1200, 60, 60, 1200)
       );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
     });
   });
 
-  // ================================================
-  // SINGLE POSITION REBALANCE
-  // ================================================
-
-  describe('single position rebalance', () => {
-    beforeEach('create initial positions', async () => {
-      await setupInitialPositions();
+  describe('rebalance 2 pos optimized (rebalanceMultiple)', () => {
+    beforeEach('create initial 2 positions', async () => {
+      await setupTwoPositions();
     });
 
-    it('gas: single rebalance, no fees [ @skip-on-coverage ]', async () => {
+    it('gas: no fees [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
-        vault.rebalanceSingle(
-          -TICK_SPACING * 20,
-          TICK_SPACING * 20
-        )
+        vault.rebalanceOptimized(-1200, 60, 60, 1200)
       );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
     });
 
-    it('gas: single rebalance after swaps [ @skip-on-coverage ]', async () => {
+    it('gas: after swaps [ @skip-on-coverage ]', async () => {
       await generateFees();
 
       await snapshotGasCost(
-        vault.rebalanceSingle(
-          -TICK_SPACING * 20,
-          TICK_SPACING * 20
-        )
+        vault.rebalanceOptimized(-1200, 60, 60, 1200)
       );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
+    });
+
+    it('gas:  same ticks [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(
+        vault.rebalanceOptimized(-1800, 60, 60, 3600)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
     });
   });
 
-  // ================================================
-  // REPEATED REBALANCE CYCLES
-  // ================================================
-
-  describe('repeated rebalance cycles', () => {
-    it('gas: second full rebalance after swaps [ @skip-on-coverage ]', async () => {
-      await setupInitialPositions();
-
-      // First rebalance
-      await vault.rebalance(
-        -TICK_SPACING * 50,
-        TICK_SPACING * 50,
-        TICK_SPACING * 10,
-        TICK_SPACING * 100
-      );
-
-      await generateFees();
-
-      // Measure second rebalance
-      await snapshotGasCost(
-        vault.rebalance(
-          -TICK_SPACING * 30,
-          TICK_SPACING * 30,
-          -TICK_SPACING * 100,
-          -TICK_SPACING * 10
-        )
-      );
+  describe('rebalance 1 pos (dismantle + mint)', () => {
+    beforeEach('create initial 1 position', async () => {
+      await setupSinglePosition();
     });
 
-    it('gas: third full rebalance [ @skip-on-coverage ]', async () => {
-      await setupInitialPositions();
-
-      await vault.rebalance(
-        -TICK_SPACING * 50,
-        TICK_SPACING * 50,
-        TICK_SPACING * 10,
-        TICK_SPACING * 100
+    it('gas: no fees [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(
+        vault.rebalanceSingle(-1200, 1200)
       );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.equal(0);
+    });
+
+    it('gas: after swaps [ @skip-on-coverage ]', async () => {
+      await generateFees();
+
+      await snapshotGasCost(
+        vault.rebalanceSingle(-1200, 1200)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.equal(0);
+    });
+  });
+
+  describe('rebalance 1 pos optimized (NFPM.rebalance)', () => {
+    beforeEach('create initial 1 position', async () => {
+      await setupSinglePosition();
+    });
+
+    it('gas: no fees [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(
+        vault.rebalanceSingleOptimized(-1200, 1200)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.equal(0);
+    });
+
+    it('gas: after swaps [ @skip-on-coverage ]', async () => {
+      await generateFees();
+
+      await snapshotGasCost(
+        vault.rebalanceSingleOptimized(-1200, 1200)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.equal(0);
+    });
+  });
+
+
+  describe('repeated 2 pos rebalance (old)', () => {
+    it('gas: second 2 pos rebalance, after swaps [ @skip-on-coverage ]', async () => {
+      await setupTwoPositions();
+
+      await vault.rebalance(-1200, 60, 60, 1200);
 
       await generateFees();
 
-      await vault.rebalance(
-        -TICK_SPACING * 30,
-        TICK_SPACING * 30,
-        -TICK_SPACING * 100,
-        -TICK_SPACING * 10
+      await snapshotGasCost(
+        vault.rebalance(-1800, 60, 60, 3600)
       );
 
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
+    });
+
+    it('gas: third 2 pos rebalance [ @skip-on-coverage ]', async () => {
+      await setupTwoPositions();
+
+      await vault.rebalance(-1200, 60, 60, 1200);
+      await generateFees();
+
+      await vault.rebalance(-1800, 60, 60, 3600);
       await generateFees(expandTo18Decimals(500));
 
+      await snapshotGasCost(
+        vault.rebalance(-1200, 60, 60, 1200)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
+    });
+  });
+
+  describe('repeated 2 pos rebalance (optimized)', () => {
+    it('gas: after swaps [ @skip-on-coverage ]', async () => {
+      await setupTwoPositions();
+
+      await vault.rebalance(-1200, 60, 60, 1200);
+
+      await generateFees();
+
+      await snapshotGasCost(
+        vault.rebalanceOptimized(-1800, 60, 60, 3600)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
+    });
+
+    it('gas: 3th rebalance [ @skip-on-coverage ]', async () => {
+      await setupTwoPositions();
+
+      await vault.rebalance(-1200, 60, 60, 1200);
+      await generateFees();
+
+      await vault.rebalanceOptimized(-1800, 60, 60, 3600);
+      await generateFees(expandTo18Decimals(500));
+
+      await snapshotGasCost(
+        vault.rebalanceOptimized(-1200, 60, 60, 1200)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.not.equal(0);
+    });
+  });
+
+  describe('repeated 1 pos rebalance', () => {
+    it('gas: after swaps [ @skip-on-coverage ]', async () => {
+      await setupSinglePosition();
+
+      await vault.rebalanceSingle(-1200, 1200);
+
+      await generateFees();
+
+      await snapshotGasCost(
+        vault.rebalanceSingle(-1800, 1800)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.equal(0);
+    });
+  });
+
+  describe('repeated 1 pos rebalance (optimized)', () => {
+    it('gas: after swaps [ @skip-on-coverage ]', async () => {
+      await setupSinglePosition();
+
+      await vault.rebalanceSingle(-1200, 1200);
+
+      await generateFees();
+
+      await snapshotGasCost(
+        vault.rebalanceSingleOptimized(-1800, 1800)
+      );
+
+      expect(await vault.basePositionId()).to.not.equal(0);
+      expect(await vault.limitPositionId()).to.equal(0);
     });
   });
 });

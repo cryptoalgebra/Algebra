@@ -6,35 +6,24 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import '../interfaces/INonfungiblePositionManager.sol';
 
-/// @title Mock ALM Vault for gas benchmarking of NFPM rebalance flows
-/// @notice Reproduces the rebalance flow from AlgebraVault:
-///   dismantle old positions (decreaseLiquidity → collect → burn) then mint new ones
+/// @title Mock ALM Vault
+/// @notice Reproduces the rebalance flow from AlgebraVault
 contract MockAlmVault is IERC721Receiver {
     INonfungiblePositionManager public immutable nftManager;
 
-    address public token0;
-    address public token1;
+    address immutable public token0;
+    address immutable public token1;
 
-    uint256 public basePositionId;
-    uint256 public limitPositionId;
+    uint32 public basePositionId;
+    uint32 public limitPositionId;
 
-    /// @dev Accumulated fees from dismantled positions
-    uint256 public accumulatedFees0;
-    uint256 public accumulatedFees1;
-
-    constructor(INonfungiblePositionManager _nftManager) {
+    constructor(INonfungiblePositionManager _nftManager, address _token0, address _token1) {
         nftManager = _nftManager;
-    }
-
-    /// @notice Initialize vault with pool tokens and approve NFPM
-    function initialize(address _token0, address _token1) external {
         token0 = _token0;
         token1 = _token1;
-        IERC20(_token0).approve(address(nftManager), type(uint256).max);
-        IERC20(_token1).approve(address(nftManager), type(uint256).max);
+        IERC20(_token0).approve(address(_nftManager), type(uint256).max);
+        IERC20(_token1).approve(address(_nftManager), type(uint256).max);
     }
-
-    // ============ REBALANCE FLOW ============
 
     /// @notice Full rebalance: dismantle both positions, then mint new base + limit positions
     function rebalance(
@@ -43,25 +32,25 @@ contract MockAlmVault is IERC721Receiver {
         int24 limitLower,
         int24 limitUpper
     ) external {
+        (uint32 _basePositionId, uint32 _limitPositionId) = (basePositionId, limitPositionId);
         // 1. Dismantle existing positions, collect fees
-        (uint256 fees0, uint256 fees1) = _dismantlePosition(basePositionId);
-        (uint256 _fees0, uint256 _fees1) = _dismantlePosition(limitPositionId);
+        (uint256 fees0, uint256 fees1) = _dismantlePosition(_basePositionId);
+        (uint256 _fees0, uint256 _fees1) = _dismantlePosition(_limitPositionId);
         fees0 += _fees0;
         fees1 += _fees1;
-        accumulatedFees0 += fees0;
-        accumulatedFees1 += fees1;
 
         // 2. Mint new base position
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
 
-        basePositionId = _mintPosition(baseLower, baseUpper, balance0, balance1);
+        _basePositionId = _mintPosition(baseLower, baseUpper, balance0, balance1);
 
         // 3. Mint new limit position with remaining balances
         balance0 = IERC20(token0).balanceOf(address(this));
         balance1 = IERC20(token1).balanceOf(address(this));
 
-        limitPositionId = _mintPosition(limitLower, limitUpper, balance0, balance1);
+        _limitPositionId = _mintPosition(limitLower, limitUpper, balance0, balance1);
+        (basePositionId, limitPositionId) = (_basePositionId, _limitPositionId);
     }
 
     /// @notice Rebalance only the base position (single position rebalance)
@@ -70,8 +59,6 @@ contract MockAlmVault is IERC721Receiver {
         int24 newUpper
     ) external {
         (uint256 fees0, uint256 fees1) = _dismantlePosition(basePositionId);
-        accumulatedFees0 += fees0;
-        accumulatedFees1 += fees1;
 
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
@@ -79,11 +66,68 @@ contract MockAlmVault is IERC721Receiver {
         basePositionId = _mintPosition(newLower, newUpper, balance0, balance1);
     }
 
-    // ============ INTERNAL ============
+    /// @notice Optimized single position rebalance via NFPM.rebalance
+    function rebalanceSingleOptimized(
+        int24 newLower,
+        int24 newUpper
+    ) external {
+        (, , , uint256 fees0, uint256 fees1) = nftManager.rebalance(
+            INonfungiblePositionManager.RebalanceParams({
+                tokenId: basePositionId,
+                newTickLower: newLower,
+                newTickUpper: newUpper,
+                amount0Desired: type(uint256).max,
+                amount1Desired: type(uint256).max,
+                amount0Min: 0,
+                amount1Min: 0,
+                deadline: block.timestamp
+            })
+        );
+    }
 
-    /// @dev Dismantle a position: decreaseLiquidity(all) → collect(max) → burn
-    /// @return fee0 collected fees in token0 (collected - burnt)
-    /// @return fee1 collected fees in token1 (collected - burnt)
+    /// @notice Optimized full rebalance via NFPM.rebalanceMultiple
+    function rebalanceOptimized(
+        int24 baseLower,
+        int24 baseUpper,
+        int24 limitLower,
+        int24 limitUpper
+    ) external {
+        (uint32 _basePositionId, uint32 _limitPositionId) = (basePositionId, limitPositionId);
+        bool hasLimit = _limitPositionId != 0;
+
+        INonfungiblePositionManager.RebalanceParams[] memory params =
+            new INonfungiblePositionManager.RebalanceParams[](hasLimit ? 2 : 1);
+
+        params[0] = INonfungiblePositionManager.RebalanceParams({
+            tokenId: _basePositionId,
+            newTickLower: baseLower,
+            newTickUpper: baseUpper,
+            amount0Desired: type(uint256).max,
+            amount1Desired: type(uint256).max,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 0
+        });
+
+        if (hasLimit) {
+            params[1] = INonfungiblePositionManager.RebalanceParams({
+                tokenId: _limitPositionId,
+                newTickLower: limitLower,
+                newTickUpper: limitUpper,
+                amount0Desired: type(uint256).max,
+                amount1Desired: type(uint256).max,
+                amount0Min: 0,
+                amount1Min: 0,
+                deadline: 0
+            });
+        }
+
+        (uint256 fees0, uint256 fees1) = nftManager.rebalanceMultiple(params, block.timestamp);
+    }
+
+    /// @dev Dismantle a position
+    /// @return fee0 collected fees in token0
+    /// @return fee1 collected fees in token1
     function _dismantlePosition(uint256 positionId) internal returns (uint256 fee0, uint256 fee1) {
         if (positionId == 0) return (0, 0);
 
@@ -125,10 +169,10 @@ contract MockAlmVault is IERC721Receiver {
         int24 tickUpper,
         uint256 amount0Desired,
         uint256 amount1Desired
-    ) internal returns (uint256 positionId) {
+    ) internal returns (uint32) {
         if (amount0Desired == 0 && amount1Desired == 0) return 0;
 
-        (positionId, , , ) = nftManager.mint(
+        (uint256 positionId, , , ) = nftManager.mint(
             INonfungiblePositionManager.MintParams({
                 token0: token0,
                 token1: token1,
@@ -143,6 +187,8 @@ contract MockAlmVault is IERC721Receiver {
                 deadline: block.timestamp
             })
         );
+
+        return uint32(positionId);
     }
 
     /// @dev ERC721 receiver to accept NFTs

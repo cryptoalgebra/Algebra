@@ -6,6 +6,8 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
 
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+
 import './interfaces/INonfungiblePositionManager.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
 import './interfaces/IPositionFollower.sol';
@@ -421,6 +423,192 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
+    function rebalance(
+        RebalanceParams calldata params
+    )
+        external
+        payable
+        override
+        isAuthorizedForToken(params.tokenId)
+        checkDeadline(params.deadline)
+        returns (uint128 liquidity, uint256 amount0, uint256 amount1, uint256 fees0, uint256 fees1)
+    {
+        Position storage position = _positions[params.tokenId];
+        require(tokenFarmedIn[params.tokenId] == address(0), 'Position is farmed');
+
+        uint80 poolId = position.poolId;
+        PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[poolId];
+        IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
+
+        // dismantle old position, collect fees to caller
+        {
+            int24 oldTickLower = position.tickLower;
+            int24 oldTickUpper = position.tickUpper;
+            uint128 oldLiquidity = position.liquidity;
+
+            uint256 burnedAmount0;
+            uint256 burnedAmount1;
+
+            if (oldLiquidity > 0) {
+                (burnedAmount0, burnedAmount1) = pool._burnPositionInPool(oldTickLower, oldTickUpper, oldLiquidity);
+            }
+
+            (uint256 collected0, uint256 collected1) = pool.collect(
+                msg.sender,
+                oldTickLower,
+                oldTickUpper,
+                type(uint128).max,
+                type(uint128).max
+            );
+            // TODO: send fees to caller
+            fees0 = collected0 - burnedAmount0;
+            fees1 = collected1 - burnedAmount1;
+        }
+
+        // TODO: pass via params
+        uint256 amount0Desired = params.amount0Desired;
+        uint256 amount1Desired = params.amount1Desired;
+        if (amount0Desired == type(uint256).max) amount0Desired = IERC20(poolKey.token0).balanceOf(msg.sender);
+        if (amount1Desired == type(uint256).max) amount1Desired = IERC20(poolKey.token1).balanceOf(msg.sender);
+
+        uint128 liquidityDesired;
+        (liquidityDesired, liquidity, amount0, amount1, ) = addLiquidity(
+            AddLiquidityParams({
+                token0: poolKey.token0,
+                token1: poolKey.token1,
+                deployer: poolKey.deployer,
+                recipient: address(this),
+                tickLower: params.newTickLower,
+                tickUpper: params.newTickUpper,
+                amount0Desired: amount0Desired,
+                amount1Desired: amount1Desired,
+                amount0Min: params.amount0Min,
+                amount1Min: params.amount1Min
+            })
+        );
+
+        // update nfpm position
+        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool._getPositionInPool(
+            address(this),
+            params.newTickLower,
+            params.newTickUpper
+        );
+
+        position.tickLower = params.newTickLower;
+        position.tickUpper = params.newTickUpper;
+        position.liquidity = liquidity;
+        position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+        position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+        position.tokensOwed0 = 0;
+        position.tokensOwed1 = 0;
+
+        emit Rebalance(params.tokenId, params.newTickLower, params.newTickUpper, liquidity, amount0, amount1, fees0, fees1);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function rebalanceMultiple(
+        RebalanceParams[] calldata params,
+        uint256 deadline
+    )
+        external
+        payable
+        override
+        checkDeadline(deadline)
+        returns (uint256 totalFees0, uint256 totalFees1)
+    {
+
+        for (uint256 i; i < params.length; ) {
+            uint256 tokenId = params[i].tokenId;
+            _checkAuthorizationForToken(tokenId);
+
+            Position storage position = _positions[tokenId];
+            require(tokenFarmedIn[tokenId] == address(0), 'Position is farmed');
+
+            uint80 poolId = position.poolId;
+            IAlgebraPool pool = IAlgebraPool(_getPoolById(poolId));
+
+            int24 oldTickLower = position.tickLower;
+            int24 oldTickUpper = position.tickUpper;
+            uint128 oldLiquidity = position.liquidity;
+
+            uint256 burnedAmount0;
+            uint256 burnedAmount1;
+
+            if (oldLiquidity > 0) {
+                (burnedAmount0, burnedAmount1) = pool._burnPositionInPool(oldTickLower, oldTickUpper, oldLiquidity);
+            }
+
+            (uint256 collected0, uint256 collected1) = pool.collect(
+                msg.sender,
+                oldTickLower,
+                oldTickUpper,
+                type(uint128).max,
+                type(uint128).max
+            );
+            // TODO: send fees to caller
+            unchecked {
+                totalFees0 += collected0 - burnedAmount0;
+                totalFees1 += collected1 - burnedAmount1;
+            }
+
+            position.tokensOwed0 = 0;
+            position.tokensOwed1 = 0;
+
+            unchecked { ++i; }
+        }
+
+        for (uint256 i; i < params.length; ) {
+            Position storage position = _positions[params[i].tokenId];
+            uint80 poolId = position.poolId;
+            PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[poolId];
+
+            uint128 liquidity;
+            uint256 amount0;
+            uint256 amount1;
+            IAlgebraPool pool;
+
+            {
+                uint256 a0Desired = params[i].amount0Desired;
+                uint256 a1Desired = params[i].amount1Desired;
+                if (a0Desired == type(uint256).max) a0Desired = IERC20(poolKey.token0).balanceOf(msg.sender);
+                if (a1Desired == type(uint256).max) a1Desired = IERC20(poolKey.token1).balanceOf(msg.sender);
+
+                uint128 liquidityDesired;
+                (liquidityDesired, liquidity, amount0, amount1, pool) = addLiquidity(
+                    AddLiquidityParams({
+                        token0: poolKey.token0,
+                        token1: poolKey.token1,
+                        deployer: poolKey.deployer,
+                        recipient: address(this),
+                        tickLower: params[i].newTickLower,
+                        tickUpper: params[i].newTickUpper,
+                        amount0Desired: a0Desired,
+                        amount1Desired: a1Desired,
+                        amount0Min: params[i].amount0Min,
+                        amount1Min: params[i].amount1Min
+                    })
+                );
+            }
+
+            (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool._getPositionInPool(
+                address(this),
+                params[i].newTickLower,
+                params[i].newTickUpper
+            );
+
+            position.tickLower = params[i].newTickLower;
+            position.tickUpper = params[i].newTickUpper;
+            position.liquidity = liquidity;
+            position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+            position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+
+            emit Rebalance(params[i].tokenId, params[i].newTickLower, params[i].newTickUpper, liquidity, amount0, amount1, 0, 0);
+
+            unchecked { ++i; }
+        }
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
     function approveForFarming(
         uint256 tokenId,
         bool approve,
@@ -474,7 +662,7 @@ contract NonfungiblePositionManager is
         return _isApprovedOrOwner(spender, tokenId);
     }
 
-    function _checkAuthorizationForToken(uint256 tokenId) private view {
+    function _checkAuthorizationForToken(uint256 tokenId) internal view {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
     }
 

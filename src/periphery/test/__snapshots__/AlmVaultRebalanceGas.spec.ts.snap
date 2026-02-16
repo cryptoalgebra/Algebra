@@ -1,15 +1,37 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ALM Vault Rebalance Gas first rebalance (no prior positions) gas: two narrow ranges [ @skip-on-coverage ] 1`] = `528926`;
+exports[`ALM Vault Rebalance Gas first rebalance (no prior positions) gas: first rebalance, 1 pos (rebalanceSingle) [ @skip-on-coverage ] 1`] = `512459`;
 
-exports[`ALM Vault Rebalance Gas first rebalance (no prior positions) gas: wide base + narrow limit [ @skip-on-coverage ] 1`] = `363233`;
+exports[`ALM Vault Rebalance Gas first rebalance (no prior positions) gas: first rebalance, 2 pos (base + limit) [ @skip-on-coverage ] 1`] = `814632`;
 
-exports[`ALM Vault Rebalance Gas full rebalance (dismantle + remint) gas: rebalance to same ticks (re-enter same range) [ @skip-on-coverage ] 1`] = `391293`;
+exports[`ALM Vault Rebalance Gas rebalance 1 pos (dismantle + mint) gas: after swaps [ @skip-on-coverage ] 1`] = `633972`;
 
-exports[`ALM Vault Rebalance Gas full rebalance (dismantle + remint) gas: rebalance with no fees accrued [ @skip-on-coverage ] 1`] = `567061`;
+exports[`ALM Vault Rebalance Gas rebalance 1 pos (dismantle + mint) gas: no fees [ @skip-on-coverage ] 1`] = `537666`;
 
-exports[`ALM Vault Rebalance Gas repeated rebalance cycles gas: second full rebalance after swaps [ @skip-on-coverage ] 1`] = `1137336`;
+exports[`ALM Vault Rebalance Gas rebalance 1 pos optimized (NFPM.rebalance) gas: after swaps [ @skip-on-coverage ] 1`] = `492622`;
 
-exports[`ALM Vault Rebalance Gas single position rebalance gas: single rebalance after swaps [ @skip-on-coverage ] 1`] = `727750`;
+exports[`ALM Vault Rebalance Gas rebalance 1 pos optimized (NFPM.rebalance) gas: no fees [ @skip-on-coverage ] 1`] = `397312`;
 
-exports[`ALM Vault Rebalance Gas single position rebalance gas: single rebalance, no fees [ @skip-on-coverage ] 1`] = `561963`;
+exports[`ALM Vault Rebalance Gas rebalance 2 pos (dismantle + mint) gas: after swaps [ @skip-on-coverage ] 1`] = `930815`;
+
+exports[`ALM Vault Rebalance Gas rebalance 2 pos (dismantle + mint) gas: no fees [ @skip-on-coverage ] 1`] = `834497`;
+
+exports[`ALM Vault Rebalance Gas rebalance 2 pos (dismantle + mint) gas: same ticks [ @skip-on-coverage ] 1`] = `678177`;
+
+exports[`ALM Vault Rebalance Gas rebalance 2 pos optimized (rebalanceMultiple) gas:  same ticks [ @skip-on-coverage ] 1`] = `395740`;
+
+exports[`ALM Vault Rebalance Gas rebalance 2 pos optimized (rebalanceMultiple) gas: after swaps [ @skip-on-coverage ] 1`] = `624671`;
+
+exports[`ALM Vault Rebalance Gas rebalance 2 pos optimized (rebalanceMultiple) gas: no fees [ @skip-on-coverage ] 1`] = `552060`;
+
+exports[`ALM Vault Rebalance Gas repeated 1 pos rebalance (optimized) gas: after swaps [ @skip-on-coverage ] 1`] = `492637`;
+
+exports[`ALM Vault Rebalance Gas repeated 1 pos rebalance gas: after swaps [ @skip-on-coverage ] 1`] = `633984`;
+
+exports[`ALM Vault Rebalance Gas repeated 2 pos rebalance (old) gas: second 2 pos rebalance, after swaps [ @skip-on-coverage ] 1`] = `930815`;
+
+exports[`ALM Vault Rebalance Gas repeated 2 pos rebalance (old) gas: third 2 pos rebalance [ @skip-on-coverage ] 1`] = `940311`;
+
+exports[`ALM Vault Rebalance Gas repeated 2 pos rebalance (optimized) gas: 3th rebalance [ @skip-on-coverage ] 1`] = `626033`;
+
+exports[`ALM Vault Rebalance Gas repeated 2 pos rebalance (optimized) gas: after swaps [ @skip-on-coverage ] 1`] = `624671`;
