@@ -2459,17 +2459,118 @@ describe('AlgebraPool', () => {
     });
   });
 
-  describe('Plugin fees', () => {
+  describe('With plugin', () => {
     let poolPlugin : MockPoolPlugin;
 
     beforeEach('initialize the pool', async () => {
       const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
       poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
       await pool.setPlugin(poolPlugin);
-      await pool.setPluginConfig(255);
+      await pool.setPluginConfig(511);
       await pool.initialize(encodePriceSqrt(1, 1));
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
     });
+
+    it('can decrease amountIn using beforeSwap hook', async () => {
+      await poolPlugin.setAmountInDecrease(expandTo18Decimals(1) / 100n);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+        .to.emit(pool, 'Swap').withArgs(
+          await swapTarget.getAddress(),
+          wallet.address,
+          expandTo18Decimals(1) - expandTo18Decimals(1) / 100n, // the swap amount is decreased by amountInDecrease
+          -497362409242500018n,
+          39823052726313498882156089247n,
+          1000000000000000000n,
+          -13759
+        )
+        .to.emit(swapTarget, 'SwapCallback').withArgs(
+          expandTo18Decimals(1), // the user still sends the total input amount
+          -497362409242500018n
+        )
+        .to.emit(token1, 'Transfer').withArgs(
+          await pool.getAddress(),
+          wallet.address,
+          497362409242500018n
+        )
+        .to.emit(token0, 'Transfer').withArgs(
+          wallet.address,
+          await pool.getAddress(),
+          expandTo18Decimals(1) // the user still sends the total input amount
+        )
+        .to.emit(token0, 'Transfer').withArgs(
+          await pool.getAddress(),
+          await poolPlugin.getAddress(),
+          expandTo18Decimals(1) / 100n // the pool sends the decreased part of the input to the plugin
+        )
+    })
+
+    it('can increase amountIn using afterSwap hook', async () => {
+      const exactAmountOut = expandTo18Decimals(1) / 10n;
+      await poolPlugin.setAmountInIncrease(expandTo18Decimals(1) / 100n);
+      await expect(swap0ForExact1(exactAmountOut, wallet.address))
+        .to.emit(pool, 'Swap').withArgs(
+          await swapTarget.getAddress(),
+          wallet.address,
+          121166694458340283n, // this amount equals to the calculated amountIn plus amountInIncrease
+          -exactAmountOut,
+          71305346262837903834189555302n,
+          1000000000000000000n,
+          -2108
+        )
+        .to.emit(swapTarget, 'SwapCallback').withArgs(
+          121166694458340283n, // the user sends the increased amountIn to the pool
+          -exactAmountOut
+        )
+        .to.emit(token1, 'Transfer').withArgs(
+          await pool.getAddress(),
+          wallet.address,
+          exactAmountOut
+        )
+        .to.emit(token0, 'Transfer').withArgs(
+          wallet.address,
+          await pool.getAddress(),
+          121166694458340283n // the user sends the increased amountIn to the pool
+        )
+        .to.emit(token0, 'Transfer').withArgs(
+          await pool.getAddress(),
+          await poolPlugin.getAddress(),
+          expandTo18Decimals(1) / 100n // the pool sends the increased part of input to the plugin
+        )
+    })
+
+    it('can decrease amountOut using afterSwap hook', async () => {
+      const exactAmountIn = expandTo18Decimals(1);
+      await poolPlugin.setAmountOutDecrease(expandTo18Decimals(1) / 100n);
+      await expect(swapExact0For1(exactAmountIn, wallet.address))
+        .to.emit(pool, 'Swap').withArgs(
+          await swapTarget.getAddress(),
+          wallet.address,
+          exactAmountIn,
+          -489874968742185546n, // this amount equals to the calculated amountOut minus amountOutDecrease
+          39623987253945655210574618823n,
+          1000000000000000000n,
+          -13859
+        )
+        .to.emit(swapTarget, 'SwapCallback').withArgs(
+          exactAmountIn,
+          -489874968742185546n // the user receives the decreased amountOut
+        )
+        .to.emit(token1, 'Transfer').withArgs(
+          await pool.getAddress(),
+          wallet.address,
+          489874968742185546n // the user receives the decreased amountOut
+        )
+        .to.emit(token0, 'Transfer').withArgs(
+          wallet.address,
+          await pool.getAddress(),
+          exactAmountIn
+        )
+        .to.emit(token1, 'Transfer').withArgs(
+          await pool.getAddress(),
+          await poolPlugin.getAddress(),
+          expandTo18Decimals(1) / 100n // the pool sends a part of amountOut to the plugin
+        )
+    })
 
     it('swap/burn fails if plugin fee exceeds max value', async () => {
       await poolPlugin.setPluginFees(4000, 1000000);

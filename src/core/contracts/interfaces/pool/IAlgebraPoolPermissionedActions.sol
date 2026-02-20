@@ -21,7 +21,7 @@ interface IAlgebraPoolPermissionedActions {
   /// @notice Set new plugin config. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   /// @param newConfig In the new configuration of the plugin,
   /// each bit of which is responsible for a particular hook.
-  function setPluginConfig(uint8 newConfig) external;
+  function setPluginConfig(uint16 newConfig) external;
 
   /// @notice Set new community fee vault address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   /// @dev Community fee vault receives collected community fees.
