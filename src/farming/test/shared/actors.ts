@@ -8,10 +8,13 @@ export const WALLET_USER_INDEXES = {
   LP_USER_0: 4,
   LP_USER_1: 5,
   LP_USER_2: 6,
-  TRADER_USER_0: 7,
-  TRADER_USER_1: 8,
-  TRADER_USER_2: 9,
-  INCENTIVE_CREATOR: 10,
+  LP_USER_3: 7,
+  LP_USER_4: 8,
+  LP_USER_5: 9,
+  TRADER_USER_0: 10,
+  TRADER_USER_1: 11,
+  TRADER_USER_2: 12,
+  INCENTIVE_CREATOR: 13,
 };
 
 export class ActorFixture {
@@ -54,6 +57,18 @@ export class ActorFixture {
 
   lpUser2() {
     return this._getActor(WALLET_USER_INDEXES.LP_USER_2);
+  }
+
+  lpUser3() {
+    return this._getActor(WALLET_USER_INDEXES.LP_USER_3);
+  }
+
+  lpUser4() {
+    return this._getActor(WALLET_USER_INDEXES.LP_USER_4);
+  }
+
+  lpUser5() {
+    return this._getActor(WALLET_USER_INDEXES.LP_USER_5);
   }
 
   lpUsers() {
