@@ -53,14 +53,27 @@ contract NonfungiblePositionManager is
     bytes32 public constant NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE =
         keccak256('NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE');
 
+    /// @dev The maximum allowed liquidity lock period
+    uint32 private constant MAX_LIQUIDITY_LOCK_PERIOD = 10 minutes;
+
+    /// @inheritdoc INonfungiblePositionManager
+    bool public override liquidityLockSettingDisabled;
+
     /// @inheritdoc INonfungiblePositionManager
     address public override farmingCenter;
+    
+    /// @inheritdoc INonfungiblePositionManager
+    uint32 public override liquidityLockPeriod;
+
+    /// @inheritdoc INonfungiblePositionManager
+    mapping(address => bool) public override isWhitelisted;
 
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public override farmingApprovals;
 
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
+    mapping(uint256 tokenId => uint32) private _liquidityUnlockTime;
 
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private immutable _tokenDescriptor;
@@ -184,6 +197,7 @@ contract NonfungiblePositionManager is
             PoolAddress.PoolKey({deployer: params.deployer, token0: params.token0, token1: params.token1})
         );
 
+        _updateLiquidityUnlockTime(tokenId);
         _positions[tokenId] = Position({
             nonce: 0,
             operator: address(0),
@@ -212,6 +226,15 @@ contract NonfungiblePositionManager is
 
     function _getPoolById(uint80 poolId) private view returns (address) {
         return PoolAddress.computeAddress(poolDeployer, _poolIdToPoolKey[poolId]);
+    }
+
+    /// @dev Updates the liquidity unlock time for a position
+    function _updateLiquidityUnlockTime(uint256 tokenId) private {
+        if (isWhitelisted[tx.origin] || isWhitelisted[msg.sender]) return;
+        if (liquidityLockPeriod > 0) {
+            _liquidityUnlockTime[tokenId] = uint32(_blockTimestamp() + liquidityLockPeriod);
+            emit LiquidityUnlockTimeUpdated(tokenId, _liquidityUnlockTime[tokenId]);
+        }
     }
 
     function _updateUncollectedFees(
@@ -258,6 +281,25 @@ contract NonfungiblePositionManager is
         checkDeadline(params.deadline)
         returns (uint128 liquidity, uint256 amount0, uint256 amount1)
     {
+        /**
+         *
+         * This check is used to discourage JIT (Just-In-Time) liquidity attacks.
+         * When JIT protection is enabled, `liquidityLockPeriod` will be greater than zero.
+         * In this mode, only approved addresses are allowed to call `increaseLiquidity`.
+         *
+         * Ideally `msg.sender` is more than enough in case of ALMs or contracts.
+         * `tx.origin` or `isWhitelisted` is added for more safer checks
+         */
+        if (liquidityLockPeriod > 0) {
+            require(
+                _isApprovedOrOwner(tx.origin, params.tokenId) ||
+                    _isApprovedOrOwner(msg.sender, params.tokenId) ||
+                    isWhitelisted[tx.origin] ||
+                    isWhitelisted[msg.sender],
+                'NA'
+            );
+        }
+
         Position storage position = _positions[params.tokenId];
 
         PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[position.poolId];
@@ -298,6 +340,7 @@ contract NonfungiblePositionManager is
                 position.tokensOwed1 += tokensOwed1;
             }
             position.liquidity = positionLiquidity + liquidity;
+            _updateLiquidityUnlockTime(params.tokenId);
         }
 
         emit IncreaseLiquidity(params.tokenId, liquidityDesired, liquidity, amount0, amount1, address(pool));
@@ -326,6 +369,10 @@ contract NonfungiblePositionManager is
             position.liquidity
         );
         require(positionLiquidity >= params.liquidity);
+
+        if (!isWhitelisted[msg.sender] && liquidityLockPeriod > 0) {
+            require(_blockTimestamp() >= uint256(_liquidityUnlockTime[params.tokenId]), 'LL');
+        }
 
         IAlgebraPool pool = IAlgebraPool(_getPoolById(poolId));
         (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, params.liquidity);
@@ -417,6 +464,7 @@ contract NonfungiblePositionManager is
 
         delete _positions[tokenId];
         delete tokenFarmedIn[tokenId];
+        delete _liquidityUnlockTime[tokenId];
         _burn(tokenId);
     }
 
@@ -460,6 +508,46 @@ contract NonfungiblePositionManager is
     function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {
         _requireMinted(tokenId);
         return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function setLiquidityLockPeriod(uint32 _liquidityLockPeriod) external override {
+        require(
+            IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender),
+            'NA'
+        );
+        require(_liquidityLockPeriod <= MAX_LIQUIDITY_LOCK_PERIOD, 'LOCK_PERIOD_TOO_LONG');
+        if (!liquidityLockSettingDisabled) {
+            uint32 oldLiquidityLockPeriod = liquidityLockPeriod;
+            liquidityLockPeriod = _liquidityLockPeriod;
+            emit LiquidityLockPeriodChanged(oldLiquidityLockPeriod, _liquidityLockPeriod);
+        }
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function permanentlyDisableLiquidityLock() external override {
+        require(
+            IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender),
+            'NA'
+        );
+        uint32 oldLiquidityLockPeriod = liquidityLockPeriod;
+        liquidityLockSettingDisabled = true;
+        liquidityLockPeriod = 0;
+        emit LiquidityLockSettingDisabled();
+        emit LiquidityLockPeriodChanged(oldLiquidityLockPeriod, 0);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function setWhitelistStatus(address account, bool status) external override {
+        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
+        isWhitelisted[account] = status;
+        emit WhitelistStatusChanged(account, status);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function liquidityUnlockTime(uint256 tokenId) external view override returns (uint32) {
+        if (liquidityLockSettingDisabled || liquidityLockPeriod == 0) return 0;
+        return _liquidityUnlockTime[tokenId];
     }
 
     /// @inheritdoc IERC721
