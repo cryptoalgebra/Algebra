@@ -67,10 +67,6 @@ export class ActorFixture {
     return this._getActor(WALLET_USER_INDEXES.LP_USER_4);
   }
 
-  lpUser5() {
-    return this._getActor(WALLET_USER_INDEXES.LP_USER_5);
-  }
-
   lpUsers() {
     return [this.lpUser0(), this.lpUser1(), this.lpUser2()];
   }
