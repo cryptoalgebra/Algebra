@@ -77,7 +77,12 @@ async function main() {
     await hre.run("verify:verify", {
         address: deploysData.mcall,
         constructorArguments: [],
-        });    
+        });
+        
+    await hre.run("verify:verify", {
+        address: deploysData.mcall3,
+        constructorArguments: [],
+        });  
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -118,6 +118,14 @@ async function main() {
   console.log('AlgebraInterfaceMulticall deployed to:', AlgebraInterfaceMulticall.target);
   deploysData.mcall = AlgebraInterfaceMulticall.target;
 
+  const Multicall3Factory = await hre.ethers.getContractFactory('AlgebraInterfaceMulticall3');
+  const Multicall3 = await Multicall3Factory.deploy();
+
+  await Multicall3.waitForDeployment();
+
+  console.log('AlgebraInterfaceMulticall3 deployed to:', Multicall3.target);
+  deploysData.mcall3 = Multicall3.target;
+
   fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 }
 
