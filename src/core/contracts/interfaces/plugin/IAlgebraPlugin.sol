@@ -7,7 +7,7 @@ interface IAlgebraPlugin {
   /// @notice Returns plugin config
   /// @return config Each bit of the config is responsible for enabling/disabling the hooks.
   /// The last bit indicates whether the plugin contains dynamic fees logic
-  function defaultPluginConfig() external view returns (uint8);
+  function defaultPluginConfig() external view returns (uint16);
 
   /// @notice Handle plugin fee transfer on plugin contract
   /// @param pluginFee0 Fee0 amount transferred to plugin
@@ -97,6 +97,7 @@ interface IAlgebraPlugin {
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
   /// @param amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+  /// @param totalSwapFeeAmount The total fee earned by LPs during the swap (before community/plugin fee deduction)
   /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function afterSwap(
@@ -107,6 +108,7 @@ interface IAlgebraPlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
+    uint256 totalSwapFeeAmount,
     bytes calldata data
   ) external returns (bytes4);
 
@@ -136,5 +138,20 @@ interface IAlgebraPlugin {
     uint256 paid0,
     uint256 paid1,
     bytes calldata data
+  ) external returns (bytes4);
+
+  /// @notice The hook called after crossing an initialized tick during a swap
+  /// @param zeroToOne The direction of the swap
+  /// @param swapStepAmount The input amount of the swap step
+  /// @param feeStepAmount The fee amount of the swap step (before community/plugin fee deduction)
+  /// @param tick The tick that was crossed
+  /// @param liquidityDelta The liquidity delta at the crossed tick
+  /// @return bytes4 The function selector for the hook
+  function afterCross(
+    bool zeroToOne,
+    uint256 swapStepAmount,
+    uint256 feeStepAmount,
+    int24 tick,
+    int128 liquidityDelta
   ) external returns (bytes4);
 }

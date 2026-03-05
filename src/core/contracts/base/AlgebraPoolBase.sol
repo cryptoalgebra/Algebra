@@ -35,7 +35,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     uint160 price;
     int24 tick;
     uint16 lastFee;
-    uint8 pluginConfig;
+    uint16 pluginConfig;
     uint16 communityFee;
     bool unlocked;
   }
@@ -113,7 +113,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     external
     view
     override
-    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
+    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint16 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
   {
     sqrtPrice = globalState.price;
     tick = globalState.tick;
@@ -144,7 +144,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @inheritdoc IAlgebraPoolState
   function fee() external view override returns (uint16 currentFee) {
     currentFee = globalState.lastFee;
-    uint8 pluginConfig = globalState.pluginConfig;
+    uint16 pluginConfig = globalState.pluginConfig;
 
     if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
   }
@@ -219,7 +219,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     emit Plugin(_plugin);
   }
 
-  function _setPluginConfig(uint8 _pluginConfig) internal {
+  function _setPluginConfig(uint16 _pluginConfig) internal {
     globalState.pluginConfig = _pluginConfig;
     emit PluginConfig(_pluginConfig);
   }

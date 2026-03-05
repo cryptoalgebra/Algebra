@@ -71,7 +71,7 @@ contract AlgebraCustomPoolEntryPoint is IAlgebraCustomPoolEntryPoint {
     }
 
     /// @inheritdoc IAlgebraCustomPoolEntryPoint
-    function setPluginConfig(address pool, uint8 newConfig) external override onlyCustomDeployer(pool) {
+    function setPluginConfig(address pool, uint16 newConfig) external override onlyCustomDeployer(pool) {
         IAlgebraPool(pool).setPluginConfig(newConfig);
     }
 

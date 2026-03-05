@@ -115,7 +115,7 @@ interface IAlgebraPoolEvents {
 
   /// @notice Emitted when the plugin config changes
   /// @param newPluginConfig New plugin config
-  event PluginConfig(uint8 newPluginConfig);
+  event PluginConfig(uint16 newPluginConfig);
 
   /// @notice Emitted when the fee changes inside the pool
   /// @param fee The current fee in hundredths of a bip, i.e. 1e-6

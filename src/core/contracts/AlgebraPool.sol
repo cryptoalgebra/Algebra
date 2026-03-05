@@ -25,7 +25,7 @@ import './interfaces/IAlgebraFactory.sol';
 contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positions, SwapCalculation, ReservesManager {
   using SafeCast for uint256;
   using SafeCast for uint128;
-  using Plugins for uint8;
+  using Plugins for uint16;
   using Plugins for bytes4;
 
   /// @inheritdoc IAlgebraPoolActions
@@ -252,11 +252,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   ) external override returns (int256 amount0, int256 amount1) {
     (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
     _lock();
-
+    FeesAmount memory fees;
     {
       // scope to prevent "stack too deep"
       SwapEventParams memory eventParams;
-      FeesAmount memory fees;
       (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
         overrideFee,
         pluginFee,
@@ -294,7 +293,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
 
     _unlock();
-    _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -374,7 +373,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     );
 
     _unlock();
-    _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
+    _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
   }
 
   /// @dev internal function to reduce bytecode size
@@ -400,7 +399,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bool payInAdvance,
     bytes calldata data
   ) internal returns (uint24 overrideFee, uint24 pluginFee) {
-    uint8 pluginConfig = globalState.pluginConfig;
+    uint16 pluginConfig = globalState.pluginConfig;
     if (pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       if (_isPlugin()) return (0, 0);
       bytes4 selector;
@@ -411,10 +410,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
   }
 
-  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {
+  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, uint256 totalSwapFeeAmount, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       if (_isPlugin()) return;
-      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
+      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, totalSwapFeeAmount, data).shouldReturn(
         IAlgebraPlugin.afterSwap.selector
       );
     }
@@ -505,7 +504,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPluginConfig(uint8 newConfig) external override onlyUnlocked {
+  function setPluginConfig(uint16 newConfig) external override onlyUnlocked {
     address _plugin = plugin;
     if (_plugin == address(0)) revert pluginIsNotConnected(); // it is not allowed to set plugin config without plugin
 
