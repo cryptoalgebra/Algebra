@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TickLens #getClosestActiveTicks gas for almost all tick space [ @skip-on-coverage ] 1`] = `34119`;
+exports[`TickLens #getClosestActiveTicks gas for almost all tick space [ @skip-on-coverage ] 1`] = `34141`;
 
 exports[`TickLens #getNextActiveTicks gas for single populated tick [ @skip-on-coverage ] 1`] = `23594`;
 
