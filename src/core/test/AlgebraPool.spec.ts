@@ -3073,6 +3073,194 @@ describe('AlgebraPool', () => {
         await expect(poolPlugin.mint()).not.to.be.emit(poolPlugin, 'AfterModifyPosition');
       });
 
+      it('afterCross hook is called when tick is crossed (zeroToOne)', async () => {
+        await pool.setPluginConfig(511); // 255 | 256: all hooks + AFTER_CROSS_FLAG
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, -120, 120, expandTo18Decimals(1));
+        await mint(wallet.address, -240, -120, expandTo18Decimals(1));
+        await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          .to.emit(poolPlugin, 'AfterCross');
+      });
+
+      it('afterCross hook is called when tick is crossed (oneToZero)', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, -120, 120, expandTo18Decimals(1));
+        await mint(wallet.address, 120, 240, expandTo18Decimals(1));
+        await expect(swapExact1For0(expandTo18Decimals(1), wallet.address))
+          .to.emit(poolPlugin, 'AfterCross');
+      });
+
+      it('afterCross hook is not called when no tick is crossed', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(10));
+        await expect(swapExact0For1(1000, wallet.address))
+          .not.to.emit(poolPlugin, 'AfterCross');
+      });
+
+      it('afterCross hook is not called if AFTER_CROSS_FLAG is not set', async () => {
+        // pluginConfig = 255 (from beforeEach), AFTER_CROSS_FLAG not set
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, -120, 120, expandTo18Decimals(1));
+        await mint(wallet.address, -240, -120, expandTo18Decimals(1));
+        await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          .not.to.emit(poolPlugin, 'AfterCross');
+      });
+
+      it('afterCross hook is disabled after pluginConfig change', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, -120, 120, expandTo18Decimals(1));
+        await mint(wallet.address, -240, -120, expandTo18Decimals(1));
+        await expect(swapExact0For1(expandTo18Decimals(1) / 4n, wallet.address))
+          .to.emit(poolPlugin, 'AfterCross');
+        await pool.setPluginConfig(255); // disable AFTER_CROSS_FLAG
+        await expect(swapExact1For0(expandTo18Decimals(1) / 4n, wallet.address))
+          .not.to.emit(poolPlugin, 'AfterCross');
+      });
+
+      it('transaction reverted if plugin returns incorrect selector for afterCross hook', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, -120, 120, expandTo18Decimals(1));
+        await mint(wallet.address, -240, -120, expandTo18Decimals(1));
+        await poolPlugin.setSelectorDisable(256); // AFTER_CROSS_FLAG
+        const selector = poolPlugin.interface.getFunction('afterCross').selector;
+        await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          .to.be.revertedWithCustomError(pool, 'invalidHookResponse')
+          .withArgs(selector);
+      });
+
+      it('afterCross hook is not called if caller is a plugin', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, -120, 120, expandTo18Decimals(1));
+        await mint(wallet.address, -240, -120, expandTo18Decimals(1));
+        await token0.transfer(poolPlugin, expandTo18Decimals(1));
+        await token1.transfer(poolPlugin, expandTo18Decimals(1));
+        await expect(poolPlugin.swap()).not.to.emit(poolPlugin, 'AfterCross');
+      });
+
+      it('afterCross hook is called at each crossed tick with correct params (zeroToOne)', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+
+        const liq1 = expandTo18Decimals(3);
+        const liq2 = expandTo18Decimals(2);
+        const liq3 = expandTo18Decimals(1);
+        await mint(wallet.address, -60, 60, liq1);
+        await mint(wallet.address, -120, -60, liq2);
+        await mint(wallet.address, -180, -120, liq3);
+
+        const tickMathFactory = await ethers.getContractFactory('TickMathTest');
+        const tickMath = (await tickMathFactory.deploy()) as any as TickMathTest;
+        const priceMathFactory = await ethers.getContractFactory('PriceMovementMathTest');
+        const priceMath = (await priceMathFactory.deploy()) as any as PriceMovementMathTest;
+
+        const sqrtPriceMinus60 = await tickMath.getSqrtRatioAtTick(-60);
+        const sqrtPriceMinus120 = await tickMath.getSqrtRatioAtTick(-120);
+
+        const [, input1, , fee1] = await priceMath.movePriceTowardsTarget(
+          encodePriceSqrt(1, 1), sqrtPriceMinus60, liq1, expandTo18Decimals(1), 500
+        );
+        const remaining1 = expandTo18Decimals(1) - (input1 + fee1);
+
+        const [, input2, , fee2] = await priceMath.movePriceTowardsTarget(
+          sqrtPriceMinus60, sqrtPriceMinus120, liq2, remaining1, 500
+        );
+
+        await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, input1, fee1, -60, -(liq1 - liq2))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, input2, fee2, -120, -(liq2 - liq3));
+      });
+
+      it('afterCross hook is called at each crossed tick with correct params (oneToZero)', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+        const liq1 = expandTo18Decimals(3);
+        const liq2 = expandTo18Decimals(2);
+        const liq3 = expandTo18Decimals(1);
+        await mint(wallet.address, -60, 60, liq1);
+        await mint(wallet.address, 60, 120, liq2);
+        await mint(wallet.address, 120, 180, liq3);
+
+        const tickMathFactory = await ethers.getContractFactory('TickMathTest');
+        const tickMath = (await tickMathFactory.deploy()) as any as TickMathTest;
+        const priceMathFactory = await ethers.getContractFactory('PriceMovementMathTest');
+        const priceMath = (await priceMathFactory.deploy()) as any as PriceMovementMathTest;
+
+        const sqrtPrice60 = await tickMath.getSqrtRatioAtTick(60);
+        const sqrtPrice120 = await tickMath.getSqrtRatioAtTick(120);
+
+        const [, input1, , fee1] = await priceMath.movePriceTowardsTarget(
+          encodePriceSqrt(1, 1), sqrtPrice60, liq1, expandTo18Decimals(1), 500
+        );
+        const remaining1 = expandTo18Decimals(1) - (input1 + fee1);
+
+        const [, input2, , fee2] = await priceMath.movePriceTowardsTarget(
+          sqrtPrice60, sqrtPrice120, liq2, remaining1, 500
+        );
+
+        await expect(swapExact1For0(expandTo18Decimals(1), wallet.address))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(false, input1, fee1, 60, -(liq1 - liq2))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(false, input2, fee2, 120, -(liq2 - liq3));
+      });
+
+      it('afterCross hook receives feeStepAmount (not reduced by community fee)', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await pool.setCommunityFee(500); // 50% community fee
+
+        const liq = expandTo18Decimals(2);
+        const liqBelow = expandTo18Decimals(1);
+        await mint(wallet.address, -120, 120, liq);
+        await mint(wallet.address, -240, -120, liqBelow);
+
+        const tickMathFactory = await ethers.getContractFactory('TickMathTest');
+        const tickMath = (await tickMathFactory.deploy()) as any as TickMathTest;
+        const priceMathFactory = await ethers.getContractFactory('PriceMovementMathTest');
+        const priceMath = (await priceMathFactory.deploy()) as any as PriceMovementMathTest;
+
+        const sqrtPriceMinus120 = await tickMath.getSqrtRatioAtTick(-120);
+        const [, expectedInput, , expectedFee] = await priceMath.movePriceTowardsTarget(
+          encodePriceSqrt(1, 1), sqrtPriceMinus120, liq, expandTo18Decimals(1), 500
+        );
+
+        await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, expectedInput, expectedFee, -120, -(liq - liqBelow));
+      });
+
+      it('afterCross hook works correctly with zero-liquidity gap between ticks', async () => {
+        await pool.setPluginConfig(511);
+        await pool.initialize(encodePriceSqrt(1, 1));
+
+        const liq = expandTo18Decimals(1);
+        await mint(wallet.address, -60, 60, liq); 
+        await mint(wallet.address, -240, -180, liq); 
+
+        const tickMathFactory = await ethers.getContractFactory('TickMathTest');
+        const tickMath = (await tickMathFactory.deploy()) as any as TickMathTest;
+        const priceMathFactory = await ethers.getContractFactory('PriceMovementMathTest');
+        const priceMath = (await priceMathFactory.deploy()) as any as PriceMovementMathTest;
+
+        const sqrtPriceMinus60 = await tickMath.getSqrtRatioAtTick(-60);
+        const [, input1, , fee1] = await priceMath.movePriceTowardsTarget(
+          encodePriceSqrt(1, 1), sqrtPriceMinus60, liq, expandTo18Decimals(1), 500
+        );
+
+        await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, input1, fee1, -60, -liq)
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, 0, 0, -180, liq);
+      });
+
     });
 
     describe('#setPlugin', () => {
