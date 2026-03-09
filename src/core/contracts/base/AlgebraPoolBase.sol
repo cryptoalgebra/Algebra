@@ -79,6 +79,11 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   address public override communityVault;
 
   /// @inheritdoc IAlgebraPoolState
+  address public override algebraFeeReceiver;
+  /// @inheritdoc IAlgebraPoolState
+  uint16 public override algebraFee;
+
+  /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
 
   /// @inheritdoc IAlgebraPoolState
@@ -90,11 +95,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
   // shares one slot with TickStructure.tickTreeRoot
-
-  /// @inheritdoc IAlgebraPoolState
-  address public override algebraFeeReceiver;
-  /// @inheritdoc IAlgebraPoolState
-  uint16 public override algebraFee;
 
   /// @notice Check that the lower and upper ticks do not violate the boundaries of allowed ticks and are specified in the correct order
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
