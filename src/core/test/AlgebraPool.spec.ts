@@ -2023,6 +2023,129 @@ describe('AlgebraPool', () => {
     });
   });
 
+  describe('#algebraFee split', () => {
+    const liquidityAmount = expandTo18Decimals(1000);
+    const COMMUNITY_FEE = 170n; // 17%
+    const ALGEBRA_FEE = 100n; // 10%
+    const swapAmount = expandTo18Decimals(1);
+    const DEFAULT_FEE = 500n; // 0.05%
+
+    beforeEach(async () => {
+      pool = await createPoolWrapped();
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, minTick, maxTick, liquidityAmount);
+    });
+
+    async function setupAlgebraFee(algebraFee: bigint, receiver: string) {
+      await factory.transferAlgebraFeeManagerRole(wallet.address);
+      await factory.setAlgebraFeeReceiver(await pool.getAddress(), receiver);
+      await factory.proposeAlgebraFee(await pool.getAddress(), algebraFee);
+      await factory.acceptAlgebraFee(await pool.getAddress());
+    }
+
+    it('community fees split correctly between vault and algebraFeeReceiver', async () => {
+      await pool.setCommunityFee(COMMUNITY_FEE);
+      await setupAlgebraFee(ALGEBRA_FEE, other.address);
+
+      await swapExact0For1(swapAmount, wallet.address);
+      await pool.advanceTime(28801); // 8 hours
+      await swapExact0For1(swapAmount, wallet.address);
+
+      const vaultBalance0 = await token0.balanceOf(vaultAddress);
+      const algebraBalance0 = await token0.balanceOf(other.address);
+      const totalCommunityFee = vaultBalance0 + algebraBalance0;
+
+      // totalCommunityFee = 2 * swapAmount * 0.05% * 17%
+      const expectedTotalFee = swapAmount * DEFAULT_FEE * COMMUNITY_FEE * 2n / (1_000_000n * 1000n);
+      expect(totalCommunityFee).to.be.closeTo(expectedTotalFee, expectedTotalFee / 100n);
+
+      // algebraFee = 100/170 of total
+      expect(algebraBalance0).to.be.closeTo(totalCommunityFee * ALGEBRA_FEE / COMMUNITY_FEE, 1n);
+      // communityFee = 70/170 of total
+      expect(vaultBalance0).to.be.closeTo(totalCommunityFee * (COMMUNITY_FEE - ALGEBRA_FEE) / COMMUNITY_FEE, 1n);
+    });
+
+    it('all community fees go to algebraFeeReceiver when algebraFee >= communityFee', async () => {
+      await pool.setCommunityFee(COMMUNITY_FEE);
+      await setupAlgebraFee(COMMUNITY_FEE, other.address);
+
+      await swapExact0For1(swapAmount, wallet.address);
+      await pool.advanceTime(28801);
+      await swapExact0For1(swapAmount, wallet.address);
+
+      const vaultBalance0 = await token0.balanceOf(vaultAddress);
+      const algebraBalance0 = await token0.balanceOf(other.address);
+
+      // when algebraFee >= communityFee, all goes to algebraFeeReceiver
+      expect(vaultBalance0).to.eq(0);
+      expect(algebraBalance0).to.be.gt(0);
+    });
+
+    it('no algebra fee split when algebraFee is zero', async () => {
+      await pool.setCommunityFee(COMMUNITY_FEE);
+
+      await swapExact0For1(swapAmount, wallet.address);
+      await pool.advanceTime(28801);
+      await swapExact0For1(swapAmount, wallet.address);
+
+      const vaultBalance0 = await token0.balanceOf(vaultAddress);
+      const algebraBalance0 = await token0.balanceOf(other.address);
+
+      expect(vaultBalance0).to.be.gt(0);
+      expect(algebraBalance0).to.eq(0);
+    });
+
+    it('no algebra fee split when algebraFeeReceiver is zero address', async () => {
+      await pool.setCommunityFee(COMMUNITY_FEE);
+      await factory.transferAlgebraFeeManagerRole(wallet.address);
+
+      await factory.proposeAlgebraFee(await pool.getAddress(), ALGEBRA_FEE);
+      await factory.acceptAlgebraFee(await pool.getAddress());
+
+      await swapExact0For1(swapAmount, wallet.address);
+      await pool.advanceTime(28801);
+      await swapExact0For1(swapAmount, wallet.address);
+
+      const vaultBalance0 = await token0.balanceOf(vaultAddress);
+
+      expect(vaultBalance0).to.be.gt(0);
+    });
+
+    it('emits CommunityFeeTransfer event with correct split', async () => {
+      await pool.setCommunityFee(COMMUNITY_FEE);
+      await setupAlgebraFee(ALGEBRA_FEE, other.address);
+
+      await swapExact0For1(swapAmount, wallet.address);
+      await pool.advanceTime(28801);
+      await expect(swapExact0For1(swapAmount, wallet.address))
+        .to.emit(pool, 'CommunityFeeTransfer');
+    });
+
+    it('fee split works for both tokens', async () => {
+      await pool.setCommunityFee(COMMUNITY_FEE);
+      await setupAlgebraFee(ALGEBRA_FEE, other.address);
+
+      await swapExact0For1(swapAmount, wallet.address);
+      await swapExact1For0(swapAmount, wallet.address);
+      await pool.advanceTime(28801);
+      await swapExact0For1(swapAmount, wallet.address);
+
+      const vaultBalance0 = await token0.balanceOf(vaultAddress);
+      const vaultBalance1 = await token1.balanceOf(vaultAddress);
+      const algebraBalance0 = await token0.balanceOf(other.address);
+      const algebraBalance1 = await token1.balanceOf(other.address);
+
+      //algebraFeeReceiver gets 100/170, vault gets 70/170
+      const totalFee0 = vaultBalance0 + algebraBalance0;
+      expect(algebraBalance0).to.be.closeTo(totalFee0 * ALGEBRA_FEE / COMMUNITY_FEE, 1n);
+      expect(vaultBalance0).to.be.closeTo(totalFee0 * (COMMUNITY_FEE - ALGEBRA_FEE) / COMMUNITY_FEE, 1n);
+
+      const totalFee1 = vaultBalance1 + algebraBalance1;
+      expect(algebraBalance1).to.be.closeTo(totalFee1 * ALGEBRA_FEE / COMMUNITY_FEE, 1n);
+      expect(vaultBalance1).to.be.closeTo(totalFee1 * (COMMUNITY_FEE - ALGEBRA_FEE) / COMMUNITY_FEE, 1n);
+    });
+  });
+
   describe('#tickSpacing', () => {
     beforeEach('deploy pool', async () => {
       pool = await createPoolWrapped();
