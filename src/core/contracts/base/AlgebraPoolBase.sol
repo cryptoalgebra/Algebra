@@ -91,6 +91,11 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   int24 public override tickSpacing;
   // shares one slot with TickStructure.tickTreeRoot
 
+  /// @inheritdoc IAlgebraPoolState
+  address public override algebraFeeReceiver;
+  /// @inheritdoc IAlgebraPoolState
+  uint16 public override algebraFee;
+
   /// @notice Check that the lower and upper ticks do not violate the boundaries of allowed ticks and are specified in the correct order
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
     TickManagement.checkTickRangeValidity(bottomTick, topTick);
@@ -156,7 +161,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   }
 
   /// @dev Gets the default settings for pool initialization. Can be overridden in tests
-  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16) {
+  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16, uint16) {
     return IAlgebraFactory(factory).defaultConfigurationForPool();
   }
 
@@ -222,5 +227,15 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   function _setPluginConfig(uint16 _pluginConfig) internal {
     globalState.pluginConfig = _pluginConfig;
     emit PluginConfig(_pluginConfig);
+  }
+
+  function _setAlgebraFee(uint16 _algebraFee) internal {
+    algebraFee = _algebraFee;
+    emit AlgebraFee(_algebraFee);
+  }
+
+  function _setAlgebraFeeReceiver(address _algebraFeeReceiver) internal {
+    algebraFeeReceiver = _algebraFeeReceiver;
+    emit AlgebraFeeReceiver(_algebraFeeReceiver);
   }
 }

@@ -20,7 +20,7 @@ async function main() {
 
   await hre.run('verify:verify', {
     address: deploysData.vault,
-    constructorArguments: [deploysData.factory, deployer.address],
+    constructorArguments: [deploysData.factory],
   });
 
   await hre.run('verify:verify', {

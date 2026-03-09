@@ -150,6 +150,14 @@ interface IAlgebraPoolState {
   /// @return The current tick spacing
   function tickSpacing() external view returns (int24);
 
+  /// @notice The algebra fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
+  /// @return The current algebra fee value
+  function algebraFee() external view returns (uint16);
+
+  /// @notice The address that receives the algebra fee part of community fees
+  /// @return The algebra fee receiver address
+  function algebraFeeReceiver() external view returns (address);
+
   /// @notice The previous initialized tick before (or at) current global tick
   /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
   /// @return The previous initialized tick

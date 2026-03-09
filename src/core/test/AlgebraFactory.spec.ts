@@ -575,17 +575,19 @@ describe('AlgebraFactory', () => {
   });
 
   it('defaultConfigurationForPool', async () => {
-    const { communityFee, tickSpacing, fee } = await factory.defaultConfigurationForPool();
+    const { communityFee, tickSpacing, fee, algebraFee } = await factory.defaultConfigurationForPool();
     expect(communityFee).to.eq(0);
     expect(tickSpacing).to.eq(60);
     expect(fee).to.eq(500);
+    expect(algebraFee).to.eq(0);
   });
 
   it('defaultConfigurationForPool works without vault factory', async () => {
     await factory.setVaultFactory(ZeroAddress);
-    const { communityFee, tickSpacing, fee } = await factory.defaultConfigurationForPool();
+    const { communityFee, tickSpacing, fee, algebraFee } = await factory.defaultConfigurationForPool();
     expect(communityFee).to.eq(0);
     expect(tickSpacing).to.eq(60);
     expect(fee).to.eq(500);
+    expect(algebraFee).to.eq(0);
   });
 });

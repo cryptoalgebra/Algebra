@@ -55,6 +55,27 @@ interface IAlgebraFactory {
   /// @param newVaultFactory The new vaultFactory address
   event VaultFactory(address newVaultFactory);
 
+  /// @notice Emitted when the default algebra fee is changed
+  /// @param newDefaultAlgebraFee The new default algebra fee value
+  event DefaultAlgebraFee(uint16 newDefaultAlgebraFee);
+
+  /// @notice Emitted when the default algebra fee receiver address is changed
+  /// @param newDefaultAlgebraFeeReceiver The new default algebra fee receiver address
+  event DefaultAlgebraFeeReceiver(address newDefaultAlgebraFeeReceiver);
+
+  /// @notice Emitted when the algebra fee manager address is changed
+  /// @param newAlgebraFeeManager The new algebra fee manager address
+  event AlgebraFeeManager(address newAlgebraFeeManager);
+
+  /// @notice Emitted when a new algebra fee is proposed for a pool
+  /// @param pool The pool address
+  /// @param proposedNewAlgebraFee The proposed new algebra fee
+  event AlgebraFeeProposal(address indexed pool, uint16 proposedNewAlgebraFee);
+
+  /// @notice Emitted when an algebra fee proposal is cancelled for a pool
+  /// @param pool The pool address
+  event CancelAlgebraFeeProposal(address indexed pool);
+
   /// @notice role that can change communityFee and tickspacing in pools
   /// @return The hash corresponding to this role
   function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32);
@@ -100,11 +121,29 @@ interface IAlgebraFactory {
   /// @return Algebra vault factory
   function vaultFactory() external view returns (IAlgebraVaultFactory);
 
-  /// @notice Returns the default communityFee, tickspacing, fee and communityFeeVault for pool
+  /// @notice Returns the current algebra fee manager address
+  /// @return The algebra fee manager address
+  function algebraFeeManager() external view returns (address);
+
+  /// @notice Returns the default address to which algebra fees are sent for new pools
+  /// @return The default algebra fee receiver address
+  function defaultAlgebraFeeReceiver() external view returns (address);
+
+  /// @notice Returns the default algebra fee for new pools
+  /// @return The default algebra fee value in thousandths (1e-3)
+  function defaultAlgebraFee() external view returns (uint16);
+
+  /// @notice Returns the proposed algebra fee for a specific pool
+  /// @param pool The pool address
+  /// @return The proposed algebra fee value
+  function proposedAlgebraFee(address pool) external view returns (uint16);
+
+  /// @notice Returns the default communityFee, tickspacing, fee and algebraFee for pool
   /// @return communityFee which will be set at the creation of the pool
   /// @return tickSpacing which will be set at the creation of the pool
   /// @return fee which will be set at the creation of the pool
-  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee);
+  /// @return algebraFee which will be set at the creation of the pool
+  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee, uint16 algebraFee);
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @dev The method does not check if such a pool has been created
@@ -196,4 +235,35 @@ interface IAlgebraFactory {
 
   /// @notice Stops process of renounceOwnership and removes timer.
   function stopRenounceOwnership() external;
+
+  /// @dev updates default algebra fee for new pools
+  /// @param newDefaultAlgebraFee The new default algebra fee, _must_ be <= MAX_COMMUNITY_FEE
+  function setDefaultAlgebraFee(uint16 newDefaultAlgebraFee) external;
+
+  /// @dev updates algebra fee receiver for a specific pool
+  /// @param pool The pool address
+  /// @param newAlgebraFeeReceiver The new algebra fee receiver address
+  function setAlgebraFeeReceiver(address pool, address newAlgebraFeeReceiver) external;
+
+  /// @dev updates default algebra fee receiver address for new pools
+  /// @param newDefaultAlgebraFeeReceiver The new default algebra fee receiver address
+  function setDefaultAlgebraFeeReceiver(address newDefaultAlgebraFeeReceiver) external;
+
+  /// @notice Proposes new algebra fee value for a specific pool. Only algebraFeeManager.
+  /// @param pool The pool address
+  /// @param newAlgebraFee The proposed new algebra fee value
+  function proposeAlgebraFee(address pool, uint16 newAlgebraFee) external;
+
+  /// @notice Cancels algebra fee change proposal for a specific pool. Only algebraFeeManager.
+  /// @param pool The pool address
+  function cancelAlgebraFeeProposal(address pool) external;
+
+  /// @notice Accepts proposed algebra fee for a specific pool. Only factory owner or POOLS_ADMINISTRATOR_ROLE.
+  /// @dev Clears the proposal and calls setAlgebraFee on the pool.
+  /// @param pool The pool address
+  function acceptAlgebraFee(address pool) external;
+
+  /// @notice Transfers algebra fee manager role to a new address
+  /// @param _newAlgebraFeeManager The new algebra fee manager address
+  function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external;
 }
