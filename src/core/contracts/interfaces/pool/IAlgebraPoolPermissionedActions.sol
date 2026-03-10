@@ -34,6 +34,14 @@ interface IAlgebraPoolPermissionedActions {
   /// @param newFee The new fee value
   function setFee(uint16 newFee) external;
 
+  /// @notice Set the algebra fee for this pool. Only callable by the factory.
+  /// @param newAlgebraFee The new algebra fee value
+  function setAlgebraFee(uint16 newAlgebraFee) external;
+
+  /// @notice Set the algebra fee receiver for this pool. Only callable by the factory.
+  /// @param newAlgebraFeeReceiver The new algebra fee receiver address
+  function setAlgebraFeeReceiver(address newAlgebraFeeReceiver) external;
+
   /// @notice Forces balances to match reserves. Excessive tokens will be distributed between active LPs
   /// @dev Only plugin can call this function
   function sync() external;
