@@ -48,6 +48,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   address public immutable override token0;
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override token1;
+  /// @notice The address of the pool extension contract used for delegatecall
+  address public immutable algebraPoolExtension;
 
   // ! IMPORTANT security note: the pool state can be manipulated
   // ! external contracts using this data must prevent read-only reentrancy
@@ -104,7 +106,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   constructor() {
     address _plugin;
-    (_plugin, factory, token0, token1) = _getDeployParameters();
+    (_plugin, factory, token0, token1, algebraPoolExtension) = _getDeployParameters();
     (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     globalState.unlocked = true;
     if (_plugin != address(0)) {
@@ -156,13 +158,40 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
   /// Can be overridden in tests
-  function _getDeployParameters() internal virtual returns (address, address, address, address) {
+  function _getDeployParameters() internal virtual returns (address, address, address, address, address) {
     return IAlgebraPoolDeployer(msg.sender).getDeployParameters();
   }
 
   /// @dev Gets the default settings for pool initialization. Can be overridden in tests
   function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16, uint16) {
     return IAlgebraFactory(factory).defaultConfigurationForPool();
+  }
+
+  /// @dev Uses the standard OZ Proxy._delegate() 
+  function _delegateToExtension() internal {
+    address _extension = algebraPoolExtension;
+    assembly {
+      // Copy msg.data. We take full control of memory in this inline assembly
+      // block because it will not return to Solidity code. We overwrite the
+      // Solidity scratch pad at memory position 0.
+      calldatacopy(0, 0, calldatasize())
+
+      // Call the implementation.
+      // out and outsize are 0 because we don't know the size yet.
+      let result := delegatecall(gas(), _extension, 0, calldatasize(), 0, 0)
+
+      // Copy the returned data.
+      returndatacopy(0, 0, returndatasize())
+
+      switch result
+      // delegatecall returns 0 on error.
+      case 0 {
+        revert(0, returndatasize()) 
+      }
+      default { 
+        return(0, returndatasize()) 
+      }
+    }
   }
 
   // The main external calls that are used by the pool. Can be overridden in tests

@@ -472,81 +472,32 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
   }
 
-  /// @dev using function to save bytecode
-  function _checkIfAdministrator() private view {
-    if (!IAlgebraFactory(factory).hasRoleOrOwner(Constants.POOLS_ADMINISTRATOR_ROLE, msg.sender)) revert notAllowed();
-  }
-
-  // permissioned actions use reentrancy lock to prevent call from callback (to keep the correct order of events, etc.)
+  // Permissioned setters are delegated to the extension contract to reduce pool bytecode size.
+  // Setters are called rarely, so the additional gas overhead of delegatecall is acceptable
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint16 newCommunityFee) external override onlyUnlocked {
-    _checkIfAdministrator();
-    if (
-      newCommunityFee > Constants.MAX_COMMUNITY_FEE ||
-      newCommunityFee == globalState.communityFee ||
-      (newCommunityFee != 0 && communityVault == address(0))
-    ) revert invalidNewCommunityFee();
-    _setCommunityFee(newCommunityFee);
-  }
+  function setCommunityFee(uint16) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setTickSpacing(int24 newTickSpacing) external override onlyUnlocked {
-    _checkIfAdministrator();
-    if (newTickSpacing <= 0 || newTickSpacing > Constants.MAX_TICK_SPACING || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
-    _setTickSpacing(newTickSpacing);
-  }
+  function setTickSpacing(int24) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPlugin(address newPluginAddress) external override onlyUnlocked {
-    _checkIfAdministrator();
-    _setPluginConfig(0);
-    _setPlugin(newPluginAddress);
-  }
+  function setPlugin(address) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPluginConfig(uint16 newConfig) external override onlyUnlocked {
-    address _plugin = plugin;
-    if (_plugin == address(0)) revert pluginIsNotConnected(); // it is not allowed to set plugin config without plugin
-
-    if (msg.sender != _plugin) _checkIfAdministrator();
-
-    _setPluginConfig(newConfig);
-  }
+  function setPluginConfig(uint16) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityVault(address newCommunityVault) external override onlyUnlocked {
-    // factory is allowed to set initial vault
-    if (msg.sender != factory) _checkIfAdministrator();
-    if (newCommunityVault == address(0) && globalState.communityFee != 0) _setCommunityFee(0); // the pool should not accumulate a community fee without a vault
-    _setCommunityFeeVault(newCommunityVault); // accumulated but not yet sent to the vault community fees once will be sent to the `newCommunityVault` address
-  }
+  function setCommunityVault(address) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setFee(uint16 newFee) external override {
-    _checkIfAdministrator();
-    bool isDynamicFeeEnabled = globalState.pluginConfig.hasFlag(Plugins.DYNAMIC_FEE);
-    if (!globalState.unlocked) revert locked(); // cheaper to check lock here
-    if (isDynamicFeeEnabled) revert dynamicFeeActive();
-    _setFee(newFee);
-  }
-
-  /// @dev using function to save bytecode
-  function _checkIfFactory() private view {
-    if (msg.sender != factory) revert notAllowed();
-  }
+  function setFee(uint16) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setAlgebraFee(uint16 newAlgebraFee) external override onlyUnlocked {
-    _checkIfFactory();
-    _setAlgebraFee(newAlgebraFee);
-  }
+  function setAlgebraFee(uint16) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setAlgebraFeeReceiver(address newAlgebraFeeReceiver) external override onlyUnlocked {
-    _checkIfFactory();
-    _setAlgebraFeeReceiver(newAlgebraFeeReceiver);
-  }
+  function setAlgebraFeeReceiver(address) external override { _delegateToExtension(); }
 
   /// @dev using function to save bytecode
   function _checkIfPlugin() private view {

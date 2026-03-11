@@ -99,6 +99,10 @@ interface IAlgebraFactory {
   /// @return The address of the poolDeployer
   function poolDeployer() external view returns (address);
 
+  /// @notice Returns the shared pool extension contract address
+  /// @return The address of the pool extension
+  function poolExtension() external view returns (address);
+
   /// @notice Returns the default community fee
   /// @return Fee which will be set at the creation of the pool
   function defaultCommunityFee() external view returns (uint16);

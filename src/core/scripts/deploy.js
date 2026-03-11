@@ -16,7 +16,7 @@ async function main() {
   await factory.waitForDeployment();
 
   const PoolDeployerFactory = await hre.ethers.getContractFactory('AlgebraPoolDeployer');
-  const poolDeployer = await PoolDeployerFactory.deploy(factory.target);
+  const poolDeployer = await PoolDeployerFactory.deploy(factory.target, await factory.poolExtension());
 
   await poolDeployer.waitForDeployment();
 
@@ -64,6 +64,7 @@ async function main() {
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
   deploysData.poolDeployer = poolDeployer.target;
   deploysData.factory = factory.target;
+  deploysData.poolExtension = await factory.poolExtension();
   deploysData.vault = vault.target;
   deploysData.vaultFactory = vaultFactoryStub.target;
   fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');

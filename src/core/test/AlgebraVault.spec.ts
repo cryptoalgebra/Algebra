@@ -28,7 +28,7 @@ describe('AlgebraCommunityVault', () => {
     const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-    poolDeployer = (await poolDeployerFactory.deploy(_factory)) as any as AlgebraPoolDeployer;
+    poolDeployer = (await poolDeployerFactory.deploy(_factory, await _factory.poolExtension())) as any as AlgebraPoolDeployer;
 
     const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
     vault = (await vaultFactory.deploy(_factory)) as any as AlgebraCommunityVault;
