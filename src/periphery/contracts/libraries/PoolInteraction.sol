@@ -36,6 +36,6 @@ library PoolInteraction {
         int24 tickUpper,
         uint128 liquidity
     ) internal returns (uint256 amount0, uint256 amount1) {
-        return pool.burn(tickLower, tickUpper, liquidity, '0x0');
+        return pool.burn(tickLower, tickUpper, liquidity, abi.encode(msg.sender));
     }
 }
