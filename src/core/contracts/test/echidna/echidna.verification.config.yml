@@ -1,0 +1,12 @@
+symExec: true
+symExecTimeout: 600
+symExecMaxExplore: 100
+symExecMaxIters: 100
+
+format: text
+testMode: assertion
+
+maxTimeDelay: 0
+maxBlockDelay: 0
+workers: 0
+seqLen: 1
