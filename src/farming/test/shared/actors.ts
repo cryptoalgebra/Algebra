@@ -68,7 +68,7 @@ export class ActorFixture {
   }
 
   lpUsers() {
-    return [this.lpUser0(), this.lpUser1(), this.lpUser2()];
+    return [this.lpUser0(), this.lpUser1(), this.lpUser2(), this.lpUser3(), this.lpUser4()];
   }
 
   /** These EOAs trade in the algebra pools and incur fees */

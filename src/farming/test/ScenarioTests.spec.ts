@@ -5,21 +5,14 @@ import { TestERC20 } from '../typechain';
 import { algebraFixture, AlgebraFixtureType } from './shared/fixtures';
 import {
   expect,
-  getMaxTick,
-  getMinTick,
-  FeeAmount,
-  TICK_SPACINGS,
   blockTimestamp,
   BNe18,
   ActorFixture,
-  makeTimestamps,
-  ZERO_ADDRESS,
 } from './shared';
 import { provider } from './shared/provider';
-import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from './helpers';
+import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter, expectRewardRatio } from './helpers';
 import { createTimeMachine } from './shared/time';
 import { HelperTypes } from './helpers/types';
-import { ContractParams } from '../types/contractParams';
 
 describe('Scenario tests', () => {
   let actors: ActorFixture;
@@ -27,15 +20,13 @@ describe('Scenario tests', () => {
   let lpUser1: Wallet;
   let lpUser2: Wallet;
   const amountDesired = BNe18(10);
-  const totalReward = 10000n;
-  const bonusReward = 200n;
+  const totalReward = BNe18(1_000_000_000);
+  const bonusReward = BNe18(200_000_000);
   const erc20Helper = new ERC20Helper();
   const Time = createTimeMachine();
   let helpers: HelperCommands;
   let context: AlgebraFixtureType;
-  let timestamps: ContractParams.Timestamps;
-  let nonce = 0n;
-
+  const nonce = 0n;
 
   before(async () => {
     const wallets = (await ethers.getSigners()) as any as Wallet[];
@@ -44,34 +35,36 @@ describe('Scenario tests', () => {
     lpUser1 = actors.lpUser1();
     lpUser2 = actors.lpUser2();
   });
+
   beforeEach('create fixture loader', async () => {
     context = await loadFixture(algebraFixture);
     helpers = HelperCommands.fromTestContext(context, actors, provider);
   });
-  describe('Scenario 1', () => {
+
+  describe('Scenario: Three LPs with different shares in same range', () => {
     let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result;
-    let incentiveKeyEternal: any;
-    let tokenIdEternal: string;
-    let tokenIdEternalLpUser1;
-    let tokensToFarm: [TestERC20, TestERC20]; 
+    let tokensToFarm: [TestERC20, TestERC20];
+    let lpUser3: Wallet;
+    let lpUser4: Wallet;
+    let mint0: HelperTypes.MintDepositFarm.Result;
+    let mint1: HelperTypes.MintDepositFarm.Result;
+    let mint2: HelperTypes.MintDepositFarm.Result;
+    let incentiveKey: any;
+    let currentTick: bigint;
+    let tickSpacing: bigint;
 
-    // helper to fetch current tick, tick spacing and cached incentive key
-    const getPoolState1 = async () => {
-      const currentTick = (await helpers.pool.connect(lpUser0).globalState()).tick;
-      const tickSpacing = await helpers.pool.connect(lpUser0).tickSpacing();
-      return { incentiveKey: incentiveKeyEternal, currentTick, tickSpacing };
-    };
+    beforeEach('Setup incentive and three LPs', async () => {
+      lpUser3 = actors.lpUser3();
+      lpUser4 = actors.lpUser4();
+      tokensToFarm = [context.token0, context.token1] as [TestERC20, TestERC20];
 
-
-    beforeEach('create fixture loader', async () => {
-      // Setup
-
-      timestamps = makeTimestamps(await blockTimestamp());
-
-      console.log(timestamps)
-      tokensToFarm = [context.token0, context.token1] as [TestERC20, TestERC20]; 
-
-      await erc20Helper.ensureBalancesAndApprovals(lpUser0, tokensToFarm, amountDesired, await context.nft.getAddress());
+      await Promise.all([
+        erc20Helper.ensureBalancesAndApprovals(lpUser0, tokensToFarm, amountDesired, await context.nft.getAddress()),
+        erc20Helper.ensureBalancesAndApprovals(lpUser1, tokensToFarm, amountDesired * 2n, await context.nft.getAddress()),
+        erc20Helper.ensureBalancesAndApprovals(lpUser2, tokensToFarm, amountDesired * 3n, await context.nft.getAddress()),
+        erc20Helper.ensureBalancesAndApprovals(lpUser3, tokensToFarm, amountDesired, await context.nft.getAddress()),
+        erc20Helper.ensureBalancesAndApprovals(lpUser4, tokensToFarm, amountDesired, await context.nft.getAddress()),
+      ]);
 
       createIncentiveResultEternal = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
@@ -80,1671 +73,404 @@ describe('Scenario tests', () => {
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
         nonce,
-        rewardRate: 1n,
-        bonusRewardRate: 1n,
+        minimalPositionWidth: 240,
       });
 
-      // cache incentive key to avoid repeated adapter calls
-      incentiveKeyEternal = await incentiveResultToFarmAdapter(createIncentiveResultEternal);
+      incentiveKey = await incentiveResultToFarmAdapter(createIncentiveResultEternal);
 
-      await Time.setAndMine(timestamps.startTime + 100);
-
-      const mintResultEternal = await helpers.mintDepositFarmFlow({
-        lp: lpUser0,
-        tokensToFarm,
-        ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-      tokenIdEternal = mintResultEternal.tokenId;
-    });
-    it('cannot use if not nonfungiblePosManager', async () => {
-      await expect(context.farmingCenter.applyLiquidityDelta(tokenIdEternal, 100)).to.be.revertedWith('Only nonfungiblePosManager');
-    });
-
-    it('Second user can create LP and deposit to farm', async () => {
-      const MintResultLpUser1 = await helpers.mintDepositFarmFlow({
-        lp: lpUser1,
-        tokensToFarm,
-        ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      })
-      tokenIdEternalLpUser1=MintResultLpUser1.tokenId
-      expect(BigInt(tokenIdEternalLpUser1)).to.gt(0n)
-    })
-
-    it('Make Swap', async () => {
-      await Time.setAndMine(timestamps.startTime + 200);
-
-      const incentiveKey = incentiveKeyEternal;
-      const rewardInfoBefore = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        tokenIdEternal
-      );
-
-      console.log(rewardInfoBefore)
-      // Wait time for rewards to accumulate
-      await Time.setAndMine(timestamps.startTime + 1000);
-      
-      // const trader = actors.traderUser0();
-      // await helpers.makeTickGoFlow({
-      //   trader,
-      //   direction: 'up',
-      //   desiredValue: 10, // Move tick to trigger virtual pool updates
-      // });
-      
-      // Now getRewardInfo should return rewards > 0
-      const rewardInfo = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        tokenIdEternal
-      );
-      console.log('Reward info after makeTickGoFlow:', rewardInfo);
-      expect(rewardInfo.reward).to.be.gt(0n); // Should be > 0 now
-      
-      // Collect rewards to update rewards mapping
-      await context.farmingCenter.connect(lpUser0).collectRewards(
-        incentiveKey,
-        tokenIdEternal
-      );
-      
-      const rewardBalanceBefore = await context.eternalFarming.rewards(
-        lpUser0.address,
-        context.rewardToken
-      );
-      console.log('Reward balance before second swap:', rewardBalanceBefore.toString());
-      
-      const tx = await helpers.makeSwapGasCHeckFlow({
-        direction: 'up',
-        trader: lpUser2,
-        amountIn: 1,
-      });
-      const receipt = await tx.wait();
-      expect(receipt?.gasUsed).to.be.gt(21000n);
-      console.log('Gas used:', receipt?.gasUsed?.toString());
-
-      // Collect rewards again after swap
-      await context.farmingCenter.connect(lpUser0).collectRewards(
-        incentiveKey,
-        tokenIdEternal
-      );
-
-      const rewardBalanceAfter = await context.eternalFarming.rewards(
-        lpUser0.address,
-        context.rewardToken
-      );
-
-      console.log('Reward balance after second swap:', rewardBalanceAfter.toString());
-    });
-
-
-
-    /* Two users*/
-    it('Two users enter farming at different times, normalized rewards should be equal', async function() {
-      const timestampBefore = await blockTimestamp();
-      console.log('Test start time:', timestampBefore);
-      
-      const { incentiveKey, currentTick, tickSpacing } = await getPoolState1();
-      const mintLPUser1 = await helpers.mintDepositFarmFlow({
-        lp: lpUser1,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-      
-      const mintLPUser2 = await helpers.mintDepositFarmFlow({
-        lp: lpUser2,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-      
-      const totalLiquidity = await helpers.pool.connect(lpUser0).liquidity();
-      const liquidityLpUser1 = await helpers.nft.connect(lpUser1).positions(mintLPUser1.tokenId);
-      const liquidityLpUser2 = await helpers.nft.connect(lpUser2).positions(mintLPUser2.tokenId);
-      
-      console.log('Total liquidity:', totalLiquidity.toString());
-      console.log('Liquidity User1:', liquidityLpUser1.liquidity.toString());
-      console.log('Liquidity User2:', liquidityLpUser2.liquidity.toString());
-    
-      const farmdAtLpUser1 = mintLPUser1.farmdAt;
-      const farmdAtLpUser2 = mintLPUser2.farmdAt;
-      console.log('User1 entered at:', farmdAtLpUser1.toString());
-      console.log('User2 entered at:', farmdAtLpUser2.toString());
-      
-      const timestampAfter = await blockTimestamp();
-      const checkTime = timestampAfter + 100;
-      await Time.setAndMine(checkTime);
-      
-      console.log('Check rewards at time:', checkTime);
-      
-      const rewardInfoUser1 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser1.tokenId
-      );
-      const rewardInfoUser2 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser2.tokenId
-      );
-      
-      console.log('Actual reward User1:', rewardInfoUser1.reward.toString());
-      console.log('Actual reward User2:', rewardInfoUser2.reward.toString());
-    
-      const timeSolo = BigInt(farmdAtLpUser2) - BigInt(farmdAtLpUser1); 
-      const timeTogether = BigInt(checkTime) - BigInt(farmdAtLpUser2); 
-      const totalTimeUser1 = BigInt(checkTime) - BigInt(farmdAtLpUser1); 
-      
-      console.log('\n--- Time periods ---');
-      console.log('Time User1 was alone:', timeSolo.toString(), 'seconds');
-      console.log('Time both were farming:', timeTogether.toString(), 'seconds');
-      console.log('Total time User1:', totalTimeUser1.toString(), 'seconds');
-      
-      const rewardRate = 1n;
-      
-      const expectedRewardUser1Full = (timeSolo * rewardRate) + (timeTogether * rewardRate) / 2n;
-      
-      const expectedRewardUser2Actual = (timeTogether * rewardRate) / 2n;
-      
-      console.log('\n--- Expected rewards (theoretical) ---');
-      console.log('Expected User1 (full):', expectedRewardUser1Full.toString());
-      console.log('Expected User2 (actual):', expectedRewardUser2Actual.toString());
-      
-      /* Normalization */
-      /* Calculate the missed rewards for User2 if he entered the farm at the same time as User1 */
-      const missedRewards = (timeSolo * rewardRate) / 2n;
-      const normalizedRewardUser2 = BigInt(rewardInfoUser2.reward) + missedRewards;
-      
-      console.log('\n--- Normalized comparison ---');
-      console.log('User1 actual reward:', rewardInfoUser1.reward.toString());
-      console.log('User2 missed rewards (if entered together):', missedRewards.toString());
-      console.log('User2 normalized reward:', normalizedRewardUser2.toString());
-      
-      /* Check the difference between the actual reward and the normalized reward */
-          const difference = rewardInfoUser1.reward > normalizedRewardUser2
-        ? BigInt(rewardInfoUser1.reward) - normalizedRewardUser2
-        : normalizedRewardUser2 - BigInt(rewardInfoUser1.reward);
-
-      console.log('Difference:', difference.toString());
-      console.log('Difference %:', Number(difference * 10000n / BigInt(rewardInfoUser1.reward)) / 100, '%');
-
-      /* Check the difference should be minimal */
-      /* The difference should be less than the timeSolo */
-      const maxAllowedDifference = timeSolo; 
-      expect(difference).to.be.lte(maxAllowedDifference, 
-        `Normalized rewards differ too much. User1: ${rewardInfoUser1.reward}, User2 normalized: ${normalizedRewardUser2}`
-      );
-      
-      /* Alternative check: compare the average rewards per second */
-      const avgRewardPerSecUser1 = BigInt(rewardInfoUser1.reward) * 1000000n / totalTimeUser1;
-      const avgRewardPerSecUser2 = BigInt(rewardInfoUser2.reward) * 1000000n / timeTogether;
-      
-      console.log('\n--- Average rewards per second (scaled by 1M) ---');
-      console.log('User1 avg reward/sec:', avgRewardPerSecUser1.toString());
-      console.log('User2 avg reward/sec:', avgRewardPerSecUser2.toString());
-      
-      /* User2 should receive approximately the same amount per second as User1 received during the timeTogether (when they shared rewards) */
-      /* User1 received rewardRate/2 during the timeTogether, User2 also received rewardRate/2 */
-      expect(avgRewardPerSecUser2).to.be.closeTo(avgRewardPerSecUser1, avgRewardPerSecUser1 / 10n);
-    });
-
-    it('Three users enter farming at different times, normalized rewards should be equal', async function() {
-      const timestampBefore = await blockTimestamp();
-      console.log('Test start time:', timestampBefore);
-      
-      const { incentiveKey, currentTick, tickSpacing } = await getPoolState1();
-    
-      const mintLPUser1 = await helpers.mintDepositFarmFlow({
-        lp: lpUser1,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-      
-      const mintLPUser2 = await helpers.mintDepositFarmFlow({
-        lp: lpUser2,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-      
-      const mintLPUser0 = await helpers.mintDepositFarmFlow({
-        lp: lpUser0,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-      
-      const liquidityUser1 = await helpers.nft.connect(lpUser1).positions(mintLPUser1.tokenId);
-      const liquidityUser2 = await helpers.nft.connect(lpUser2).positions(mintLPUser2.tokenId);
-      const liquidityUser0 = await helpers.nft.connect(lpUser0).positions(mintLPUser0.tokenId);
-      
-      console.log('\n--- Liquidity ---');
-      console.log('Liquidity User1:', liquidityUser1.liquidity.toString());
-      console.log('Liquidity User2:', liquidityUser2.liquidity.toString());
-      console.log('Liquidity User0:', liquidityUser0.liquidity.toString());
-    
-      const farmdAtUser1 = BigInt(mintLPUser1.farmdAt);
-      const farmdAtUser2 = BigInt(mintLPUser2.farmdAt);
-      const farmdAtUser0 = BigInt(mintLPUser0.farmdAt);
-      
-      console.log('\n--- Entry times ---');
-      console.log('User1 entered at:', farmdAtUser1.toString());
-      console.log('User2 entered at:', farmdAtUser2.toString());
-      console.log('User0 entered at:', farmdAtUser0.toString());
-      
-      const timestampAfter = await blockTimestamp();
-      const checkTime = timestampAfter + 100;
-      await Time.setAndMine(checkTime);
-      
-      console.log('Check rewards at time:', checkTime);
-      
-      /* Get the actual rewards */
-      const rewardInfoUser1 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser1.tokenId
-      );
-      const rewardInfoUser2 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser2.tokenId
-      );
-      const rewardInfoUser0 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser0.tokenId
-      );
-      
-      console.log('\n--- Actual rewards ---');
-      console.log('User1 reward:', rewardInfoUser1.reward.toString());
-      console.log('User2 reward:', rewardInfoUser2.reward.toString());
-      console.log('User0 reward:', rewardInfoUser0.reward.toString());
-    
-      /* Calculate the periods */
-      const period1_User1Alone = farmdAtUser2 - farmdAtUser1; /* Only User1 */
-      const period2_Users1And2 = farmdAtUser0 - farmdAtUser2; /* User1 + User2 */
-      const period3_AllThree = BigInt(checkTime) - farmdAtUser0; /* User1 + User2 + User0 */
-      
-      console.log('\n--- Time periods ---');
-      console.log('Period 1 (User1 alone):', period1_User1Alone.toString(), 'seconds');
-      console.log('Period 2 (User1+User2):', period2_Users1And2.toString(), 'seconds');
-      console.log('Period 3 (All three):', period3_AllThree.toString(), 'seconds');
-      
-      const rewardRates = await helpers.getRewardRate({
-        createIncentiveResult: createIncentiveResultEternal
-      });
-      const rewardRate = rewardRates.rewardRate0;
-      
-      /* Theoretical rewards for each period */
-      console.log('\n--- Theoretical rewards per period ---');
-      
-      /* Period 1: User1 receives 100% */
-      const period1Rewards = period1_User1Alone * rewardRate;
-      console.log('Period 1 total rewards:', period1Rewards.toString());
-      console.log('  User1 gets 100%:', period1Rewards.toString());
-      
-      /* Period 2: User1 and User2 receive 50% */
-      const period2Rewards = period2_Users1And2 * rewardRate;
-      console.log('Period 2 total rewards:', period2Rewards.toString());
-      console.log('  User1 gets 50%:', (period2Rewards / 2n).toString());
-      console.log('  User2 gets 50%:', (period2Rewards / 2n).toString());
-      
-      /* Period 3: All three receive 33.33% */
-      const period3Rewards = period3_AllThree * rewardRate;
-      console.log('Period 3 total rewards:', period3Rewards.toString());
-      console.log('  User1 gets 33.33%:', (period3Rewards / 3n).toString());
-      console.log('  User2 gets 33.33%:', (period3Rewards / 3n).toString());
-      console.log('  User0 gets 33.33%:', (period3Rewards / 3n).toString());
-      
-      /* Expected actual rewards */
-      const expectedUser1 = period1Rewards + period2Rewards / 2n + period3Rewards / 3n;
-      const expectedUser2 = period2Rewards / 2n + period3Rewards / 3n;
-      const expectedUser0 = period3Rewards / 3n;
-      
-      console.log('\n--- Expected actual rewards ---');
-      console.log('User1 expected:', expectedUser1.toString());
-      console.log('User2 expected:', expectedUser2.toString());
-      console.log('User0 expected:', expectedUser0.toString());
-      
-      /* Normalization: bring all to the time of User1 entry */
-      /* User1: without changes (he entered first) */
-      const normalizedUser1 = BigInt(rewardInfoUser1.reward);
-      
-      /* User2: add rewards, which he would receive for Period 1 */
-      /* If he participated with User1 in Period 1, they would share rewards 50/50 */
-      const missedRewardsUser2_Period1 = period1Rewards / 2n;
-      const normalizedUser2 = BigInt(rewardInfoUser2.reward) + missedRewardsUser2_Period1;
-      
-      /* User0: add rewards for Period 1 and Period 2 */
-      /* Period 1: if all three participated, User0 would receive 33.33% */
-      const missedRewardsUser0_Period1 = period1Rewards / 3n;
-      /* Period 2: if all three participated, User0 would receive 33.33% */
-      const missedRewardsUser0_Period2 = period2Rewards / 3n;
-      const normalizedUser0 = BigInt(rewardInfoUser0.reward) + missedRewardsUser0_Period1 + missedRewardsUser0_Period2;
-      
-      console.log('\n--- Normalized rewards (as if all entered together) ---');
-      console.log('User1 normalized:', normalizedUser1.toString());
-      console.log('User2 normalized:', normalizedUser2.toString(), 
-        `(+${missedRewardsUser2_Period1} for Period 1)`);
-      console.log('User0 normalized:', normalizedUser0.toString(), 
-        `(+${missedRewardsUser0_Period1} for Period 1, +${missedRewardsUser0_Period2} for Period 2)`);
-      
-      /* Calculate the difference between the normalized rewards */
-      const avgNormalized = (normalizedUser1 + normalizedUser2 + normalizedUser0) / 3n;
-      
-      const diff1 = normalizedUser1 > avgNormalized 
-        ? normalizedUser1 - avgNormalized 
-        : avgNormalized - normalizedUser1;
-      const diff2 = normalizedUser2 > avgNormalized 
-        ? normalizedUser2 - avgNormalized 
-        : avgNormalized - normalizedUser2;
-      const diff0 = normalizedUser0 > avgNormalized 
-        ? normalizedUser0 - avgNormalized 
-        : avgNormalized - normalizedUser0;
-      
-      console.log('\n--- Differences from average ---');
-      console.log('Average normalized:', avgNormalized.toString());
-      console.log('User1 diff:', diff1.toString(), `(${Number(diff1 * 10000n / avgNormalized) / 100}%)`);
-      console.log('User2 diff:', diff2.toString(), `(${Number(diff2 * 10000n / avgNormalized) / 100}%)`);
-      console.log('User0 diff:', diff0.toString(), `(${Number(diff0 * 10000n / avgNormalized) / 100}%)`);
-      
-        /* Check: all normalized rewards should be approximately equal */
-      /* Allow for error due to rounding */
-      const maxAllowedDiffPercent = 1100n; /* 11% = 1100 basis points */
-      
-      expect(diff1 * 10000n / avgNormalized).to.be.lte(maxAllowedDiffPercent,
-        `User1 normalized reward differs too much from average`);
-      expect(diff2 * 10000n / avgNormalized).to.be.lte(maxAllowedDiffPercent,
-         `User2 normalized reward differs too much from average`);
-       expect(diff0 * 10000n / avgNormalized).to.be.lte(maxAllowedDiffPercent,
-         `User0 normalized reward differs too much from average`);
-      
-      /* Alternative check: average reward per second */
-      const totalTimeUser1 = BigInt(checkTime) - farmdAtUser1;
-      const totalTimeUser2 = BigInt(checkTime) - farmdAtUser2;
-      const totalTimeUser0 = BigInt(checkTime) - farmdAtUser0;
-      
-      const avgRewardPerSecUser1 = BigInt(rewardInfoUser1.reward) * 1000000n / totalTimeUser1;
-      const avgRewardPerSecUser2 = BigInt(rewardInfoUser2.reward) * 1000000n / totalTimeUser2;
-      const avgRewardPerSecUser0 = BigInt(rewardInfoUser0.reward) * 1000000n / totalTimeUser0;
-      
-      console.log('\n--- Average rewards per second (scaled by 1M) ---');
-      console.log('User1 avg reward/sec:', avgRewardPerSecUser1.toString());
-      console.log('User2 avg reward/sec:', avgRewardPerSecUser2.toString());
-      console.log('User0 avg reward/sec:', avgRewardPerSecUser0.toString());
-      
-      /* Check the sum of all rewards */
-      const totalRewardsDistributed = BigInt(rewardInfoUser1.reward) + 
-                                       BigInt(rewardInfoUser2.reward) + 
-                                       BigInt(rewardInfoUser0.reward);
-      const totalRewardsExpected = (BigInt(checkTime) - farmdAtUser1) * rewardRate;
-      
-      console.log('\n--- Total rewards verification ---');
-      console.log('Total distributed:', totalRewardsDistributed.toString());
-      console.log('Total expected:', totalRewardsExpected.toString());
-      console.log('Difference:', (totalRewardsExpected - totalRewardsDistributed).toString());
-      
-      /* The sum of all rewards should be approximately equal to the total time * rewardRate */
-      const totalDiff = totalRewardsExpected > totalRewardsDistributed
-        ? totalRewardsExpected - totalRewardsDistributed
-        : totalRewardsDistributed - totalRewardsExpected;
-      
-      expect(totalDiff).to.be.lte(10n, 'Total rewards distributed should match expected');
-    });
-
-    it("Three users enter farming with different amounts of liquidity", async () =>{
-      const timestampBefore = await blockTimestamp();
-      console.log('Test start time:', timestampBefore);
-
-      const { incentiveKey, currentTick, tickSpacing } = await getPoolState1();
-
-      const mintLPUser0 = await helpers.mintDepositFarmFlow({
-        lp: lpUser0,
-        tokensToFarm,
-        ticks: [Number(currentTick-1n*tickSpacing), Number(currentTick+1n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      const mintLPUser1 = await helpers.mintDepositFarmFlow({
-        lp: lpUser1,
-        tokensToFarm,
-        ticks: [Number(currentTick-2n*tickSpacing), Number(currentTick+2n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      const mintLPUser2 = await helpers.mintDepositFarmFlow({
-        lp: lpUser2,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      const liquidityUser0 = await helpers.nft.connect(lpUser0).positions(mintLPUser0.tokenId);
-      const liquidityUser1 = await helpers.nft.connect(lpUser1).positions(mintLPUser1.tokenId);
-      const liquidityUser2 = await helpers.nft.connect(lpUser2).positions(mintLPUser2.tokenId);
-
-      console.log('\n--- Liquidity ---');
-      console.log('Liquidity User0:', liquidityUser0.liquidity.toString());
-      console.log('Liquidity User1:', liquidityUser1.liquidity.toString());
-      console.log('Liquidity User2:', liquidityUser2.liquidity.toString());
-
-      const farmdAtUser0 = BigInt(mintLPUser0.farmdAt);
-      const farmdAtUser1 = BigInt(mintLPUser1.farmdAt);
-      const farmdAtUser2 = BigInt(mintLPUser2.farmdAt);
-
-      const timestampAfter = await blockTimestamp();
-      const checkTime = timestampAfter + 1000;
-      await Time.setAndMine(checkTime);
-
-      console.log('Check rewards at time:', checkTime);
-
-      const rewardInfoUser0 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser0.tokenId);
-      const rewardInfoUser1 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser1.tokenId);
-      const rewardInfoUser2 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser2.tokenId);
-
-      console.log('\n--- Actual rewards ---');
-      console.log('User0 reward:', rewardInfoUser0.reward.toString());
-      console.log('User1 reward:', rewardInfoUser1.reward.toString());
-      console.log('User2 reward:', rewardInfoUser2.reward.toString());
-
-      const period1_User0Alone = farmdAtUser1 - farmdAtUser0; /* Only User0 */
-      const period2_Users0And1 = farmdAtUser2 - farmdAtUser1; /* User0 + User1 */
-      const period3_AllThree = BigInt(checkTime) - farmdAtUser2; /* User0 + User1 + User2 */
-
-      console.log('\n--- Time periods ---');
-      console.log('Period 1 (User0 alone):', period1_User0Alone.toString(), 'seconds');
-      console.log('Period 2 (User0+User1):', period2_Users0And1.toString(), 'seconds');
-      console.log('Period 3 (All three):', period3_AllThree.toString(), 'seconds');
-
-      /* Get actual reward rates */
-      const rewardRates = await helpers.getRewardRate({
-        createIncentiveResult: createIncentiveResultEternal
-      });
-      const rewardRate = rewardRates.rewardRate0;
-
-      /* Verify liquidity-based reward distribution */
-      const liq0 = BigInt(liquidityUser0.liquidity);
-      const liq1 = BigInt(liquidityUser1.liquidity);
-
-      /* Period 1: User0 alone receives full rewards */
-      const period1Rewards = period1_User0Alone * rewardRate;
-      
-      /* Total rewards should be distributed */
-      const totalRewardsDist = BigInt(rewardInfoUser0.reward) + BigInt(rewardInfoUser1.reward);
-      const totalRewardsExpected = (BigInt(checkTime) - farmdAtUser0) * rewardRate;
-      const totalDiff = totalRewardsExpected > totalRewardsDist 
-        ? totalRewardsExpected - totalRewardsDist
-        : totalRewardsDist - totalRewardsExpected;
-
-      console.log('\n--- Verification ---');
-      console.log('Period 1 rewards:', period1Rewards.toString());
-      console.log('User0 actual reward:', rewardInfoUser0.reward.toString());
-      console.log('User1 actual reward:', rewardInfoUser1.reward.toString());
-      console.log('Total distributed:', totalRewardsDist.toString());
-      console.log('Total expected:', totalRewardsExpected.toString());
-      console.log('Difference:', totalDiff.toString());
-      
-    })
-
-    it("Three users enter farming with different amounts of liquidity (with verification)", async () => {
-      const timestampBefore = await blockTimestamp();
-      console.log('Test start time:', timestampBefore);
-    
-      const { incentiveKey, currentTick, tickSpacing } = await getPoolState1();
-    
-      const mintLPUser0 = await helpers.mintDepositFarmFlow({
-        lp: lpUser0,
-        tokensToFarm,
-        ticks: [Number(currentTick-1n*tickSpacing), Number(currentTick+1n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-    
-      const mintLPUser1 = await helpers.mintDepositFarmFlow({
-        lp: lpUser1,
-        tokensToFarm,
-        ticks: [Number(currentTick-2n*tickSpacing), Number(currentTick+2n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-    
-      const mintLPUser2 = await helpers.mintDepositFarmFlow({
-        lp: lpUser2,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-    
-      const liquidityUser0 = await helpers.nft.connect(lpUser0).positions(mintLPUser0.tokenId);
-      const liquidityUser1 = await helpers.nft.connect(lpUser1).positions(mintLPUser1.tokenId);
-      const liquidityUser2 = await helpers.nft.connect(lpUser2).positions(mintLPUser2.tokenId);
-    
-      const liq0 = BigInt(liquidityUser0.liquidity);
-      const liq1 = BigInt(liquidityUser1.liquidity);
-      const liq2 = BigInt(liquidityUser2.liquidity);
-    
-      console.log('\n--- Liquidity ---');
-      console.log('Liquidity User0:', liq0.toString());
-      console.log('Liquidity User1:', liq1.toString());
-      console.log('Liquidity User2:', liq2.toString());
-    
-      const farmdAtUser0 = BigInt(mintLPUser0.farmdAt);
-      const farmdAtUser1 = BigInt(mintLPUser1.farmdAt);
-      const farmdAtUser2 = BigInt(mintLPUser2.farmdAt);
-    
-      console.log('\n--- Entry times ---');
-      console.log('User0 entered at:', farmdAtUser0.toString());
-      console.log('User1 entered at:', farmdAtUser1.toString());
-      console.log('User2 entered at:', farmdAtUser2.toString());
-    
-      const timestampAfter = await blockTimestamp();
-      const checkTime = timestampAfter + 1000;
-      await Time.setAndMine(checkTime);
-    
-      console.log('Check rewards at time:', checkTime);
-    
-      const rewardInfoUser0 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser0.tokenId
-      );
-      const rewardInfoUser1 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser1.tokenId
-      );
-      const rewardInfoUser2 = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser2.tokenId
-      );
-    
-      const reward0 = BigInt(rewardInfoUser0.reward);
-      const reward1 = BigInt(rewardInfoUser1.reward);
-      const reward2 = BigInt(rewardInfoUser2.reward);
-    
-      console.log('\n--- Actual rewards ---');
-      console.log('User0 reward:', reward0.toString());
-      console.log('User1 reward:', reward1.toString());
-      console.log('User2 reward:', reward2.toString());
-    
-      const period1_User0Alone = farmdAtUser1 - farmdAtUser0; 
-      const period2_Users0And1 = farmdAtUser2 - farmdAtUser1; 
-      const period3_AllThree = BigInt(checkTime) - farmdAtUser2; 
-    
-      console.log('\n--- Time periods ---');
-      console.log('Period 1 (User0 alone):', period1_User0Alone.toString(), 'seconds');
-      console.log('Period 2 (User0+User1):', period2_Users0And1.toString(), 'seconds');
-      console.log('Period 3 (All three):', period3_AllThree.toString(), 'seconds');
-    
-      const rewardRates = await helpers.getRewardRate({
-        createIncentiveResult: createIncentiveResultEternal
-      });
-      const rewardRate = rewardRates.rewardRate0;
-    
-      console.log('\n--- Expected rewards calculation ---');
-    
-      const period1TotalRewards = period1_User0Alone * rewardRate;
-      const expectedReward0_Period1 = period1TotalRewards; 
-      console.log('Period 1 rewards (User0 alone):', expectedReward0_Period1.toString());
-    
-      const period2TotalRewards = period2_Users0And1 * rewardRate;
-      const totalLiqPeriod2 = liq0 + liq1;
-      const expectedReward0_Period2 = (period2TotalRewards * liq0) / totalLiqPeriod2;
-      const expectedReward1_Period2 = (period2TotalRewards * liq1) / totalLiqPeriod2;
-      
-      console.log('Period 2 total rewards:', period2TotalRewards.toString());
-      console.log('  Total liquidity:', totalLiqPeriod2.toString());
-      console.log('  User0 share:', (liq0 * 10000n / totalLiqPeriod2).toString(), 'bp (basis points)');
-      console.log('  User1 share:', (liq1 * 10000n / totalLiqPeriod2).toString(), 'bp');
-      console.log('  User0 expected:', expectedReward0_Period2.toString());
-      console.log('  User1 expected:', expectedReward1_Period2.toString());
-    
-      const period3TotalRewards = period3_AllThree * rewardRate;
-      const totalLiqPeriod3 = liq0 + liq1 + liq2;
-      const expectedReward0_Period3 = (period3TotalRewards * liq0) / totalLiqPeriod3;
-      const expectedReward1_Period3 = (period3TotalRewards * liq1) / totalLiqPeriod3;
-      const expectedReward2_Period3 = (period3TotalRewards * liq2) / totalLiqPeriod3;
-    
-      console.log('Period 3 total rewards:', period3TotalRewards.toString());
-      console.log('  Total liquidity:', totalLiqPeriod3.toString());
-      console.log('  User0 share:', (liq0 * 10000n / totalLiqPeriod3).toString(), 'bp');
-      console.log('  User1 share:', (liq1 * 10000n / totalLiqPeriod3).toString(), 'bp');
-      console.log('  User2 share:', (liq2 * 10000n / totalLiqPeriod3).toString(), 'bp');
-      console.log('  User0 expected:', expectedReward0_Period3.toString());
-      console.log('  User1 expected:', expectedReward1_Period3.toString());
-      console.log('  User2 expected:', expectedReward2_Period3.toString());
-    
-      const expectedTotalReward0 = expectedReward0_Period1 + expectedReward0_Period2 + expectedReward0_Period3;
-      const expectedTotalReward1 = expectedReward1_Period2 + expectedReward1_Period3;
-      const expectedTotalReward2 = expectedReward2_Period3;
-    
-      console.log('\n--- Total expected rewards ---');
-      console.log('User0 expected total:', expectedTotalReward0.toString());
-      console.log('User1 expected total:', expectedTotalReward1.toString());
-      console.log('User2 expected total:', expectedTotalReward2.toString());
-    
-      console.log('\n--- Actual vs Expected ---');
-      console.log('User0: actual', reward0.toString(), 'vs expected', expectedTotalReward0.toString());
-      console.log('User1: actual', reward1.toString(), 'vs expected', expectedTotalReward1.toString());
-      console.log('User2: actual', reward2.toString(), 'vs expected', expectedTotalReward2.toString());
-    
-      const diff0 = reward0 > expectedTotalReward0 
-        ? reward0 - expectedTotalReward0 
-        : expectedTotalReward0 - reward0;
-      const diff1 = reward1 > expectedTotalReward1 
-        ? reward1 - expectedTotalReward1 
-        : expectedTotalReward1 - reward1;
-      const diff2 = reward2 > expectedTotalReward2 
-        ? reward2 - expectedTotalReward2 
-        : expectedTotalReward2 - reward2;
-    
-      const diffPercent0 = expectedTotalReward0 > 0n
-        ? (diff0 * 10000n) / expectedTotalReward0 
-        : 0n;
-      const diffPercent1 = expectedTotalReward1 > 0n
-        ? (diff1 * 10000n) / expectedTotalReward1 
-        : 0n;
-      const diffPercent2 = expectedTotalReward2 > 0n
-        ? (diff2 * 10000n) / expectedTotalReward2 
-        : 0n;
-      
-      console.log('\n--- Percentage differences ---');
-      console.log('User0 diff:', diff0.toString(), `(${Number(diffPercent0) / 100}%)`);
-      console.log('User1 diff:', diff1.toString(), `(${Number(diffPercent1) / 100}%)`);
-      console.log('User2 diff:', diff2.toString(), `(${Number(diffPercent2) / 100}%)`);
-      
-      const maxAllowedDiffBp = 200n; // 2%
-      
-      expect(diffPercent0).to.be.lte(maxAllowedDiffBp, 
-        `User0 reward differs too much: actual ${reward0}, expected ${expectedTotalReward0}`);
-      expect(diffPercent1).to.be.lte(maxAllowedDiffBp,
-        `User1 reward differs too much: actual ${reward1}, expected ${expectedTotalReward1}`);
-      expect(diffPercent2).to.be.lte(maxAllowedDiffBp, 
-        `User2 reward differs too much: actual ${reward2}, expected ${expectedTotalReward2}`);
-    
-      // check the ratio between users
-      // the ratio of rewards should be approximately equal to the average liquidity
-      console.log('\n--- Reward ratios ---');
-      
-      // average weighted liquidity for all time
-      const totalTime0 = BigInt(checkTime) - farmdAtUser0;
-      const totalTime1 = BigInt(checkTime) - farmdAtUser1;
-      const totalTime2 = BigInt(checkTime) - farmdAtUser2;
-      
-      const avgWeightedLiq0 = (liq0 * totalTime0) / totalTime0; 
-      const avgWeightedLiq1 = (liq1 * totalTime1) / totalTime1; 
-      const avgWeightedLiq2 = (liq2 * totalTime2) / totalTime2; 
-      
-      // check that the rewards are approximately proportional to the liquidity
-      // reward0 / liq0 ≈ reward1 / liq1 ≈ reward2 / liq2 (with respect to the time of participation)
-      
-      const rewardPerLiq0 = (reward0 * 1000000n) / liq0 / totalTime0;
-      const rewardPerLiq1 = (reward1 * 1000000n) / liq1 / totalTime1;
-      const rewardPerLiq2 = (reward2 * 1000000n) / liq2 / totalTime2;
-      
-      console.log('Reward per liquidity per second (scaled by 1M):');
-      console.log('  User0:', rewardPerLiq0.toString());
-      console.log('  User1:', rewardPerLiq1.toString());
-      console.log('  User2:', rewardPerLiq2.toString());
-      
-      // These values should be approximately equal (within 5%)
-      const avgRewardPerLiq = (rewardPerLiq0 + rewardPerLiq1 + rewardPerLiq2) / 3n;
-      
-      const ratioCheck0 = avgRewardPerLiq > 0n 
-        ? ((rewardPerLiq0 > avgRewardPerLiq ? rewardPerLiq0 - avgRewardPerLiq : avgRewardPerLiq - rewardPerLiq0) * 10000n) / avgRewardPerLiq
-        : 0n;
-      const ratioCheck1 = avgRewardPerLiq > 0n 
-        ? ((rewardPerLiq1 > avgRewardPerLiq ? rewardPerLiq1 - avgRewardPerLiq : avgRewardPerLiq - rewardPerLiq1) * 10000n) / avgRewardPerLiq
-        : 0n;
-      const ratioCheck2 = avgRewardPerLiq > 0n 
-        ? ((rewardPerLiq2 > avgRewardPerLiq ? rewardPerLiq2 - avgRewardPerLiq : avgRewardPerLiq - rewardPerLiq2) * 10000n) / avgRewardPerLiq
-        : 0n;
-      
-      // check the sum of rewards
-      const totalRewardsDistributed = reward0 + reward1 + reward2;
-      const totalRewardsExpected = (BigInt(checkTime) - farmdAtUser0) * rewardRate;
-      
-      console.log('\n--- Total rewards check ---');
-      console.log('Total distributed:', totalRewardsDistributed.toString());
-      console.log('Total expected:', totalRewardsExpected.toString());
-      
-      const totalDiff = totalRewardsExpected > totalRewardsDistributed
-        ? totalRewardsExpected - totalRewardsDistributed
-        : totalRewardsDistributed - totalRewardsExpected;
-      
-      console.log('Difference:', totalDiff.toString());
-      
-      expect(totalDiff).to.be.lte(10n, 'Total rewards should match expected');
-    });
-
-    
-    // Test: Verify reward distribution for three users with different position ranges when tick moves
-    it('Three users enter farming and move tick to 100', async () =>{
-      // Record the block timestamp before test starts
-      const timestampBefore = await blockTimestamp();
-      console.log('Test start time:', timestampBefore);
-
-      // Get incentive info and current pool state
-      const { incentiveKey, currentTick, tickSpacing } = await getPoolState1();
-
-      // User 0: Create a narrow position range around current tick (±1 tickSpacing)
-      // This position will go out of range when tick moves to 100, stopping reward earning
-      const mintLPUser0 = await helpers.mintDepositFarmFlow({
-        lp: lpUser0,
-        tokensToFarm,
-        ticks: [Number(currentTick-1n*tickSpacing), Number(currentTick+1n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      // User 1: Create a position in medium range (±2 tickSpacing)
-      // This position has a wider range and better coverage when tick moves
-      const mintLPUser1 = await helpers.mintDepositFarmFlow({
-        lp: lpUser1,
-        tokensToFarm,
-        ticks: [Number(currentTick-2n*tickSpacing), Number(currentTick+2n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      // User 2: Create a large position in very wide range (±20 tickSpacing)
-      // This position has an extremely wide range (100x capital) covering almost all target tick ranges
-      const mintLPUser2 = await helpers.mintDepositFarmFlow({
-        lp: lpUser2,
-        tokensToFarm,
-        ticks: [Number(currentTick-20n*tickSpacing), Number(currentTick+20n*tickSpacing)],
-        amountsToFarm: [amountDesired*100n, amountDesired*100n],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      // Retrieve liquidity info for each user from NFT position manager
-      const liquidityUser0 = await helpers.nft.connect(lpUser0).positions(mintLPUser0.tokenId);
-      const liquidityUser1 = await helpers.nft.connect(lpUser1).positions(mintLPUser1.tokenId);
-      const liquidityUser2 = await helpers.nft.connect(lpUser2).positions(mintLPUser2.tokenId);
-
-      // Log the liquidity amount provided by each user (for diagnostics)
-      console.log('\n--- Liquidity ---');
-      console.log('Liquidity User0:', liquidityUser0.liquidity.toString());
-      console.log('Liquidity User1:', liquidityUser1.liquidity.toString());
-      console.log('Liquidity User2:', liquidityUser2.liquidity.toString());
-
-      // Store the timestamp when each user joined the farm
-      const farmdAtUser0 = BigInt(mintLPUser0.farmdAt);
-      const farmdAtUser1 = BigInt(mintLPUser1.farmdAt);
-      const farmdAtUser2 = BigInt(mintLPUser2.farmdAt);
-
-      // Move time forward 100 seconds to accumulate rewards
-      const timestampAfter = await blockTimestamp();
-      const checkTime = timestampAfter + 100;
-      await Time.setAndMine(checkTime);
-
-      // Check accumulated rewards at the new time point
-      console.log('Check rewards at time:', checkTime);
-
-      // Retrieve reward info for each user before tick movement
-      const rewardInfoUser0Before = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser0.tokenId);
-      const rewardInfoUser1Before = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser1.tokenId);
-      const rewardInfoUser2Before = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser2.tokenId);
-
-      // Log all user rewards before tick movement
-      console.log('\n--- Actual rewards ---');
-      console.log('User0 reward before:', rewardInfoUser0Before.reward.toString());
-      console.log('User1 reward before:', rewardInfoUser1Before.reward.toString());
-      console.log('User2 reward before:', rewardInfoUser2Before.reward.toString());
-
-      // Key operation: Move current tick to 100 by executing swaps
-      // This will cause User 0's position to go out of range, while others may stay in range
-      await helpers.moveTickTo({
-        trader: lpUser0,
-        direction: 'up',
-        desiredValue: 100,
-      })
-
-      // Move time forward 1000 more seconds to accumulate rewards at new tick position
-      // This allows us to observe the reward difference for positions in/out of range
-      await Time.setAndMine(await blockTimestamp() + 1000);
-
-      // Retrieve new reward info for each user after tick movement
-      const rewardInfoUser0After = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser0.tokenId);
-      const rewardInfoUser1After = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser1.tokenId);
-      const rewardInfoUser2After = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser2.tokenId);
-
-      // Log all user rewards after tick movement
-      console.log('\n--- Actual rewards after swap ---');
-      console.log('User0 reward after:', rewardInfoUser0After.reward.toString());
-      console.log('User1 reward after:', rewardInfoUser1After.reward.toString());
-      console.log('User2 reward after:', rewardInfoUser2After.reward.toString());
-
-      // Calculate absolute reward increase for each user after tick movement
-      const diff0 = BigInt(rewardInfoUser0After.reward) - BigInt(rewardInfoUser0Before.reward);
-      const diff1 = BigInt(rewardInfoUser1After.reward) - BigInt(rewardInfoUser1Before.reward);
-      const diff2 = BigInt(rewardInfoUser2After.reward) - BigInt(rewardInfoUser2Before.reward);
-
-      // Store initial rewards before movement for percentage calculation
-      const rewardBefore0 = BigInt(rewardInfoUser0Before.reward);
-      const rewardBefore1 = BigInt(rewardInfoUser1Before.reward);
-      const rewardBefore2 = BigInt(rewardInfoUser2Before.reward);
-
-      // Calculate percentage change in rewards
-      // This reflects the relative performance of each position after tick movement
-      const diffPercent0 = rewardBefore0 > 0n 
-        ? (diff0 * 100n) / rewardBefore0 
-        : 0n;
-      const diffPercent1 = rewardBefore1 > 0n 
-        ? (diff1 * 100n) / rewardBefore1 
-        : 0n;
-      const diffPercent2 = rewardBefore2 > 0n 
-        ? (diff2 * 100n) / rewardBefore2 
-        : 0n;
-
-      // Verify expected results
-      // User 0: Position goes out of range after tick movement, so reward growth < 10%
-      expect(diffPercent0).to.be.lt(10n);
-      // User 1: Position still in range, so reward growth > 30%
-      expect(diffPercent1).to.be.gt(30n);
-      // User 2: Wide position completely in range, so reward growth > 30%
-      expect(diffPercent2).to.be.gt(30n);
-
-
-    });
-    // Test: Verify users can exit and re-enter farms preserving continuity
-    // Test scenario: User exits farm, executes trades, then re-enters
-    it('Fantom liquidity farming', async ()=>{
-      // Record the block timestamp before test starts
-      const timestampBefore = await blockTimestamp();
-      console.log('Test start time:', timestampBefore);
-
-      // Get incentive info and current pool state
-      const { incentiveKey } = await getPoolState1();
-      // Query the current tick and tickSpacing of the pool
-      const currentTick = (await helpers.pool.connect(lpUser0).globalState()).tick;
-      const tickSpacing = await helpers.pool.connect(lpUser0).tickSpacing();
-
-      // All three users establish positions in identical range (±10 tickSpacing)
-      // User 0: Will be used to test exit and re-enter functionality
-      const mintLPUser0 = await helpers.mintDepositFarmFlow({
-        lp: lpUser0,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      // User 1: Stays in the farm throughout the test
-      const mintLPUser1 = await helpers.mintDepositFarmFlow({
-        lp: lpUser1,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      // User 2: Stays in the farm throughout the test
-      const mintLPUser2 = await helpers.mintDepositFarmFlow({
-        lp: lpUser2,
-        tokensToFarm,
-        ticks: [Number(currentTick-10n*tickSpacing), Number(currentTick+10n*tickSpacing)],
-        amountsToFarm: [amountDesired, amountDesired],
-        createIncentiveResult: createIncentiveResultEternal,
-      });
-
-      // Retrieve liquidity info for each user from NFT position manager
-      const liquidityUser0 = await helpers.nft.connect(lpUser0).positions(mintLPUser0.tokenId);
-      const liquidityUser1 = await helpers.nft.connect(lpUser1).positions(mintLPUser1.tokenId);
-      const liquidityUser2 = await helpers.nft.connect(lpUser2).positions(mintLPUser2.tokenId);
-      
-      // Store the timestamp when each user joined the farm
-      const farmdAtUser0 = BigInt(mintLPUser0.farmdAt);
-      const farmdAtUser1 = BigInt(mintLPUser1.farmdAt);
-      const farmdAtUser2 = BigInt(mintLPUser2.farmdAt);
-
-      // Move time forward 100 seconds to accumulate rewards
-      const timestampAfter = await blockTimestamp();
-      const checkTime = timestampAfter + 100;
-      await Time.setAndMine(checkTime);
-      
-      // Retrieve initial reward info for all users
-      const rewardInfoUser0Before = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser0.tokenId);
-      const rewardInfoUser1Before = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser1.tokenId);
-      const rewardInfoUser2Before = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser2.tokenId);
-
-      // Log initial reward status
-      console.log('\n--- Actual rewards ---');
-      console.log('User0 reward before:', rewardInfoUser0Before.reward.toString());
-      console.log('User1 reward before:', rewardInfoUser1Before.reward.toString());
-      console.log('User2 reward before:', rewardInfoUser2Before.reward.toString());
-
-     
-      // User 0 performs key operation: Exit farm (stop earning rewards)
-      await context.farmingCenter.connect(lpUser0).exitFarming(
-        incentiveKey,
-        mintLPUser0.tokenId
-      );
-      
-      // Execute small trades to move tick (simulate market activity)
-      await helpers.makeTickGoFlow({
-        trader: lpUser0,
-        direction: 'up',
-        desiredValue: 1,
-      });
-
-      // User 0 re-enters farm (resume earning rewards)
-      // Verify re-entry operation is not reverted
-      expect(await context.farmingCenter.connect(lpUser0).enterFarming(incentiveKey, mintLPUser0.tokenId)).not.to.be.reverted;
-
-      // Retrieve User 0's reward info after exit
-      // This should show rewards at exit time are preserved
-      const rewardInfoUser0AfterExit  = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser0.tokenId);
-      
-      console.log('User0 reward after exit:', rewardInfoUser0AfterExit.reward.toString());
-
-      // Move time forward 100 seconds to accumulate new rewards after re-entry
-      await Time.setAndMine(await blockTimestamp() + 100);
-
-
-      // Note: User 0's final reward info (after re-entry) can be retrieved by uncommenting
-      // const rewardInfoUser0After = await context.eternalFarming.getRewardInfo(
-      //   incentiveKey,
-      //   mintLPUser0.tokenId);
-      // Retrieve final reward info for Users 1 and 2 (they never left the farm)
-      const rewardInfoUser1After = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser1.tokenId);
-      const rewardInfoUser2After = await context.eternalFarming.getRewardInfo(
-        incentiveKey,
-        mintLPUser2.tokenId);
-
-      // Log reward info for Users 1 and 2 after complete test cycle
-      console.log('\n--- Actual rewards after swap ---');
-      // User 0's final rewards (may need separate verification due to exit/re-entry)
-      // console.log('User0 reward after:', rewardInfoUser0After.reward.toString());
-      // Log rewards for users who stayed in farm throughout the cycle
-      console.log('User1 reward after:', rewardInfoUser1After.reward.toString());
-      console.log('User2 reward after:', rewardInfoUser2After.reward.toString());
-
-      // Verify expected reward growth (commented assertions can be enabled as needed)
-      // Expectation: Final rewards for all users should be greater than initial rewards
-      //expect(rewardInfoUser0After.reward).to.be.gt(rewardInfoUser0Before.reward);
-      // expect(rewardInfoUser1After.reward).to.be.gt(rewardInfoUser1Before.reward);
-      // expect(rewardInfoUser2After.reward).to.be.gt(rewardInfoUser2Before.reward);
-      
-    });
-
-  });
-
-
-  describe('Scenario 2: Three LPs with different shares in same range', () => {
-    let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result;
-    let incentiveKeyEternal2: any;
-    let tokensToFarm: [TestERC20, TestERC20];
-    let lpUser3: Wallet;
-    let lpUser4: Wallet;
-    // common variables for the three LPs used across many tests
-    let mint0: any;
-    let mint1: any;
-    let mint2: any;
-    let incentiveKey: any;
-    let currentTick: any;
-    let tickSpacing: any;
-
-    // Helper to get pool state parameters
-    const getPoolState2 = async () => {
-      const currentTick = (await helpers.pool.connect(lpUser0).globalState()).tick;
-      const tickSpacing = await helpers.pool.connect(lpUser0).tickSpacing();
-      return { incentiveKey: incentiveKeyEternal2, currentTick, tickSpacing };
-    };
-
-    beforeEach('Setup three LPs with different shares', async () => {
-      // Get additional users for this scenario
-      lpUser3 = actors.lpUser3();
-      lpUser4 = actors.lpUser4();
-
-      tokensToFarm = [context.token0, context.token1] as [TestERC20, TestERC20];
-
-      // Ensure all users have tokens and approvals
-      await Promise.all([
-        erc20Helper.ensureBalancesAndApprovals(lpUser0, tokensToFarm, amountDesired, await context.nft.getAddress()),
-        erc20Helper.ensureBalancesAndApprovals(lpUser1, tokensToFarm, amountDesired * 2n, await context.nft.getAddress()),
-        erc20Helper.ensureBalancesAndApprovals(lpUser2, tokensToFarm, amountDesired * 3n, await context.nft.getAddress()),
-        erc20Helper.ensureBalancesAndApprovals(lpUser3, tokensToFarm, amountDesired * 1n, await context.nft.getAddress()),
-        erc20Helper.ensureBalancesAndApprovals(lpUser4, tokensToFarm, amountDesired, await context.nft.getAddress()),
-      ]);
-
-      createIncentiveResultEternal = await helpers.createIncentiveFlow({
-        rewardToken: context.rewardToken,
-        bonusRewardToken: context.bonusRewardToken,
-        totalReward: BNe18(1_000_000_000),
-        bonusReward: BNe18(200_000_000),
-        poolAddress: await context.poolObj.getAddress(),
-        nonce,
-        rewardRate: BNe18(10),
-        bonusRewardRate: BNe18(2),
-      });
-
-      // cache incentive key for scenario2
-      incentiveKeyEternal2 = await incentiveResultToFarmAdapter(createIncentiveResultEternal);
-
-      // Now get pool state after incentive is created
-      const poolState = await getPoolState2();
-      incentiveKey = poolState.incentiveKey;
+      const poolState = await helpers.getPoolState();
       currentTick = poolState.currentTick;
       tickSpacing = poolState.tickSpacing;
 
-
-    // create common three-LP setup so it can be reused
-        mint0 = await helpers.mintDepositFarmFlow({
-          lp: lpUser0,
-          tokensToFarm,
-          ticks: [Number(currentTick - 10n * tickSpacing), Number(currentTick + 10n * tickSpacing)],
-          amountsToFarm: [amountDesired, amountDesired],
-          createIncentiveResult: createIncentiveResultEternal,
-        });
-        mint1 = await helpers.mintDepositFarmFlow({
-          lp: lpUser1,
-          tokensToFarm,
-          ticks: [Number(currentTick - 10n * tickSpacing), Number(currentTick + 10n * tickSpacing)],
-          amountsToFarm: [amountDesired * 2n, amountDesired * 2n],
-          createIncentiveResult: createIncentiveResultEternal,
-        });
-        mint2 = await helpers.mintDepositFarmFlow({
-          lp: lpUser2,
-          tokensToFarm,
-          ticks: [Number(currentTick - 10n * tickSpacing), Number(currentTick + 10n * tickSpacing)],
-          amountsToFarm: [amountDesired * 3n, amountDesired * 3n],
-          createIncentiveResult: createIncentiveResultEternal,
-        });
-        
-        // Move tick to simulate market activity
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'up',
-          desiredValue: 5,
-        })
-        // and swap back
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'down',
-          desiredValue: 5,
-        })
-
-        // advance time so rewards accumulate before each individual test
-        await Time.setAndMine(await blockTimestamp() + 1000);
+      mint0 = await helpers.mintDepositFarmFlow({
+        lp: lpUser0, tokensToFarm,
+        ticks: [Number(currentTick - 10n * tickSpacing), Number(currentTick + 10n * tickSpacing)],
+        amountsToFarm: [amountDesired, amountDesired],
+        createIncentiveResult: createIncentiveResultEternal,
+      });
+      mint1 = await helpers.mintDepositFarmFlow({
+        lp: lpUser1, tokensToFarm,
+        ticks: [Number(currentTick - 10n * tickSpacing), Number(currentTick + 10n * tickSpacing)],
+        amountsToFarm: [amountDesired * 2n, amountDesired * 2n],
+        createIncentiveResult: createIncentiveResultEternal,
+      });
+      mint2 = await helpers.mintDepositFarmFlow({
+        lp: lpUser2, tokensToFarm,
+        ticks: [Number(currentTick - 10n * tickSpacing), Number(currentTick + 10n * tickSpacing)],
+        amountsToFarm: [amountDesired * 3n, amountDesired * 3n],
+        createIncentiveResult: createIncentiveResultEternal,
       });
 
+      await helpers.setRates(incentiveKey, BNe18(10), BNe18(2));
+    });
 
 
-      it('Verifying the liquidity and rewards for the three common LPs', async function() { // looks ok
-        
-        // Get liquidity
-        const liquidityUser0 = await helpers.nft.connect(lpUser0).positions(mint0.tokenId);
-        const liquidityUser1 = await helpers.nft.connect(lpUser1).positions(mint1.tokenId);
-        const liquidityUser2 = await helpers.nft.connect(lpUser2).positions(mint2.tokenId);
-        
-        console.log('\n--- Liquidity ---');
-        console.log('User0 (1x):', liquidityUser0.liquidity.toString());
-        console.log('User1 (2x):', liquidityUser1.liquidity.toString());
-        console.log('User2 (3x):', liquidityUser2.liquidity.toString());
+    describe('Incentive setup', () => {
 
-
-        const farmdAtLpUser0 = mint0.farmdAt;
-        const farmdAtLpUser1 = mint1.farmdAt;
-        const farmdAtLpUser2 = mint2.farmdAt;
-        // console.log('User0 entered at:', farmdAtLpUser0.toString());
-        // console.log('User1 entered at:', farmdAtLpUser1.toString());
-        // console.log('User2 entered at:', farmdAtLpUser2.toString());
-
-        const user0rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const user1rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-        const user2rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint2.tokenId);
-
-        console.log('\n--- Rewards after 1000 seconds ---');
-
-        const user0RewardBase = user0rewards.reward;
-        const user1RewardBase = user1rewards.reward;
-        const user2RewardBase = user2rewards.reward;
-
-        // get reward rates
-        const rewardRates = await helpers.getRewardRate({
-          createIncentiveResult: createIncentiveResultEternal
-        });
-        const rewardRate = rewardRates.rewardRate0;
-        // const bonusRewardRate = rewardRates.rewardRate1;
-
-        // calculate extra rewards for user0
-        const user0ExtraRewards1 = BigInt(farmdAtLpUser1  - farmdAtLpUser0) * rewardRate;
-        const user0ExtraRewards2 = BigInt(farmdAtLpUser2  - farmdAtLpUser1) * rewardRate / 3n;
-
-        // deduct them
-        const user0RewardsNormalized = user0RewardBase - user0ExtraRewards1 - user0ExtraRewards2;
-
-        // calculate extra rewards for user1
-        const user1ExtraRewards = BigInt(farmdAtLpUser2  - farmdAtLpUser1) * rewardRate * 2n / 3n;
-        // deduct them
-        const user1RewardsNormalized = user1RewardBase - user1ExtraRewards;
-
-
-        console.log('User0 reward (1x):', user0RewardsNormalized);
-        console.log('User1 reward (2x):', user1RewardsNormalized);
-        console.log('User2 reward (3x):', user2RewardBase);
-
-
-        // User1 should have ~2x rewards and User2 should have ~3x rewards of User0
-        // with 0.1% tolerance for rounding and virtual pool variations
-        const tolerance = user0RewardsNormalized / 1000n; // 0.1% tolerance
-        
-
-        expect(user1RewardsNormalized).to.be.within(
-          user0RewardsNormalized * 2n - tolerance,
-          user0RewardsNormalized * 2n + tolerance,
-        );
-        console.log('User1/User0 ratio:', user1RewardsNormalized / user0RewardsNormalized);
-
-        expect(user2RewardBase).to.be.within(
-          user0RewardsNormalized * 3n - tolerance,
-          user0RewardsNormalized * 3n + tolerance,
-        );
-        console.log('User2/User0 ratio:', user2RewardBase / user0RewardsNormalized);
-
-        // swap and move time again
-        
-        // Move tick to simulate market activity
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'up',
-          desiredValue: 5,
-        })
-        // and swap back
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'down',
-          desiredValue: 5,
-        })
-
-        // advance time so rewards accumulate before each individual test
-        await Time.setAndMine(await blockTimestamp() + 1000);
-
-        
-        const user0rewards1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const user1rewards1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-        const user2rewards1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint2.tokenId);
-
-        const user0RewardBase1 = user0rewards1.reward;
-        const user1RewardBase1 = user1rewards1.reward;
-        const user2RewardBase1 = user2rewards1.reward;
-        
-        // Normalize rewards again after second round of rewards
-        const user0RewardsNormalized1 = BigInt(user0RewardBase1) - user0ExtraRewards1 - user0ExtraRewards2;
-        const user1RewardsNormalized1 = BigInt(user1RewardBase1) - user1ExtraRewards;
-
-        console.log('\n--- Rewards after 2000 seconds ---');
-        console.log('User0 (1x):', user0RewardsNormalized1);
-        console.log('User1 (2x):', user1RewardsNormalized1);
-        console.log('User2 (3x):', user2RewardBase1);
-
-        
-        expect(user1RewardsNormalized1).to.be.within(
-          user0RewardsNormalized1 * 2n - tolerance,
-          user0RewardsNormalized1 * 2n + tolerance,
-        );
-        console.log('User1/User0 ratio:', user1RewardsNormalized1 / user0RewardsNormalized1);
-
-        expect(user2RewardBase1).to.be.within(
-          user0RewardsNormalized1 * 3n - tolerance,
-          user0RewardsNormalized1 * 3n + tolerance,
-        );
-        console.log('User2/User0 ratio:', user2RewardBase1 / user0RewardsNormalized1);
-      });
-      
-      
-      it('One LP exits and re-enters', async function() { // Looks ok
-       
-        const farmdAtLpUser0 = mint0.farmdAt;
-        const farmdAtLpUser1 = mint1.farmdAt;
-        const farmdAtLpUser2 = mint2.farmdAt;
-
-        // User0 exits farming
-        await context.farmingCenter.connect(lpUser0).exitFarming(incentiveKey, mint0.tokenId);
-
-        // Record the timestamp of exit for User0
-        const exitFarmingdAtLpUser0 = await blockTimestamp();
-        console.log('User0 exited at:', exitFarmingdAtLpUser0);
-
-
-        // Move tick to simulate market activity after User0 exit
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'up',
-          desiredValue: 5,
-        })
-
-        // Move time forward
-        await Time.setAndMine(await blockTimestamp() + 1000);
-
-
-        // User0 re-enters farming
-        await context.farmingCenter.connect(lpUser0).enterFarming(incentiveKey, mint0.tokenId);
-
-        // Record the timestamp of re-entry for User0
-        const farmdAt1LpUser0 = await blockTimestamp();
-        console.log('User0 re-entered at:', farmdAt1LpUser0);
-        
-
-        // Move tick again to simulate market activity after User0 re-entry
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'down',
-          desiredValue: 0,
-        })
-
-        // Move time forward again
-        await Time.setAndMine(await blockTimestamp() + 1000);
-
-
-        
-
-        // Get final rewards
-        const user0collectedrewards = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken);
-        const user0rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const user1rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-        const user2rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint2.tokenId);
-        
-        console.log('\n--- Rewards ---');
-
-        const user0RewardBase = user0rewards.reward + user0collectedrewards;
-        const user1RewardBase = user1rewards.reward;
-        const user2RewardBase = user2rewards.reward;
-
-         // get reward rates
-        const rewardRates = await helpers.getRewardRate({
-          createIncentiveResult: createIncentiveResultEternal
-        });
-        const rewardRate = rewardRates.rewardRate0;
-
-        // calculate extra rewards for user0
-        const user0ExtraRewards1 = BigInt(farmdAtLpUser1  - farmdAtLpUser0) * rewardRate;
-        const user0ExtraRewards2 = BigInt(farmdAtLpUser2  - farmdAtLpUser1) * rewardRate / 3n;
-        // deduct them
-        const user0RewardsNormalized = user0RewardBase - user0ExtraRewards1 - user0ExtraRewards2;
-
-        // calculate extra rewards for user1
-        const user1ExtraRewards1 = BigInt(farmdAtLpUser2  - farmdAtLpUser1) * rewardRate * 2n / 3n;
-        const user1ExtraRewards2 = BigInt(farmdAt1LpUser0  - exitFarmingdAtLpUser0) * rewardRate * 2n / 5n;
-        // deduct them
-        const user1RewardsNormalized = user1RewardBase - user1ExtraRewards1 - user1ExtraRewards2;
-
-        // calculate extra rewards for user2
-        const user2ExtraRewards = BigInt(farmdAt1LpUser0  - exitFarmingdAtLpUser0) * rewardRate * 3n / 5n;
-        // deduct them
-        const user2RewardsNormalized = user2RewardBase - user2ExtraRewards;
-
-
-        console.log('User0 reward (1x):', user0RewardsNormalized);
-        console.log('User1 reward (2x):', user1RewardsNormalized);
-        console.log('User2 reward (3x):', user2RewardsNormalized);
-
-        // User1 should have ~2x rewards and User2 should have ~3x rewards of User0
-        // with 0.1% tolerance for rounding and virtual pool variations
-        const tolerance = user0RewardsNormalized / 1000n; // 0.1% tolerance
-        
-
-        expect(user1RewardsNormalized).to.be.within(
-          user0RewardsNormalized * 2n - tolerance,
-          user0RewardsNormalized * 2n + tolerance,
-        );
-        console.log('User1/User0 ratio:', user1RewardsNormalized / user0RewardsNormalized);
-
-        expect(user2RewardsNormalized).to.be.within(
-          user0RewardsNormalized * 3n - tolerance,
-          user0RewardsNormalized * 3n + tolerance,
-        );
-        console.log('User2/User0 ratio:', user2RewardsNormalized / user0RewardsNormalized);
-                
+      it('cannot use if not nonfungiblePosManager', async () => {
+        await expect(
+          context.farmingCenter.applyLiquidityDelta(mint0.tokenId, 100)
+        ).to.be.revertedWith('Only nonfungiblePosManager');
       });
 
-      it.only('Multiple ranges: 3 LPs in same range + 1 in different range + 1 out-of-range', async function() { // normalize and calculate rewards
-          
-        // One user in wider range
-        const mint3 = await helpers.mintDepositFarmFlow({
+      it('cannot create two incentives on the same pool simultaneously', async () => {
+        await expect(
+          helpers.createIncentiveFlow({
+            rewardToken: context.rewardToken,
+            bonusRewardToken: context.bonusRewardToken,
+            totalReward: BNe18(1_000_000),
+            bonusReward: BNe18(200_000),
+            poolAddress: await context.poolObj.getAddress(),
+            nonce: nonce + 1n,
+            rewardRate: BNe18(10),
+            bonusRewardRate: BNe18(2),
+          })
+        ).to.be.reverted;
+      });
+
+      it('minimalPositionWidth: position narrower than minimum is rejected on enterFarming', async () => {
+        const tooNarrow = await helpers.mintFlow({
           lp: lpUser3,
-          tokensToFarm,
+          tokens: tokensToFarm,
+          tickLower: Number(currentTick - tickSpacing),
+          tickUpper: Number(currentTick + tickSpacing),
+        });
+        await helpers.depositFlow({ lp: lpUser3, tokenId: tooNarrow.tokenId });
+        await expect(
+          helpers.farmingCenter.connect(lpUser3).enterFarming(incentiveKey, tooNarrow.tokenId)
+        ).to.be.revertedWithCustomError(context.eternalFarming, 'positionIsTooNarrow');
+      });
+
+    });
+
+
+    describe('Reward distribution', () => {
+
+      it('rewards are proportional to liquidity share (1x / 2x / 3x)', async () => {
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+
+        expectRewardRatio(r0.reward, r1.reward, 2n);
+        expectRewardRatio(r0.reward, r2.reward, 3n);
+        expectRewardRatio(r0.bonusReward, r0.reward, 5n);
+        expectRewardRatio(r0.bonusReward, r1.bonusReward, 2n);
+        expectRewardRatio(r0.bonusReward, r2.bonusReward, 3n);
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const [r0b, r1b, r2b] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+
+        expectRewardRatio(r0b.reward, r1b.reward, 2n);
+        expectRewardRatio(r0b.reward, r2b.reward, 3n);
+        expectRewardRatio(r0b.bonusReward, r0b.reward, 5n);
+        expectRewardRatio(r0b.bonusReward, r1b.bonusReward, 2n);
+        expectRewardRatio(r0b.bonusReward, r2b.bonusReward, 3n);
+      });
+
+      it('multiple ranges distribute rewards proportionally; out-of-range earns nothing', async () => {
+        const mintWide = await helpers.mintDepositFarmFlow({
+          lp: lpUser3, tokensToFarm,
           ticks: [Number(currentTick - 20n * tickSpacing), Number(currentTick + 20n * tickSpacing)],
           amountsToFarm: [amountDesired * 2n, amountDesired * 2n],
           createIncentiveResult: createIncentiveResultEternal,
         });
-
-        // One user out of range
-        const mint4 = await helpers.mintDepositFarmFlow({
-          lp: lpUser4,
-          tokensToFarm,
+        const mintOOR = await helpers.mintDepositFarmFlow({
+          lp: lpUser4, tokensToFarm,
           ticks: [Number(currentTick + 30n * tickSpacing), Number(currentTick + 40n * tickSpacing)],
-          amountsToFarm: [amountDesired, amountDesired],
-          createIncentiveResult: createIncentiveResultEternal,
+          amountsToFarm: [amountDesired, amountDesired], createIncentiveResult: createIncentiveResultEternal,
         });
 
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
 
-        // Move tick to simulate market activity
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'up',
-          desiredValue: 5,
-        })
-
-        await Time.setAndMine(await blockTimestamp() + 1000);
-        const farmdAtLpUser0 = mint0.farmdAt;
-        const farmdAtLpUser1 = mint1.farmdAt;
-        const farmdAtLpUser2 = mint2.farmdAt;
-        const farmdAtLpUser3 = mint3.farmdAt;
-        const farmdAtLpUser4 = mint4.farmdAt;
-
-                // Get liquidity
-        const liquidityUser0 = await helpers.nft.connect(lpUser0).positions(mint0.tokenId);
-        const liquidityUser1 = await helpers.nft.connect(lpUser1).positions(mint1.tokenId);
-        const liquidityUser2 = await helpers.nft.connect(lpUser2).positions(mint2.tokenId);
-        const liquidityUser3 = await helpers.nft.connect(lpUser3).positions(mint3.tokenId);
-        const liquidityUser4 = await helpers.nft.connect(lpUser4).positions(mint4.tokenId);
+        const [r0, r1, r2, r3, r4] = await helpers.getRewardInfoBatch(incentiveKey, [
+          mint0.tokenId, mint1.tokenId, mint2.tokenId, mintWide.tokenId, mintOOR.tokenId,
+        ]);
         
-
-
-        console.log('\n--- Multiple ranges scenario (5 LPs) ---');
-        console.log('3 LPs in narrow range:');
-        console.log('  User0 liquidity:', liquidityUser0.liquidity.toString());
-        console.log('  User1 liquidity:', liquidityUser1.liquidity.toString());
-        console.log('  User2 liquidity:', liquidityUser2.liquidity.toString());
-        console.log('1 LP in wide range:');
-        console.log('  User3 liquidity:', liquidityUser3.liquidity.toString());
-        console.log('1 LP out-of-range:');
-        console.log('  User4 liquidity:', liquidityUser4.liquidity.toString());
-
-
-        // normalize rewards
-        const user0rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const user1rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-        const user2rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint2.tokenId);
-        const user3rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint3.tokenId);
-        const user4rewards = await context.eternalFarming.getRewardInfo(incentiveKey, mint4.tokenId);
-
-        const user0RewardBase = user0rewards.reward;
-        const user1RewardBase = user1rewards.reward;
-        const user2RewardBase = user2rewards.reward;
-        const user3RewardBase = user3rewards.reward;
-        const user4RewardBase = user4rewards.reward;
-
-          // get reward rates
-        const rewardRates = await helpers.getRewardRate({
-          createIncentiveResult: createIncentiveResultEternal
-        });
-        const rewardRate = rewardRates.rewardRate0;
-
-        // calculate extra rewards for user0
-        const user0ExtraRewards1 = BigInt(farmdAtLpUser1  - farmdAtLpUser0) * rewardRate;
-        const user0ExtraRewards2 = BigInt(farmdAtLpUser2  - farmdAtLpUser1) * rewardRate / 3n;
-        const user0ExtraRewards3 = BigInt(farmdAtLpUser3  - farmdAtLpUser2) * rewardRate / 6n;
-        const user0ExtraRewards4 = BigInt(farmdAtLpUser4  - farmdAtLpUser3) * rewardRate / 7n;
-        // deduct them
-        const user0RewardsNormalized = user0RewardBase - user0ExtraRewards1 - user0ExtraRewards2 - user0ExtraRewards3 - user0ExtraRewards4;
-
-        // calculate extra rewards for user1
-        const user1ExtraRewards1 = BigInt(farmdAtLpUser2  - farmdAtLpUser1) * rewardRate * 2n / 3n;
-        const user1ExtraRewards2 = BigInt(farmdAtLpUser3  - farmdAtLpUser2) * rewardRate * 2n / 6n;
-        const user1ExtraRewards3 = BigInt(farmdAtLpUser4  - farmdAtLpUser3) * rewardRate * 2n / 7n;
-        
-        // deduct them
-        const user1RewardsNormalized = user1RewardBase - user1ExtraRewards1 - user1ExtraRewards2 - user1ExtraRewards3;
-
-        // calculate extra rewards for user2
-        const user2ExtraRewards1 = BigInt(farmdAtLpUser3  - farmdAtLpUser2) * rewardRate * 3n / 6n;
-        const user2ExtraRewards2 = BigInt(farmdAtLpUser4  - farmdAtLpUser3) * rewardRate * 3n / 7n;
-        // deduct them
-        const user2RewardsNormalized = user2RewardBase - user2ExtraRewards1 - user2ExtraRewards2;
-
-
-        console.log('User0 reward (1x):', user0RewardsNormalized);
-        console.log('User1 reward (2x):', user1RewardsNormalized);
-        console.log('User2 reward (3x):', user2RewardsNormalized);
-        console.log('User3 reward (1.01572x):', user3RewardBase);
-        console.log('User4 reward (0x):', user4RewardBase);
-
-
-        // User1 should have ~2x rewards and User2 should have ~3x rewards of User0
-        // with 0.1% tolerance for rounding and virtual pool variations
-        const tolerance = user0RewardsNormalized / 50n; // 2% tolerance
-        
-
-        expect(user1RewardsNormalized).to.be.within(
-          user0RewardsNormalized * 2n - tolerance,
-          user0RewardsNormalized * 2n + tolerance,
-        );
-        console.log('User1/User0 ratio:', user1RewardsNormalized / user0RewardsNormalized);
-
-        expect(user2RewardsNormalized).to.be.within(
-          user0RewardsNormalized * 3n - tolerance,
-          user0RewardsNormalized * 3n + tolerance,
-        );
-        console.log('User2/User0 ratio:', user2RewardsNormalized / user0RewardsNormalized);
-        
-        expect(user3RewardBase).to.be.within(
-          user0RewardsNormalized - tolerance,
-          user0RewardsNormalized + tolerance,
-        );
-        console.log('User3/User0 ratio:', user3RewardBase / user0RewardsNormalized);
+        expectRewardRatio(r0.reward, r1.reward, 2n);
+        expectRewardRatio(r0.reward, r2.reward, 3n);
+        expectRewardRatio(r0.reward, r3.reward, 1n, 200n);
+        expect(r4.reward).to.equal(0n, 'out-of-range LP should earn no rewards');
+        expectRewardRatio(r0.bonusReward, r1.bonusReward, 2n);
+        expectRewardRatio(r0.bonusReward, r2.bonusReward, 3n);
+        expectRewardRatio(r0.bonusReward, r3.bonusReward, 1n, 200n);
+        expect(r4.bonusReward).to.equal(0n, 'out-of-range LP should earn no bonus rewards');
       });
 
-      it('New user joins midway and starts receiving rewards', async function() { // looks ok. can be improved by calculating exact rewards
+      it('total distributed rewards ≈ rewardRate × elapsed time', async () => {
+        const t0 = BigInt(await blockTimestamp());
+        const { rewardRate0: rewardRate, rewardRate1: bonusRewardRate } =
+          await helpers.getRewardRate({ createIncentiveResult: createIncentiveResultEternal });
 
-        // Wait for first period
-        await Time.setAndMine(await blockTimestamp() + 1000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+        await Time.setAndMine(Number(t0) + 1000);
+        const t1 = BigInt(await blockTimestamp());
 
-        const rewardsUser0Period1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const rewardsUser1Period1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
+        const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
 
-        console.log('\n--- First period (3 users farming) ---');
-        console.log('User0 reward:', rewardsUser0Period1.reward.toString());
-        console.log('User1 reward:', rewardsUser1Period1.reward.toString());
-        console.log('User2 reward:', rewardsUser1Period1.reward.toString());
+        expectRewardRatio((t1 - t0) * rewardRate, r0.reward + r1.reward + r2.reward, 1n);
+        expectRewardRatio((t1 - t0) * bonusRewardRate, r0.bonusReward + r1.bonusReward + r2.bonusReward, 1n);
+      });
 
-        // New user joins!
-        const mint3 = await helpers.mintDepositFarmFlow({
-          lp: lpUser3,
-          tokensToFarm,
+      // it('no rewards accrue without swap activity', async () => {
+      //   await Time.setAndMine(await blockTimestamp() + 10_000);
+
+      //   const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+
+      //   expect(r0.reward + r1.reward + r2.reward).to.equal(0n);
+      //   expect(r0.bonusReward + r1.bonusReward + r2.bonusReward).to.equal(0n);
+      // });
+
+    });
+
+
+    describe('Rates & caps', () => {
+
+      it('halving rates halves reward accrual for the next period', async () => {
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+        const [snap1] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId]);
+        const rewardP1 = snap1.reward;
+        const bonusP1 = snap1.bonusReward;
+
+        await helpers.setRates(incentiveKey, BNe18(5), BNe18(1));
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+        const [snap2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId]);
+        const rewardP2 = snap2.reward - rewardP1;
+        const bonusP2 = snap2.bonusReward - bonusP1;
+
+        expectRewardRatio(rewardP2, rewardP1, 2n);
+        expectRewardRatio(bonusP2, bonusP1, 2n);
+      });
+
+      it('rewards stop accruing once totalReward is exhausted', async () => {
+        await helpers.setRates(incentiveKey, BNe18(10_000), BNe18(2_000));
+
+        await Time.setAndMine(await blockTimestamp() + 100_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const cap = createIncentiveResultEternal.totalReward;
+        const bonusCap = createIncentiveResultEternal.bonusReward;
+
+        const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+        const accrued = r0.reward + r1.reward + r2.reward;
+        const accruedBonus = r0.bonusReward + r1.bonusReward + r2.bonusReward;
+
+        expectRewardRatio(accrued, cap, 1n);
+        expectRewardRatio(accruedBonus, bonusCap, 1n);
+
+        await Time.setAndMine(await blockTimestamp() + 100_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const [r0a, r1a, r2a] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+        const accruedPost = r0a.reward + r1a.reward + r2a.reward;
+        const accruedBonusPost = r0a.bonusReward + r1a.bonusReward + r2a.bonusReward;
+
+        expectRewardRatio(accruedPost, cap, 1n);
+        expectRewardRatio(accruedBonusPost, bonusCap, 1n);
+      });
+
+    });
+
+
+    describe('LP lifecycle', () => {
+
+      it('late entry: no retroactive rewards for time before entering farming', async () => {
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const earlySnap = await helpers.getRewardInfo(incentiveKey, mint0.tokenId);
+        expect(earlySnap.reward).to.be.gt(0n);
+
+        const lateMint = await helpers.mintDepositFarmFlow({
+          lp: lpUser3, tokensToFarm,
           ticks: [Number(currentTick - 10n * tickSpacing), Number(currentTick + 10n * tickSpacing)],
           amountsToFarm: [amountDesired, amountDesired],
           createIncentiveResult: createIncentiveResultEternal,
         });
 
-        console.log('\nUser3 joins farming');
+        const riAtEntry = await helpers.getRewardInfo(incentiveKey, lateMint.tokenId);
+        expect(riAtEntry.reward).to.equal(0n, 'late LP should have no rewards at entry');
+        expect(riAtEntry.bonusReward).to.equal(0n, 'late LP should have no bonus at entry');
 
-        // Wait for second period
-        await Time.setAndMine(await blockTimestamp() + 1000);
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
 
-        const rewardsUser0Final = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const rewardsUser1Final = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-        const rewardsUser2Final = await context.eternalFarming.getRewardInfo(incentiveKey, mint2.tokenId);
-        const rewardsUser3Final = await context.eternalFarming.getRewardInfo(incentiveKey, mint3.tokenId);
+        const [lateSnap, earlySnap2] = await helpers.getRewardInfoBatch(incentiveKey, [lateMint.tokenId, mint0.tokenId]);
 
-        console.log('\n--- Second period (3 users farming) ---');
-        console.log('User0 reward:', rewardsUser0Final.reward.toString());
-        console.log('User1 reward:', rewardsUser1Final.reward.toString());
-        console.log('User2 reward:', rewardsUser2Final.reward.toString());
-        console.log('User3 reward (just joined):', rewardsUser3Final.reward.toString());
-
-        // New user should have earned rewards
-        expect(rewardsUser3Final.reward).to.be.gt(0n);
-        
-        // Existing users should earn less per unit time in period 2
-        const period1Increase0 = rewardsUser0Period1.reward;
-        const period2Increase0 = rewardsUser0Final.reward - rewardsUser0Period1.reward;
-        console.log('\nUser0 period 1 rewards:', period1Increase0.toString());
-        console.log('User0 period 2 rewards:', period2Increase0.toString());
-        
-        // Period 2 rewards should be less than period 1 due to increased competition
-        expect(period2Increase0).to.be.lt(period1Increase0);
+        expect(lateSnap.reward).to.be.gt(0n, 'late LP should earn after entering');
+        expect(lateSnap.bonusReward).to.be.gt(0n, 'late LP should earn bonus after entering');
+        expect(earlySnap2.reward).to.be.gt(lateSnap.reward, 'early LP should have more total rewards');
+        expect(earlySnap2.bonusReward).to.be.gt(lateSnap.bonusReward, 'early LP should have more bonus');
       });
 
-      it('User removes all liquidity - rewards distributed to remaining farmers', async function() { // looks ok
+      it('new LP joining reduces reward rate for existing LPs', async () => {
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
 
-        // Period 1: All 3 farming
-        await Time.setAndMine(await blockTimestamp() + 1000);
+        const [p1r0, p1r1] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId]);
 
-        const rewardsPeriod1_0 = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const rewardsPeriod1_1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-        const rewardsPeriod1_2 = await context.eternalFarming.getRewardInfo(incentiveKey, mint2.tokenId);
-
-        console.log('\n--- Period 1: 3 users farming ---');
-        console.log('User0 reward:', rewardsPeriod1_0.reward.toString());
-        console.log('User1 reward:', rewardsPeriod1_1.reward.toString());
-        console.log('User2 reward:', rewardsPeriod1_2.reward.toString());
-
-        // Store User0's reward before exit
-        const user0_rewards_at_exit = rewardsPeriod1_0.reward;
-
-        // User0 removes all liquidity and exits farming
-        await context.farmingCenter.connect(lpUser0).exitFarming(incentiveKey, mint0.tokenId);
-        console.log('\nUser0 removed all liquidity and exited farming');
-
-        // Period 2: Only 2 farming
-        await Time.setAndMine(await blockTimestamp() + 1000);
-
-        const rewardsPeriod2_1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-        const rewardsPeriod2_2 = await context.eternalFarming.getRewardInfo(incentiveKey, mint2.tokenId);
-
-        console.log('\n--- Period 2: 2 users farming (User0 left) ---');
-        console.log('User1 reward:', rewardsPeriod2_1.reward.toString());
-        console.log('User2 reward:', rewardsPeriod2_2.reward.toString());
-
-        // Remaining users should earn more per unit time
-        const period1_1_increase = rewardsPeriod1_1.reward;
-        const period2_1_increase = rewardsPeriod2_1.reward - rewardsPeriod1_1.reward;
-        console.log('\nUser1 period 1 rewards:', period1_1_increase.toString());
-        console.log('User1 period 2 rewards:', period2_1_increase.toString());
-        
-        // Period 2 should have higher rewards for User1 (less competition)
-        expect(period2_1_increase).to.be.gt(period1_1_increase);
-        
-        // Verify User0 is no longer receiving rewards (by checking that User1 and User2 earn more without User0)
-        console.log('\nVerification: User1 earned more in period 2 after User0 exited');
-        console.log('Total period 1 rewards (3 users):', (rewardsPeriod1_0.reward + rewardsPeriod1_1.reward + rewardsPeriod1_2.reward).toString());
-        console.log('Total period 2 rewards (2 users):', (rewardsPeriod2_1.reward + rewardsPeriod2_2.reward).toString());
-      });
-
-      it('Out-of-range user removes all liquidity - no impact on other farmers', async function() { // looks ok
-
-        // Out-of-range LP
-        const mint_OOR = await helpers.mintDepositFarmFlow({
-          lp: lpUser2,
-          tokensToFarm,
-          ticks: [Number(currentTick + 30n * tickSpacing), Number(currentTick + 40n * tickSpacing)],
+        await helpers.mintDepositFarmFlow({
+          lp: lpUser3, tokensToFarm,
+          ticks: [Number(currentTick - 10n * tickSpacing), Number(currentTick + 10n * tickSpacing)],
           amountsToFarm: [amountDesired, amountDesired],
           createIncentiveResult: createIncentiveResultEternal,
         });
 
-        // Period 1: 2 in-range + 1 out-of-range
-        // getting current tick for debugging
-        // const currentTickBefore = (await helpers.pool.connect(lpUser0).globalState()).tick;
-        // console.log( 'tick before:', Number(currentTickBefore));
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'down',
-          desiredValue: 5,
-        })
-        // getting current tick for debugging
-        // const currentTickAfter = (await helpers.pool.connect(lpUser0).globalState()).tick;
-        // console.log( 'tick after:', Number(currentTickAfter));
-        await Time.setAndMine(await blockTimestamp() + 1000);
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
 
-        const rewardsPeriod1_0 = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const rewardsPeriod1_1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-        const rewardsPeriod1_OOR = await context.eternalFarming.getRewardInfo(incentiveKey, mint_OOR.tokenId);
+        const [p2r0, p2r1] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId]);
 
-        console.log('\n--- Period 1: 2 in-range + 1 out-of-range ---');
-        console.log('User0 (in-range) reward:', rewardsPeriod1_0.reward.toString());
-        console.log('User1 (in-range) reward:', rewardsPeriod1_1.reward.toString());
-        console.log('User2 (out-of-range) reward:', rewardsPeriod1_OOR.reward.toString());
-
-        // Out-of-range user should have 0 rewards
-        expect(rewardsPeriod1_OOR.reward).to.equal(0n);
-
-        // Out-of-range user exits farming
-        await context.farmingCenter.connect(lpUser2).exitFarming(incentiveKey, mint_OOR.tokenId);
-        console.log('\nOut-of-range user exited farming');
-
-        // Period 2: Only 2 in-range (out-of-range user removed)
-
-        await helpers.moveTickTo({
-          trader: lpUser0,
-          direction: 'up',
-          desiredValue: 0,
-        })
-
-        await Time.setAndMine(await blockTimestamp() + 1000);
-
-        const rewardsPeriod2_0 = await context.eternalFarming.getRewardInfo(incentiveKey, mint0.tokenId);
-        const rewardsPeriod2_1 = await context.eternalFarming.getRewardInfo(incentiveKey, mint1.tokenId);
-
-        console.log('\n--- Period 2: 2 in-range (out-of-range user left) ---');
-        console.log('User0 reward:', rewardsPeriod2_0.reward.toString());
-        console.log('User1 reward:', rewardsPeriod2_1.reward.toString());
-
-        
-
-        // In-range users' rewards should increase equally (no change in reward distribution)
-        const period1_0_increase = rewardsPeriod1_0.reward;
-        const period2_0_increase = rewardsPeriod2_0.reward - rewardsPeriod1_0.reward;
-        
-        
-        const period1_1_increase = rewardsPeriod1_1.reward;
-        const period2_1_increase = rewardsPeriod2_1.reward - rewardsPeriod1_1.reward;
-
-        console.log('\nUser0 period 1 rewards:', period1_0_increase.toString());
-        console.log('User0 period 2 rewards:', period2_0_increase.toString());
-        console.log('User1 period 1 rewards:', period1_1_increase.toString());
-        console.log('User1 period 2 rewards:', period2_1_increase.toString());
-
-        // // Both in-range users should have equal increase (1:1 ratio maintained)
-        // const ratio = period1_0_increase > 0n && period1_1_increase > 0n
-        //   ? Number(period1_0_increase * 10000n / period1_1_increase) / 5000 // user1's liquidity is 2x user0's
-        //   : 1;
-        
-        // console.log('Reward ratio (User0/User1):', ratio.toFixed(2), '(should be ~1)');
-        // expect(ratio).to.be.closeTo(1, 0.1); // Allow 10% difference
-
-        const ratio2 = period2_0_increase > 0n && period2_1_increase > 0n
-          ? Number(period2_0_increase * 10000n / period2_1_increase) / 5000 // user1's liquidity is 2x user0's
-          : 1;
-        
-        console.log('Reward increase ratio (User0/User1):', ratio2.toFixed(2), '(should be ~1)');
-        expect(ratio2).to.be.closeTo(1, 0.1); // Allow 10% difference
+        expect(p2r0.reward - p1r0.reward).to.be.lt(p1r0.reward);
+        expect(p2r0.bonusReward - p1r0.bonusReward).to.be.lt(p1r0.bonusReward);
+        expect(p2r1.reward - p1r1.reward).to.be.lt(p1r1.reward);
+        expect(p2r1.bonusReward - p1r1.bonusReward).to.be.lt(p1r1.bonusReward);
       });
 
-});
+      it('LP exit increases reward rate for remaining farmers', async () => {
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
 
-})
+        const p1r1 = await helpers.getRewardInfo(incentiveKey, mint1.tokenId);
+
+        await helpers.exitFarming(incentiveKey, mint0.tokenId, lpUser0);
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const p2r1 = await helpers.getRewardInfo(incentiveKey, mint1.tokenId);
+
+        expect(p2r1.reward - p1r1.reward).to.be.gt(p1r1.reward);
+        expect(p2r1.bonusReward - p1r1.bonusReward).to.be.gt(p1r1.bonusReward);
+      });
+
+      it('LP exits and re-enters: normalized rewards remain proportional', async () => {
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const { rewardRate0: rewardRate, rewardRate1: bonusRewardRate } =
+          await helpers.getRewardRate({ createIncentiveResult: createIncentiveResultEternal });
+
+        const exitAt = await helpers.exitFarming(incentiveKey, mint0.tokenId, lpUser0);
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+        const reEntryAt = await helpers.enterFarming(incentiveKey, mint0.tokenId, lpUser0);
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const collectedRewards = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
+        const collectedBonus = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
+        const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+
+        const user0Reward = r0.reward + collectedRewards;
+        const user0Bonus = r0.bonusReward + collectedBonus;
+
+        const absentDuration = BigInt(reEntryAt - exitAt);
+        const n1 = r1.reward - absentDuration * rewardRate * 2n / 5n;
+        const n2 = r2.reward - absentDuration * rewardRate * 3n / 5n;
+        const n1Bonus = r1.bonusReward - absentDuration * bonusRewardRate * 2n / 5n;
+        const n2Bonus = r2.bonusReward - absentDuration * bonusRewardRate * 3n / 5n;
+
+        expectRewardRatio(user0Reward, n1, 2n);
+        expectRewardRatio(user0Reward, n2, 3n);
+        expectRewardRatio(user0Bonus, n1Bonus, 2n);
+        expectRewardRatio(user0Bonus, n2Bonus, 3n);
+      });
+
+      it('phantom liquidity', async () => {
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const [before0, before1, before2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+
+        await helpers.exitFarming(incentiveKey, mint0.tokenId, lpUser0);
+        await helpers.swapTwice(lpUser0, 5, 0);
+        await helpers.enterFarming(incentiveKey, mint0.tokenId, lpUser0);
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const [after0, after1, after2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+
+        expect(after1.reward).to.be.gt(before1.reward, 'User1 should earn more because User0 was out');
+        expect(after2.reward).to.be.gt(before2.reward, 'User2 should earn more because User0 was out');
+        expectRewardRatio(before0.reward, after0.reward, 1n);
+        expectRewardRatio(before1.reward, after1.reward, 2n);
+        expectRewardRatio(before2.reward, after2.reward, 2n);
+      });
+
+    });
+
+
+    describe('Liquidity changes', () => {
+
+      it.only('User doubles liquidity - rewards increase accordingly', async () => {
+        await helpers.setRates(incentiveKey, BNe18(10), BNe18(2));
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const snap1 = await helpers.getRewardInfo(incentiveKey, mint0.tokenId);
+        const rewardsP1 = snap1.reward;
+        const bonusP1 = snap1.bonusReward;
+        
+        await helpers.increaseLiquidity(mint0.tokenId, amountDesired, amountDesired, lpUser0);
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const snap2 = await helpers.getRewardInfo(incentiveKey, mint0.tokenId);
+        const rewardsP2 = snap2.reward;
+        const bonusP2 = snap2.bonusReward;
+
+        const rewardsP1Scaled = rewardsP1 * 6n;
+        const rewardsP2Scaled = rewardsP2 * 7n / 2n;
+        const bonusP1Scaled = bonusP1 * 6n;
+        const bonusP2Scaled = bonusP2 * 7n / 2n;
+
+        expectRewardRatio(rewardsP1Scaled, rewardsP2Scaled, 1n);
+        expectRewardRatio(bonusP1Scaled, bonusP2Scaled, 1n);
+      });
+
+      it('User halves liquidity - rewards decrease accordingly', async () => {
+        await helpers.setRates(incentiveKey, BNe18(10), BNe18(2));
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const snap1 = await helpers.getRewardInfo(incentiveKey, mint1.tokenId);
+        const rewardsP1 = snap1.reward;
+        const bonusP1 = snap1.bonusReward;
+        
+        const liq = await helpers.getPositionLiquidity(mint1.tokenId, lpUser1);
+        await helpers.decreaseLiquidity(mint1.tokenId, liq/2n, lpUser1);
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const snap2 = await helpers.getRewardInfo(incentiveKey, mint1.tokenId);
+        const rewardsP2 = snap2.reward;
+        const bonusP2 = snap2.bonusReward;
+
+        const rewardsP1Scaled = rewardsP1 * 3n;
+        const rewardsP2Scaled = rewardsP2 * 5n;
+        const bonusP1Scaled = bonusP1 * 3n;
+        const bonusP2Scaled = bonusP2 * 5n;
+
+
+        expectRewardRatio(rewardsP1Scaled, rewardsP2Scaled, 1n);
+        expectRewardRatio(bonusP1Scaled, bonusP2Scaled, 1n);
+      });
+
+    });
+
+  });
+
+});
