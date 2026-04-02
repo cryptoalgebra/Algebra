@@ -150,24 +150,36 @@ describe('Scenario tests', () => {
         await Time.setAndMine(await blockTimestamp() + 10_000);
         await helpers.swapTwice(lpUser0, 5, 0);
 
+        const [liq0, liq1, liq2] = await helpers.getPositionLiquidityBatch([
+          { tokenId: mint0.tokenId, lp: lpUser0 },
+          { tokenId: mint1.tokenId, lp: lpUser1 },
+          { tokenId: mint2.tokenId, lp: lpUser2 },
+        ]);
+        const liqRatio1_0 = liq1 / liq0;
+        const liqRatio2_0 = liq2 / liq0;
+
+        const { rewardRate0: rewardRate, rewardRate1: bonusRewardRate } =
+          await helpers.getRewardRate({ createIncentiveResult: createIncentiveResultEternal });
+        const rewardRatio0_1 = rewardRate / bonusRewardRate;
+        
         const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
 
-        expectRewardRatio(r0.reward, r1.reward, 2n);
-        expectRewardRatio(r0.reward, r2.reward, 3n);
-        expectRewardRatio(r0.bonusReward, r0.reward, 5n);
-        expectRewardRatio(r0.bonusReward, r1.bonusReward, 2n);
-        expectRewardRatio(r0.bonusReward, r2.bonusReward, 3n);
+        expectRewardRatio(r0.reward, r1.reward, liqRatio1_0);
+        expectRewardRatio(r0.reward, r2.reward, liqRatio2_0);
+        expectRewardRatio(r0.bonusReward, r0.reward, rewardRatio0_1);
+        expectRewardRatio(r0.bonusReward, r1.bonusReward, liqRatio1_0);
+        expectRewardRatio(r0.bonusReward, r2.bonusReward, liqRatio2_0);
 
         await Time.setAndMine(await blockTimestamp() + 10_000);
         await helpers.swapTwice(lpUser0, 5, 0);
 
         const [r0b, r1b, r2b] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
 
-        expectRewardRatio(r0b.reward, r1b.reward, 2n);
-        expectRewardRatio(r0b.reward, r2b.reward, 3n);
-        expectRewardRatio(r0b.bonusReward, r0b.reward, 5n);
-        expectRewardRatio(r0b.bonusReward, r1b.bonusReward, 2n);
-        expectRewardRatio(r0b.bonusReward, r2b.bonusReward, 3n);
+        expectRewardRatio(r0b.reward, r1b.reward, liqRatio1_0);
+        expectRewardRatio(r0b.reward, r2b.reward, liqRatio2_0);
+        expectRewardRatio(r0b.bonusReward, r0b.reward, rewardRatio0_1);
+        expectRewardRatio(r0b.bonusReward, r1b.bonusReward, liqRatio1_0);
+        expectRewardRatio(r0b.bonusReward, r2b.bonusReward, liqRatio2_0);
       });
 
       it('multiple ranges distribute rewards proportionally; out-of-range earns nothing', async () => {
@@ -186,17 +198,27 @@ describe('Scenario tests', () => {
         await Time.setAndMine(await blockTimestamp() + 10_000);
         await helpers.swapTwice(lpUser0, 5, 0);
 
+        const [liq0, liq1, liq2, liqWide] = await helpers.getPositionLiquidityBatch([
+          { tokenId: mint0.tokenId, lp: lpUser0 },
+          { tokenId: mint1.tokenId, lp: lpUser1 },
+          { tokenId: mint2.tokenId, lp: lpUser2 },
+          { tokenId: mintWide.tokenId, lp: lpUser3 },
+        ]);
+        const liqRatio1_0 = liq1 / liq0;
+        const liqRatio2_0 = liq2 / liq0;
+        const liqRatioWide_0 = liqWide / liq0;
+
         const [r0, r1, r2, r3, r4] = await helpers.getRewardInfoBatch(incentiveKey, [
           mint0.tokenId, mint1.tokenId, mint2.tokenId, mintWide.tokenId, mintOOR.tokenId,
         ]);
-        
-        expectRewardRatio(r0.reward, r1.reward, 2n);
-        expectRewardRatio(r0.reward, r2.reward, 3n);
-        expectRewardRatio(r0.reward, r3.reward, 1n, 200n);
+
+        expectRewardRatio(r0.reward, r1.reward, liqRatio1_0);
+        expectRewardRatio(r0.reward, r2.reward, liqRatio2_0);
+        expectRewardRatio(r0.reward, r3.reward, liqRatioWide_0, 200n);
         expect(r4.reward).to.equal(0n, 'out-of-range LP should earn no rewards');
-        expectRewardRatio(r0.bonusReward, r1.bonusReward, 2n);
-        expectRewardRatio(r0.bonusReward, r2.bonusReward, 3n);
-        expectRewardRatio(r0.bonusReward, r3.bonusReward, 1n, 200n);
+        expectRewardRatio(r0.bonusReward, r1.bonusReward, liqRatio1_0);
+        expectRewardRatio(r0.bonusReward, r2.bonusReward, liqRatio2_0);
+        expectRewardRatio(r0.bonusReward, r3.bonusReward, liqRatioWide_0, 200n);
         expect(r4.bonusReward).to.equal(0n, 'out-of-range LP should earn no bonus rewards');
       });
 
@@ -368,20 +390,29 @@ describe('Scenario tests', () => {
         const collectedRewards = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
         const collectedBonus = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
         const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
+        const [liq0, liq1, liq2] = await helpers.getPositionLiquidityBatch([
+          { tokenId: mint0.tokenId, lp: lpUser0 },
+          { tokenId: mint1.tokenId, lp: lpUser1 },
+          { tokenId: mint2.tokenId, lp: lpUser2 },
+        ]);
+        const absentLiq = liq1 + liq2;
 
         const user0Reward = r0.reward + collectedRewards;
         const user0Bonus = r0.bonusReward + collectedBonus;
 
         const absentDuration = BigInt(reEntryAt - exitAt);
-        const n1 = r1.reward - absentDuration * rewardRate * 2n / 5n;
-        const n2 = r2.reward - absentDuration * rewardRate * 3n / 5n;
-        const n1Bonus = r1.bonusReward - absentDuration * bonusRewardRate * 2n / 5n;
-        const n2Bonus = r2.bonusReward - absentDuration * bonusRewardRate * 3n / 5n;
+        const n1 = r1.reward - absentDuration * rewardRate * liq1 / absentLiq;
+        const n2 = r2.reward - absentDuration * rewardRate * liq2 / absentLiq;
+        const n1Bonus = r1.bonusReward - absentDuration * bonusRewardRate * liq1 / absentLiq;
+        const n2Bonus = r2.bonusReward - absentDuration * bonusRewardRate * liq2 / absentLiq;
 
-        expectRewardRatio(user0Reward, n1, 2n);
-        expectRewardRatio(user0Reward, n2, 3n);
-        expectRewardRatio(user0Bonus, n1Bonus, 2n);
-        expectRewardRatio(user0Bonus, n2Bonus, 3n);
+        const liqRatio1_0 = liq1 / liq0;
+        const liqRatio2_0 = liq2 / liq0;
+
+        expectRewardRatio(user0Reward, n1, liqRatio1_0);
+        expectRewardRatio(user0Reward, n2, liqRatio2_0);
+        expectRewardRatio(user0Bonus, n1Bonus, liqRatio1_0);
+        expectRewardRatio(user0Bonus, n2Bonus, liqRatio2_0);
       });
 
       it('phantom liquidity', async () => {
@@ -411,7 +442,41 @@ describe('Scenario tests', () => {
 
     describe('Liquidity changes', () => {
 
-      it.only('User doubles liquidity - rewards increase accordingly', async () => {
+      it('User doubles liquidity - rewards increase accordingly', async () => {
+        await helpers.setRates(incentiveKey, BNe18(10), BNe18(2));
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const snap1 = await helpers.getRewardInfo(incentiveKey, mint0.tokenId);
+        const rewardsP1 = snap1.reward;
+        const bonusP1 = snap1.bonusReward;
+
+        const liqMint0Before = await helpers.getPositionLiquidity(mint0.tokenId, lpUser0);
+        const liqTotalBefore = await helpers.pool.connect(lpUser0).liquidity();
+
+        await helpers.increaseLiquidity(mint0.tokenId, amountDesired, amountDesired, lpUser0);
+
+        const liqMint0After = await helpers.getPositionLiquidity(mint0.tokenId, lpUser0);
+        const liqTotalAfter = await helpers.pool.connect(lpUser0).liquidity();
+
+        await Time.setAndMine(await blockTimestamp() + 10_000);
+        await helpers.swapTwice(lpUser0, 5, 0);
+
+        const snap2 = await helpers.getRewardInfo(incentiveKey, mint0.tokenId);
+        const rewardsP2 = snap2.reward;
+        const bonusP2 = snap2.bonusReward;
+
+        const totalP1 = rewardsP1 * liqTotalBefore / liqMint0Before;
+        const totalP2 = rewardsP2 * liqTotalAfter / liqMint0After;
+        const totalBonusP1 = bonusP1 * liqTotalBefore / liqMint0Before;
+        const totalBonusP2 = bonusP2 * liqTotalAfter / liqMint0After;
+
+        expectRewardRatio(totalP1, totalP2, 1n);
+        expectRewardRatio(totalBonusP1, totalBonusP2, 1n);
+      });
+
+      it('User halves liquidity - rewards decrease accordingly', async () => {
         await helpers.setRates(incentiveKey, BNe18(10), BNe18(2));
 
         await Time.setAndMine(await blockTimestamp() + 10_000);
@@ -421,7 +486,14 @@ describe('Scenario tests', () => {
         const rewardsP1 = snap1.reward;
         const bonusP1 = snap1.bonusReward;
         
-        await helpers.increaseLiquidity(mint0.tokenId, amountDesired, amountDesired, lpUser0);
+        const liqMint0Before = await helpers.getPositionLiquidity(mint0.tokenId, lpUser0);
+        const liqTotalBefore = await helpers.pool.connect(lpUser0).liquidity();
+
+        const liq = await helpers.getPositionLiquidity(mint0.tokenId, lpUser0);
+        await helpers.decreaseLiquidity(mint0.tokenId, liq/2n, lpUser0);
+
+        const liqMint0After = await helpers.getPositionLiquidity(mint0.tokenId, lpUser0);
+        const liqTotalAfter = await helpers.pool.connect(lpUser0).liquidity();
 
         await Time.setAndMine(await blockTimestamp() + 10_000);
         await helpers.swapTwice(lpUser0, 5, 0);
@@ -430,43 +502,13 @@ describe('Scenario tests', () => {
         const rewardsP2 = snap2.reward;
         const bonusP2 = snap2.bonusReward;
 
-        const rewardsP1Scaled = rewardsP1 * 6n;
-        const rewardsP2Scaled = rewardsP2 * 7n / 2n;
-        const bonusP1Scaled = bonusP1 * 6n;
-        const bonusP2Scaled = bonusP2 * 7n / 2n;
+        const totalP1 = rewardsP1 * liqTotalBefore / liqMint0Before;
+        const totalP2 = rewardsP2 * liqTotalAfter / liqMint0After;
+        const totalBonusP1 = bonusP1 * liqTotalBefore / liqMint0Before;
+        const totalBonusP2 = bonusP2 * liqTotalAfter / liqMint0After;
 
-        expectRewardRatio(rewardsP1Scaled, rewardsP2Scaled, 1n);
-        expectRewardRatio(bonusP1Scaled, bonusP2Scaled, 1n);
-      });
-
-      it('User halves liquidity - rewards decrease accordingly', async () => {
-        await helpers.setRates(incentiveKey, BNe18(10), BNe18(2));
-
-        await Time.setAndMine(await blockTimestamp() + 10_000);
-        await helpers.swapTwice(lpUser0, 5, 0);
-
-        const snap1 = await helpers.getRewardInfo(incentiveKey, mint1.tokenId);
-        const rewardsP1 = snap1.reward;
-        const bonusP1 = snap1.bonusReward;
-        
-        const liq = await helpers.getPositionLiquidity(mint1.tokenId, lpUser1);
-        await helpers.decreaseLiquidity(mint1.tokenId, liq/2n, lpUser1);
-
-        await Time.setAndMine(await blockTimestamp() + 10_000);
-        await helpers.swapTwice(lpUser0, 5, 0);
-
-        const snap2 = await helpers.getRewardInfo(incentiveKey, mint1.tokenId);
-        const rewardsP2 = snap2.reward;
-        const bonusP2 = snap2.bonusReward;
-
-        const rewardsP1Scaled = rewardsP1 * 3n;
-        const rewardsP2Scaled = rewardsP2 * 5n;
-        const bonusP1Scaled = bonusP1 * 3n;
-        const bonusP2Scaled = bonusP2 * 5n;
-
-
-        expectRewardRatio(rewardsP1Scaled, rewardsP2Scaled, 1n);
-        expectRewardRatio(bonusP1Scaled, bonusP2Scaled, 1n);
+        expectRewardRatio(totalP1, totalP2, 1n);
+        expectRewardRatio(totalBonusP1, totalBonusP2, 1n);
       });
 
     });
