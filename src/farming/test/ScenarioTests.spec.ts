@@ -125,7 +125,7 @@ describe('Scenario tests', () => {
             rewardRate: BNe18(10),
             bonusRewardRate: BNe18(2),
           })
-        ).to.be.reverted;
+        ).to.be.revertedWithCustomError(context.eternalFarming, 'anotherFarmingIsActive');
       });
 
       it('minimalPositionWidth: position narrower than minimum is rejected on enterFarming', async () => {

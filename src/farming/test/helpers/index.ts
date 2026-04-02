@@ -412,7 +412,7 @@ export class HelperCommands {
  
 
   decreaseLiquidity = async (tokenId: string, liquidity: bigint, lp: Wallet) => {
-    const liquidityToRemove = liquidity || (await this.nft.connect(lp).positions(tokenId)).liquidity;
+    const liquidityToRemove = liquidity || (await this.nft.positions(tokenId)).liquidity;
  
     await this.nft.connect(lp).decreaseLiquidity(
       {
@@ -425,7 +425,7 @@ export class HelperCommands {
       maxGas
     );
 
-    const position = await this.nft.connect(lp).positions(tokenId);
+    const position = await this.nft.positions(tokenId);
     return position.liquidity;
   };
 
@@ -465,7 +465,7 @@ export class HelperCommands {
 
 
   getPositionLiquidity = async (tokenId: string, lp: Wallet) => {
-    return (await this.nft.connect(lp).positions(tokenId)).liquidity;
+    return (await this.nft.positions(tokenId)).liquidity;
   };
 
   getPositionLiquidityBatch = async (mints: Array<{ tokenId: string; lp: Wallet }>) => {
