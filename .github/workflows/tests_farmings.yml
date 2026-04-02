@@ -3,10 +3,10 @@ name: Autotests Farmings
 on:
   push:
     branches:
-      - integral-v1.2.2
+      - integral-v1.3
   pull_request:
     branches:
-      - integral-v1.2.2
+      - integral-v1.3
 
 jobs:
   Autotests:

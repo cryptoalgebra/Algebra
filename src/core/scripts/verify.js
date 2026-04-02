@@ -15,19 +15,18 @@ async function main() {
 
   await hre.run('verify:verify', {
     address: deploysData.poolDeployer,
-    constructorArguments: [deploysData.factory],
+    constructorArguments: [deploysData.factory, deploysData.poolExtension],
   });
 
   await hre.run('verify:verify', {
     address: deploysData.vault,
-    constructorArguments: [deploysData.factory, deployer.address],
+    constructorArguments: [deploysData.factory],
   });
 
   await hre.run('verify:verify', {
     contract: "contracts/AlgebraVaultFactoryStub.sol:AlgebraVaultFactoryStub",
     address: deploysData.vaultFactory,
     constructorArguments: [deploysData.vault],
-
   });
 }
 

@@ -15,7 +15,7 @@ const TEST_ADDRESSES: [string, string, string] = [
 ];
 
 describe('AlgebraFactory', () => {
-  let wallet: Wallet, other: Wallet;
+  let wallet: Wallet, other: Wallet, third: Wallet;
 
   let factory: AlgebraFactory;
   let poolDeployer: AlgebraPoolDeployer;
@@ -34,10 +34,10 @@ describe('AlgebraFactory', () => {
     const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-    const poolDeployer = (await poolDeployerFactory.deploy(factory)) as any as AlgebraPoolDeployer;
+    const poolDeployer = (await poolDeployerFactory.deploy(factory, await factory.poolExtension())) as any as AlgebraPoolDeployer;
 
     const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
-    const vault = await vaultFactory.deploy(factory, deployer.address);
+    const vault = await vaultFactory.deploy(factory);
 
     const vaultFactoryStubFactory = await ethers.getContractFactory('AlgebraVaultFactoryStub');
     const vaultFactoryStub = await vaultFactoryStubFactory.deploy(vault);
@@ -51,7 +51,7 @@ describe('AlgebraFactory', () => {
   };
 
   before('create fixture loader', async () => {
-    [wallet, other] = await (ethers as any).getSigners();
+    [wallet, other, third] = await (ethers as any).getSigners();
   });
 
   before('load pool bytecode', async () => {
@@ -353,7 +353,7 @@ describe('AlgebraFactory', () => {
   describe('Pool deployer', () => {
     it('cannot set zero address as factory', async () => {
       const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-      await expect(poolDeployerFactory.deploy(ZeroAddress)).to.be.reverted;
+      await expect(poolDeployerFactory.deploy(ZeroAddress, ZeroAddress)).to.be.reverted;
     });
   });
 
@@ -575,17 +575,245 @@ describe('AlgebraFactory', () => {
   });
 
   it('defaultConfigurationForPool', async () => {
-    const { communityFee, tickSpacing, fee } = await factory.defaultConfigurationForPool();
+    const { communityFee, tickSpacing, fee, algebraFee } = await factory.defaultConfigurationForPool();
     expect(communityFee).to.eq(0);
     expect(tickSpacing).to.eq(60);
     expect(fee).to.eq(500);
+    expect(algebraFee).to.eq(0);
   });
 
   it('defaultConfigurationForPool works without vault factory', async () => {
     await factory.setVaultFactory(ZeroAddress);
-    const { communityFee, tickSpacing, fee } = await factory.defaultConfigurationForPool();
+    const { communityFee, tickSpacing, fee, algebraFee } = await factory.defaultConfigurationForPool();
     expect(communityFee).to.eq(0);
     expect(tickSpacing).to.eq(60);
     expect(fee).to.eq(500);
+    expect(algebraFee).to.eq(0);
+  });
+
+  describe('#transferAlgebraFeeManagerRole', () => {
+    it('owner can set algebraFeeManager when manager is zero', async () => {
+      expect(await factory.algebraFeeManager()).to.eq(ZeroAddress);
+      await factory.transferAlgebraFeeManagerRole(other.address);
+      expect(await factory.algebraFeeManager()).to.eq(other.address);
+    });
+
+    it('non-owner cannot set algebraFeeManager when manager is zero', async () => {
+      await expect(factory.connect(other).transferAlgebraFeeManagerRole(other.address)).to.be.revertedWith('not allowed');
+    });
+
+    it('algebraFeeManager can transfer role', async () => {
+      await factory.transferAlgebraFeeManagerRole(other.address);
+      await factory.connect(other).transferAlgebraFeeManagerRole(third.address);
+      expect(await factory.algebraFeeManager()).to.eq(third.address);
+    });
+
+    it('non-manager cannot transfer role when manager is set', async () => {
+      await factory.transferAlgebraFeeManagerRole(other.address);
+      await expect(factory.transferAlgebraFeeManagerRole(third.address)).to.be.revertedWith('not allowed');
+    });
+
+    it('emits event', async () => {
+      await expect(factory.transferAlgebraFeeManagerRole(other.address))
+        .to.emit(factory, 'AlgebraFeeManager')
+        .withArgs(other.address);
+    });
+
+    it('can set manager to zero', async () => {
+      await factory.transferAlgebraFeeManagerRole(other.address);
+      await factory.connect(other).transferAlgebraFeeManagerRole(ZeroAddress);
+      expect(await factory.algebraFeeManager()).to.eq(ZeroAddress);
+    });
+  });
+
+  describe('#setDefaultAlgebraFee', () => {
+    beforeEach('set algebra fee manager', async () => {
+      await factory.transferAlgebraFeeManagerRole(wallet.address);
+    });
+
+    it('can set default algebra fee', async () => {
+      await factory.setDefaultAlgebraFee(100);
+      expect(await factory.defaultAlgebraFee()).to.eq(100);
+    });
+
+    it('only algebra fee manager can set', async () => {
+      await expect(factory.connect(other).setDefaultAlgebraFee(100)).to.be.revertedWith('only algebra fee manager');
+    });
+
+    it('cannot set fee greater than max', async () => {
+      await expect(factory.setDefaultAlgebraFee(1001)).to.be.reverted;
+    });
+
+    it('cannot set same value', async () => {
+      await factory.setDefaultAlgebraFee(100);
+      await expect(factory.setDefaultAlgebraFee(100)).to.be.reverted;
+    });
+
+    it('emits event', async () => {
+      await expect(factory.setDefaultAlgebraFee(100)).to.emit(factory, 'DefaultAlgebraFee').withArgs(100);
+    });
+
+    it('defaultConfigurationForPool returns updated algebraFee', async () => {
+      await factory.setDefaultAlgebraFee(200);
+      const { algebraFee } = await factory.defaultConfigurationForPool();
+      expect(algebraFee).to.eq(200);
+    });
+  });
+
+  describe('#setDefaultAlgebraFeeReceiver', () => {
+    beforeEach('set algebra fee manager', async () => {
+      await factory.transferAlgebraFeeManagerRole(wallet.address);
+    });
+
+    it('can set default algebra fee receiver', async () => {
+      await factory.setDefaultAlgebraFeeReceiver(other.address);
+      expect(await factory.defaultAlgebraFeeReceiver()).to.eq(other.address);
+    });
+
+    it('only algebra fee manager can set', async () => {
+      await expect(factory.connect(other).setDefaultAlgebraFeeReceiver(other.address)).to.be.revertedWith('only algebra fee manager');
+    });
+
+    it('cannot set same value', async () => {
+      await factory.setDefaultAlgebraFeeReceiver(other.address);
+      await expect(factory.setDefaultAlgebraFeeReceiver(other.address)).to.be.reverted;
+    });
+
+    it('emits event', async () => {
+      await expect(factory.setDefaultAlgebraFeeReceiver(other.address))
+        .to.emit(factory, 'DefaultAlgebraFeeReceiver')
+        .withArgs(other.address);
+    });
+  });
+
+  describe('#proposeAlgebraFee and #acceptAlgebraFee', () => {
+    beforeEach('set algebra fee manager and create pool', async () => {
+      await factory.transferAlgebraFeeManagerRole(wallet.address);
+    });
+
+    it('can propose algebra fee for pool', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await factory.proposeAlgebraFee(poolAddress, 100);
+      expect(await factory.proposedAlgebraFee(poolAddress)).to.eq(100);
+    });
+
+    it('only algebra fee manager can propose', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await expect(factory.connect(other).proposeAlgebraFee(poolAddress, 100)).to.be.revertedWith('only algebra fee manager');
+    });
+
+    it('cannot propose fee greater than max', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await expect(factory.proposeAlgebraFee(poolAddress, 1001)).to.be.reverted;
+    });
+
+    it('emits proposal event', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await expect(factory.proposeAlgebraFee(poolAddress, 100))
+        .to.emit(factory, 'AlgebraFeeProposal')
+        .withArgs(poolAddress, 100);
+    });
+
+    it('administrator can accept proposal', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      const pool = poolContractFactory.attach(poolAddress);
+
+      await pool.initialize(encodePriceSqrt(1, 1));
+
+      await factory.proposeAlgebraFee(poolAddress, 100);
+      await factory.acceptAlgebraFee(poolAddress);
+      expect(await pool.algebraFee()).to.eq(100);
+    });
+
+    it('only administrator can accept', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await factory.proposeAlgebraFee(poolAddress, 100);
+      await expect(factory.connect(other).acceptAlgebraFee(poolAddress)).to.be.revertedWith('only administrator');
+    });
+
+    it('can cancel proposal', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await factory.proposeAlgebraFee(poolAddress, 100);
+      await factory.cancelAlgebraFeeProposal(poolAddress);
+      expect(await factory.proposedAlgebraFee(poolAddress)).to.eq(0);
+    });
+
+    it('only algebra fee manager can cancel', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await factory.proposeAlgebraFee(poolAddress, 100);
+      await expect(factory.connect(other).cancelAlgebraFeeProposal(poolAddress)).to.be.revertedWith('only algebra fee manager');
+    });
+
+    it('emits cancel event', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await factory.proposeAlgebraFee(poolAddress, 100);
+      await expect(factory.cancelAlgebraFeeProposal(poolAddress))
+        .to.emit(factory, 'CancelAlgebraFeeProposal')
+        .withArgs(poolAddress);
+    });
+  });
+
+  describe('#setAlgebraFeeReceiver', () => {
+    beforeEach('set algebra fee manager', async () => {
+      await factory.transferAlgebraFeeManagerRole(wallet.address);
+    });
+
+    it('can set algebra fee receiver for pool', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      const pool = poolContractFactory.attach(poolAddress);
+
+      await factory.setAlgebraFeeReceiver(poolAddress, other.address);
+      expect(await pool.algebraFeeReceiver()).to.eq(other.address);
+    });
+
+    it('only algebra fee manager can set', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      await expect(factory.connect(other).setAlgebraFeeReceiver(poolAddress, other.address)).to.be.revertedWith('only algebra fee manager');
+    });
+  });
+
+  describe('#defaultAlgebraFeeReceiver in pool creation', () => {
+    it('sets algebraFeeReceiver in pool when defaultAlgebraFeeReceiver is set', async () => {
+      await factory.transferAlgebraFeeManagerRole(wallet.address);
+      await factory.setDefaultAlgebraFeeReceiver(other.address);
+
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      const pool = poolContractFactory.attach(poolAddress);
+
+      expect(await pool.algebraFeeReceiver()).to.eq(other.address);
+    });
+
+    it('does not set algebraFeeReceiver when defaultAlgebraFeeReceiver is zero', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      const poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      const pool = poolContractFactory.attach(poolAddress);
+
+      expect(await pool.algebraFeeReceiver()).to.eq(ZeroAddress);
+    });
   });
 });

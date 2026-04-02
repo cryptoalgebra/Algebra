@@ -21,11 +21,11 @@ import './interfaces/IAlgebraFactory.sol';
 
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
-/// @dev Version: Algebra Integral 1.2.2
+/// @dev Version: Algebra Integral 1.3
 contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positions, SwapCalculation, ReservesManager {
   using SafeCast for uint256;
   using SafeCast for uint128;
-  using Plugins for uint8;
+  using Plugins for uint16;
   using Plugins for bytes4;
 
   /// @inheritdoc IAlgebraPoolActions
@@ -40,12 +40,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
     }
 
-    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = _getDefaultConfiguration();
+    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee, uint16 _algebraFee) = _getDefaultConfiguration();
 
     _setFee(_fee);
     _setTickSpacing(_tickSpacing);
     if (_communityFee != 0 && communityVault == address(0)) revert invalidNewCommunityFee(); // the pool should not accumulate a community fee without a vault
     _setCommunityFee(_communityFee);
+    _setAlgebraFee(_algebraFee);
 
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
       IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
@@ -252,11 +253,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   ) external override returns (int256 amount0, int256 amount1) {
     (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
     _lock();
-
+    FeesAmount memory fees;
     {
       // scope to prevent "stack too deep"
       SwapEventParams memory eventParams;
-      FeesAmount memory fees;
       (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
         overrideFee,
         pluginFee,
@@ -294,7 +294,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
 
     _unlock();
-    _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -374,7 +374,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     );
 
     _unlock();
-    _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
+    _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
   }
 
   /// @dev internal function to reduce bytecode size
@@ -400,7 +400,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bool payInAdvance,
     bytes calldata data
   ) internal returns (uint24 overrideFee, uint24 pluginFee) {
-    uint8 pluginConfig = globalState.pluginConfig;
+    uint16 pluginConfig = globalState.pluginConfig;
     if (pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       if (_isPlugin()) return (0, 0);
       bytes4 selector;
@@ -411,10 +411,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
   }
 
-  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {
+  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, uint256 totalSwapFeeAmount, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       if (_isPlugin()) return;
-      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
+      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, totalSwapFeeAmount, data).shouldReturn(
         IAlgebraPlugin.afterSwap.selector
       );
     }
@@ -472,64 +472,32 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
   }
 
-  /// @dev using function to save bytecode
-  function _checkIfAdministrator() private view {
-    if (!IAlgebraFactory(factory).hasRoleOrOwner(Constants.POOLS_ADMINISTRATOR_ROLE, msg.sender)) revert notAllowed();
-  }
-
-  // permissioned actions use reentrancy lock to prevent call from callback (to keep the correct order of events, etc.)
+  // Permissioned setters are delegated to the extension contract to reduce pool bytecode size.
+  // Setters are called rarely, so the additional gas overhead of delegatecall is acceptable
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint16 newCommunityFee) external override onlyUnlocked {
-    _checkIfAdministrator();
-    if (
-      newCommunityFee > Constants.MAX_COMMUNITY_FEE ||
-      newCommunityFee == globalState.communityFee ||
-      (newCommunityFee != 0 && communityVault == address(0))
-    ) revert invalidNewCommunityFee();
-    _setCommunityFee(newCommunityFee);
-  }
+  function setCommunityFee(uint16) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setTickSpacing(int24 newTickSpacing) external override onlyUnlocked {
-    _checkIfAdministrator();
-    if (newTickSpacing <= 0 || newTickSpacing > Constants.MAX_TICK_SPACING || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
-    _setTickSpacing(newTickSpacing);
-  }
+  function setTickSpacing(int24) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPlugin(address newPluginAddress) external override onlyUnlocked {
-    _checkIfAdministrator();
-    _setPluginConfig(0);
-    _setPlugin(newPluginAddress);
-  }
+  function setPlugin(address) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPluginConfig(uint8 newConfig) external override onlyUnlocked {
-    address _plugin = plugin;
-    if (_plugin == address(0)) revert pluginIsNotConnected(); // it is not allowed to set plugin config without plugin
-
-    if (msg.sender != _plugin) _checkIfAdministrator();
-
-    _setPluginConfig(newConfig);
-  }
+  function setPluginConfig(uint16) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityVault(address newCommunityVault) external override onlyUnlocked {
-    // factory is allowed to set initial vault
-    if (msg.sender != factory) _checkIfAdministrator();
-    if (newCommunityVault == address(0) && globalState.communityFee != 0) _setCommunityFee(0); // the pool should not accumulate a community fee without a vault
-    _setCommunityFeeVault(newCommunityVault); // accumulated but not yet sent to the vault community fees once will be sent to the `newCommunityVault` address
-  }
+  function setCommunityVault(address) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setFee(uint16 newFee) external override {
-    _checkIfAdministrator();
-    bool isDynamicFeeEnabled = globalState.pluginConfig.hasFlag(Plugins.DYNAMIC_FEE);
-    if (!globalState.unlocked) revert locked(); // cheaper to check lock here
-    if (isDynamicFeeEnabled) revert dynamicFeeActive();
-    _setFee(newFee);
-  }
+  function setFee(uint16) external override { _delegateToExtension(); }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setAlgebraFee(uint16) external override { _delegateToExtension(); }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setAlgebraFeeReceiver(address) external override { _delegateToExtension(); }
 
   /// @dev using function to save bytecode
   function _checkIfPlugin() private view {

@@ -6,6 +6,8 @@ import '../libraries/Plugins.sol';
 import './AlgebraPoolBase.sol';
 import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/pool/IAlgebraPoolErrors.sol';
+import '../interfaces/IAlgebraFactory.sol';
+import '../interfaces/vault/IAlgebraCommunityVaultFeeHandler.sol';
 /// @title Algebra reserves management abstract contract
 /// @notice Encapsulates logic for tracking and changing pool reserves
 /// @dev The reserve mechanism allows the pool to keep track of unexpected increases in balances
@@ -77,7 +79,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
     uint256 fee1,
     uint256 lastTimestamp,
     bytes32 receiverSlot,
-    bytes32 feePendingSlot
+    bytes32 feePendingSlot,
+    bool isCommunityFee
   ) internal returns (uint104, uint104, uint256, uint256) {
     if (fee0 | fee1 != 0) {
       uint256 feePending0;
@@ -101,7 +104,9 @@ abstract contract ReservesManager is AlgebraPoolBase {
         assembly {
           recipient := sload(receiverSlot)
         }
-        (uint256 feeSent0, uint256 feeSent1) = _transferFees(feePending0, feePending1, recipient);
+        (uint256 feeSent0, uint256 feeSent1) = isCommunityFee
+          ? _transferCommunityFees(feePending0, feePending1, recipient)
+          : _transferFees(feePending0, feePending1, recipient);
         // use sload from slot (like pointer dereference) to avoid gas
         // override `lastFeeTransferTimestamp` with zeros is OK
         // because we will update it later
@@ -133,7 +138,9 @@ abstract contract ReservesManager is AlgebraPoolBase {
           assembly {
             recipient := sload(receiverSlot)
           }
-          (uint256 feeSent0, uint256 feeSent1) = _transferFees(feePending0, feePending1, recipient);
+          (uint256 feeSent0, uint256 feeSent1) = isCommunityFee
+            ? _transferCommunityFees(feePending0, feePending1, recipient)
+            : _transferFees(feePending0, feePending1, recipient);
           // use sload from slot (like pointer dereference) to avoid gas
           assembly {
             sstore(feePendingSlot, 0)
@@ -161,6 +168,48 @@ abstract contract ReservesManager is AlgebraPoolBase {
     }
 
     return (feeSent0, feeSent1);
+  }
+
+  /// @notice Transfers community fees with algebra fee split
+  /// @dev Splits the accumulated community fees between algebraFeeReceiver and communityVault.
+  /// If algebraFee >= communityFee, all community fees go to algebraFeeReceiver.
+  function _transferCommunityFees(uint256 feePending0, uint256 feePending1, address communityVaultAddr) private returns (uint256, uint256) {
+    uint256 algebraFeeAmount0;
+    uint256 algebraFeeAmount1;
+    address _algebraFeeReceiver;
+
+    uint16 _algebraFee = algebraFee;
+    if (_algebraFee > 0) {
+      uint16 _communityFee = globalState.communityFee;
+      if (_communityFee > 0) {
+        _algebraFeeReceiver = algebraFeeReceiver;
+        if (_algebraFeeReceiver != address(0)) {
+          if (_algebraFee >= _communityFee) {
+            algebraFeeAmount0 = feePending0;
+            algebraFeeAmount1 = feePending1;
+          } else {
+            if (feePending0 > 0) algebraFeeAmount0 = FullMath.mulDiv(feePending0, _algebraFee, _communityFee);
+            if (feePending1 > 0) algebraFeeAmount1 = FullMath.mulDiv(feePending1, _algebraFee, _communityFee);
+          }
+          if (algebraFeeAmount0 > 0) _transfer(token0, _algebraFeeReceiver, algebraFeeAmount0);
+          if (algebraFeeAmount1 > 0) _transfer(token1, _algebraFeeReceiver, algebraFeeAmount1);
+        }
+      }
+    }
+
+    uint256 communityVaultAmount0 = feePending0 - algebraFeeAmount0;
+    uint256 communityVaultAmount1 = feePending1 - algebraFeeAmount1;
+
+    if (communityVaultAmount0 > 0) _transfer(token0, communityVaultAddr, communityVaultAmount0);
+    if (communityVaultAmount1 > 0) _transfer(token1, communityVaultAddr, communityVaultAmount1);
+
+    emit CommunityFeeTransfer(communityVaultAddr, _algebraFeeReceiver, communityVaultAmount0, communityVaultAmount1, algebraFeeAmount0, algebraFeeAmount1);
+
+    if (communityVaultAmount0 | communityVaultAmount1 != 0) {
+      IAlgebraCommunityVaultFeeHandler(communityVaultAddr).handleCommunityFee(token0, token1, communityVaultAmount0, communityVaultAmount1);
+    }
+
+    return (feePending0, feePending1);
   }
 
   /// @notice Applies deltas to reserves and pays communityFees
@@ -193,7 +242,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
         communityFee1,
         lastTimestamp,
         feeRecipientSlot,
-        feePendingSlot
+        feePendingSlot,
+        true // community fee
       );
       if (feeSent0 | feeSent1 != 0) {
         // sent fees so decrease deltas
@@ -214,7 +264,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
         pluginFee1,
         lastTimestamp,
         feeRecipientSlot,
-        feePendingSlot
+        feePendingSlot,
+        false // plugin fee
       );
       if (feeSent0 | feeSent1 != 0) {
         // sent fees so decrease deltas

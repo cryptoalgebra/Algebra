@@ -12,7 +12,7 @@ import '@cryptoalgebra/farming-proxy-plugin/contracts/interfaces/IFarmingPlugin.
 import './interfaces/IFarmingCenter.sol';
 import './libraries/IncentiveId.sol';
 
-/// @title Algebra Integral 1.2.2 main farming contract
+/// @title Algebra Integral 1.3 main farming contract
 /// @dev Manages farmings and performs entry, exit and other actions.
 contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   /// @inheritdoc IFarmingCenter

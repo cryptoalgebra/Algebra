@@ -16,7 +16,7 @@ async function main() {
   await factory.waitForDeployment();
 
   const PoolDeployerFactory = await hre.ethers.getContractFactory('AlgebraPoolDeployer');
-  const poolDeployer = await PoolDeployerFactory.deploy(factory.target);
+  const poolDeployer = await PoolDeployerFactory.deploy(factory.target, await factory.poolExtension());
 
   await poolDeployer.waitForDeployment();
 
@@ -24,7 +24,7 @@ async function main() {
   console.log('AlgebraFactory deployed to:', factory.target);
 
   const vaultFactory = await hre.ethers.getContractFactory('AlgebraCommunityVault');
-  const vault = await vaultFactory.deploy(factory, deployer.address);
+  const vault = await vaultFactory.deploy(factory);
 
   await vault.waitForDeployment();
 
@@ -43,20 +43,20 @@ async function main() {
   // protocol fee settings
   const algebraFeeRecipient = "0x6cbd743d9b97DA1855E64893D3226F8eDCa16e76" 
   const partnerAddress = "0xDeaD1F5aF792afc125812E875A891b038f888258" // owner address, must be changed
-  const algebraFeeShare =  1000 // specified on algebraVault, 100% of community fee by default(3% of all fees) 
+  const defaultAlgebraFee = 15 // specified on factory, 1.5% of all fees by default(50% of community fee) 
   const defaultCommunityFee = 30 // 3% by default
+
+  // set deployer as algebraFeeManager first (since algebraFeeManager is address(0), owner can set it)
+  await (await factory.transferAlgebraFeeManagerRole(deployer.address)).wait()
 
   const setCommunityFeeTx = await factory.setDefaultCommunityFee(defaultCommunityFee)
   await setCommunityFeeTx.wait()
 
-  const changeAlgebraFeeReceiverTx = await vault.changeAlgebraFeeReceiver(algebraFeeRecipient)
-  await changeAlgebraFeeReceiverTx.wait()
+  await (await factory.setDefaultAlgebraFee(defaultAlgebraFee)).wait()
+  await (await factory.setDefaultAlgebraFeeReceiver(algebraFeeRecipient)).wait()
 
   const changePartnerFeeReceiverTx = await vault.changeCommunityFeeReceiver(partnerAddress)
   await changePartnerFeeReceiverTx.wait()
-
-  await (await vault.proposeAlgebraFeeChange(algebraFeeShare)).wait()
-  await (await vault.acceptAlgebraFeeChangeProposal(algebraFeeShare)).wait()
 
   await (await factory.transferOwnership(partnerAddress)).wait()
 
@@ -64,6 +64,7 @@ async function main() {
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
   deploysData.poolDeployer = poolDeployer.target;
   deploysData.factory = factory.target;
+  deploysData.poolExtension = await factory.poolExtension();
   deploysData.vault = vault.target;
   deploysData.vaultFactory = vaultFactoryStub.target;
   fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');

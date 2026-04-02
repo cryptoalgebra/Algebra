@@ -60,6 +60,24 @@ interface INonfungiblePositionManager is
     /// @param tokenId The ID of corresponding token
     event FarmingFailed(uint256 indexed tokenId);
 
+    /// @notice Emitted when the liquidity lock period is changed
+    /// @param oldLiquidityLockPeriod The old liquidity lock period
+    /// @param newLiquidityLockPeriod The new liquidity lock period
+    event LiquidityLockPeriodChanged(uint32 oldLiquidityLockPeriod, uint32 newLiquidityLockPeriod);
+
+    /// @notice Emitted when the liquidity lock setting is disabled
+    event LiquidityLockSettingDisabled();
+
+    /// @notice Emitted when the whitelist status of a account is changed
+    /// @param account The address of the account
+    /// @param status The new whitelist status
+    event WhitelistStatusChanged(address indexed account, bool status);
+
+    /// @notice Emitted when the liquidity unlock time is updated for a position
+    /// @param tokenId The ID of the token
+    /// @param unlockTime The new unlock time
+    event LiquidityUnlockTimeUpdated(uint256 indexed tokenId, uint32 unlockTime);
+
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
@@ -217,4 +235,29 @@ interface INonfungiblePositionManager is
 
     /// @notice Returns the address of farming in which this token is farmed, if any
     function tokenFarmedIn(uint256 tokenId) external view returns (address);
+
+    /// @notice Returns the duration of the liquidity lock period
+    function liquidityLockPeriod() external view returns (uint32);
+
+    /// @notice Returns the timestamp when liquidity can be removed for a given token ID
+    function liquidityUnlockTime(uint256 tokenId) external view returns (uint32);
+
+    /// @notice Returns true if the account is whitelisted
+    /// @param account The address of the account
+    function isWhitelisted(address account) external view returns (bool);
+
+    /// @notice Sets the liquidity lock period
+    /// @param _liquidityLockPeriod The new liquidity lock period
+    function setLiquidityLockPeriod(uint32 _liquidityLockPeriod) external;
+
+    /// @notice Permanently disables the liquidity lock setting
+    function permanentlyDisableLiquidityLock() external;
+
+    /// @notice Returns true if the liquidity lock setting is disabled
+    function liquidityLockSettingDisabled() external view returns (bool);
+
+    /// @notice Sets the whitelist status of an account
+    /// @param account The address of the account
+    /// @param status The new whitelist status
+    function setWhitelistStatus(address account, bool status) external;
 }

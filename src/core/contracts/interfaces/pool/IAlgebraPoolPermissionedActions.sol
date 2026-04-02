@@ -21,7 +21,7 @@ interface IAlgebraPoolPermissionedActions {
   /// @notice Set new plugin config. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   /// @param newConfig In the new configuration of the plugin,
   /// each bit of which is responsible for a particular hook.
-  function setPluginConfig(uint8 newConfig) external;
+  function setPluginConfig(uint16 newConfig) external;
 
   /// @notice Set new community fee vault address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   /// @dev Community fee vault receives collected community fees.
@@ -33,6 +33,14 @@ interface IAlgebraPoolPermissionedActions {
   /// Called by the plugin if dynamic fee is enabled
   /// @param newFee The new fee value
   function setFee(uint16 newFee) external;
+
+  /// @notice Set the algebra fee for this pool. Only callable by the factory.
+  /// @param newAlgebraFee The new algebra fee value
+  function setAlgebraFee(uint16 newAlgebraFee) external;
+
+  /// @notice Set the algebra fee receiver for this pool. Only callable by the factory.
+  /// @param newAlgebraFeeReceiver The new algebra fee receiver address
+  function setAlgebraFeeReceiver(address newAlgebraFeeReceiver) external;
 
   /// @notice Forces balances to match reserves. Excessive tokens will be distributed between active LPs
   /// @dev Only plugin can call this function

@@ -20,7 +20,7 @@ interface IAlgebraPoolState {
   function safelyGetStateOfAMM()
     external
     view
-    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick);
+    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint16 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick);
 
   /// @notice Allows to easily get current reentrancy lock status
   /// @dev can be used to prevent read-only reentrancy.
@@ -41,7 +41,7 @@ interface IAlgebraPoolState {
   /// @return pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
   /// @return communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
   /// @return unlocked Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
-  function globalState() external view returns (uint160 price, int24 tick, uint16 lastFee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
+  function globalState() external view returns (uint160 price, int24 tick, uint16 lastFee, uint16 pluginConfig, uint16 communityFee, bool unlocked);
 
   /// @notice Look up information about a specific tick in the pool
   /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
@@ -149,6 +149,14 @@ interface IAlgebraPoolState {
   /// This value is an int24 to avoid casting even though it is always positive.
   /// @return The current tick spacing
   function tickSpacing() external view returns (int24);
+
+  /// @notice The algebra fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
+  /// @return The current algebra fee value
+  function algebraFee() external view returns (uint16);
+
+  /// @notice The address that receives the algebra fee part of community fees
+  /// @return The algebra fee receiver address
+  function algebraFeeReceiver() external view returns (address);
 
   /// @notice The previous initialized tick before (or at) current global tick
   /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**

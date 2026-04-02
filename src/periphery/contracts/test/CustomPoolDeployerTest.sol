@@ -53,7 +53,7 @@ contract CustomPoolDeployerTest {
         IAlgebraCustomPoolEntryPoint(entryPoint).setPlugin(pool, newPluginAddress);
     }
 
-    function setPluginConfig(address pool, uint8 newConfig) external {
+    function setPluginConfig(address pool, uint16 newConfig) external {
         IAlgebraCustomPoolEntryPoint(entryPoint).setPluginConfig(pool, newConfig);
     }
 

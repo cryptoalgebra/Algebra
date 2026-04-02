@@ -10,15 +10,16 @@ import './interfaces/vault/IAlgebraVaultFactory.sol';
 import './interfaces/plugin/IAlgebraPluginFactory.sol';
 
 import './AlgebraCommunityVault.sol';
+import './AlgebraPoolExtension.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import {ReentrancyGuard as OZReentrancyGuard} from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
-/// @dev Version: Algebra Integral 1.2.2
-contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable, ReentrancyGuard {
+/// @dev Version: Algebra Integral 1.3
+contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable, OZReentrancyGuard {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
 
@@ -27,6 +28,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
+
+  /// @inheritdoc IAlgebraFactory
+  address public immutable poolExtension;
 
   /// @inheritdoc IAlgebraFactory
   uint16 public override defaultCommunityFee;
@@ -50,6 +54,18 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   IAlgebraVaultFactory public vaultFactory;
 
   /// @inheritdoc IAlgebraFactory
+  address public override defaultAlgebraFeeReceiver;
+
+  /// @inheritdoc IAlgebraFactory
+  address public override algebraFeeManager;
+
+  /// @inheritdoc IAlgebraFactory
+  uint16 public override defaultAlgebraFee;
+
+  /// @inheritdoc IAlgebraFactory
+  mapping(address => uint16) public override proposedAlgebraFee;
+
+  /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
   /// @inheritdoc IAlgebraFactory
@@ -57,11 +73,17 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0x62441ebe4e4315cf3d49d5957f94d66b253dbabe7006f34ad7f70947e60bf15c;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x0a5e24945efdd9ac1f8c67e36bf511e1d97cb0bde38c7ddc62d297019cb43dc3;
+
+  modifier onlyAlgebraFeeManager() {
+    require(msg.sender == algebraFeeManager, 'only algebra fee manager');
+    _;
+  }
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
+    poolExtension = address(new AlgebraPoolExtension());
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
     defaultFee = Constants.INIT_DEFAULT_FEE;
 
@@ -80,8 +102,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function defaultConfigurationForPool() external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee) {
-    return (defaultCommunityFee, defaultTickspacing, defaultFee);
+  function defaultConfigurationForPool() external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee, uint16 algebraFee) {
+    return (defaultCommunityFee, defaultTickspacing, defaultFee, defaultAlgebraFee);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -160,6 +182,11 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
       address vault = vaultFactory.createVaultForPool(pool, creator, deployer, token0, token1);
       IAlgebraPool(pool).setCommunityVault(vault);
     }
+
+    address _defaultAlgebraFeeReceiver = defaultAlgebraFeeReceiver;
+    if (_defaultAlgebraFeeReceiver != address(0)) {
+      IAlgebraPool(pool).setAlgebraFeeReceiver(_defaultAlgebraFeeReceiver);
+    }
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -229,6 +256,54 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     emit RenounceOwnershipFinish(block.timestamp);
   }
 
+  /// @inheritdoc IAlgebraFactory
+  function setDefaultAlgebraFee(uint16 newDefaultAlgebraFee) external override onlyAlgebraFeeManager {
+    require(newDefaultAlgebraFee <= Constants.MAX_COMMUNITY_FEE);
+    require(newDefaultAlgebraFee != defaultAlgebraFee);
+    defaultAlgebraFee = newDefaultAlgebraFee;
+    emit DefaultAlgebraFee(newDefaultAlgebraFee);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function setAlgebraFeeReceiver(address pool, address newAlgebraFeeReceiver) external override onlyAlgebraFeeManager {
+    IAlgebraPool(pool).setAlgebraFeeReceiver(newAlgebraFeeReceiver);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function setDefaultAlgebraFeeReceiver(address newDefaultAlgebraFeeReceiver) external override onlyAlgebraFeeManager {
+    require(newDefaultAlgebraFeeReceiver != defaultAlgebraFeeReceiver);
+    defaultAlgebraFeeReceiver = newDefaultAlgebraFeeReceiver;
+    emit DefaultAlgebraFeeReceiver(newDefaultAlgebraFeeReceiver);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function proposeAlgebraFee(address pool, uint16 newAlgebraFee) external override onlyAlgebraFeeManager {
+    require(newAlgebraFee <= Constants.MAX_COMMUNITY_FEE);
+    proposedAlgebraFee[pool] = newAlgebraFee;
+    emit AlgebraFeeProposal(pool, newAlgebraFee);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function cancelAlgebraFeeProposal(address pool) external override onlyAlgebraFeeManager {
+    delete proposedAlgebraFee[pool];
+    emit CancelAlgebraFeeProposal(pool);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function acceptAlgebraFee(address pool) external override {
+    require(hasRoleOrOwner(POOLS_ADMINISTRATOR_ROLE, msg.sender), 'only administrator');
+    uint16 newAlgebraFee = proposedAlgebraFee[pool];
+    delete proposedAlgebraFee[pool];
+    IAlgebraPool(pool).setAlgebraFee(newAlgebraFee);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external override {
+    require(msg.sender == algebraFeeManager || (algebraFeeManager == address(0) && msg.sender == owner()), 'not allowed');
+    algebraFeeManager = _newAlgebraFeeManager;
+    emit AlgebraFeeManager(_newAlgebraFeeManager);
+  }
+
   /// @dev Transfers ownership of the contract to a new account (`newOwner`).
   /// Modified to fit with the role mechanism.
   function _transferOwnership(address newOwner) internal override {
@@ -238,4 +313,5 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
       _grantRole(DEFAULT_ADMIN_ROLE, owner());
     }
   }
+  
 }

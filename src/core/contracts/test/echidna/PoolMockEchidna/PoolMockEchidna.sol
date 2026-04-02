@@ -71,17 +71,19 @@ contract PoolMockEchidna is AlgebraPool {
     return true;
   }
 
-  function _getDeployParameters() internal view override returns (address plugin, address factory, address token0, address token1) {
+  function _getDeployParameters() internal view override returns (address plugin, address factory, address token0, address token1, address extension) {
     plugin = address(0);
     factory = address(this);
     token0 = address(1);
     token1 = address(2);
+    extension = address(0);
   }
 
-  function _getDefaultConfiguration() internal pure override returns (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) {
+  function _getDefaultConfiguration() internal pure override returns (uint16 _communityFee, int24 _tickSpacing, uint16 _fee, uint16 _algebraFee) {
     _communityFee = 0;
     _tickSpacing = 1;
     _fee = 100;
+    _algebraFee = 0;
   }
 
   // The main external calls that are used by the pool

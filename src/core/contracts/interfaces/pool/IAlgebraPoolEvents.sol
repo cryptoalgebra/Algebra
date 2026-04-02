@@ -115,7 +115,7 @@ interface IAlgebraPoolEvents {
 
   /// @notice Emitted when the plugin config changes
   /// @param newPluginConfig New plugin config
-  event PluginConfig(uint8 newPluginConfig);
+  event PluginConfig(uint16 newPluginConfig);
 
   /// @notice Emitted when the fee changes inside the pool
   /// @param fee The current fee in hundredths of a bip, i.e. 1e-6
@@ -124,6 +124,30 @@ interface IAlgebraPoolEvents {
   /// @notice Emitted when the community vault address changes
   /// @param newCommunityVault New community vault
   event CommunityVault(address newCommunityVault);
+
+  /// @notice Emitted when the algebra fee is changed by the pool
+  /// @param algebraFeeNew The updated value of the algebra fee in thousandths (1e-3)
+  event AlgebraFee(uint16 algebraFeeNew);
+
+  /// @notice Emitted when the algebra fee receiver is changed
+  /// @param newAlgebraFeeReceiver The new algebra fee receiver address
+  event AlgebraFeeReceiver(address newAlgebraFeeReceiver);
+
+  /// @notice Emitted when community fees are distributed from the pool
+  /// @param communityVault The address of the community vault
+  /// @param algebraFeeReceiver The address of the algebra fee receiver
+  /// @param communityFeeAmount0 The amount of token0 sent to communityVault
+  /// @param communityFeeAmount1 The amount of token1 sent to communityVault
+  /// @param algebraFeeAmount0 The amount of token0 sent to algebraFeeReceiver
+  /// @param algebraFeeAmount1 The amount of token1 sent to algebraFeeReceiver
+  event CommunityFeeTransfer(
+    address communityVault,
+    address algebraFeeReceiver,
+    uint256 communityFeeAmount0,
+    uint256 communityFeeAmount1,
+    uint256 algebraFeeAmount0,
+    uint256 algebraFeeAmount1
+  );
 
   /// @notice Emitted when the plugin does skim the excess of tokens
   /// @param to THe receiver of tokens (plugin)

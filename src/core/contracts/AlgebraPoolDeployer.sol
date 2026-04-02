@@ -8,23 +8,26 @@ import './AlgebraPool.sol';
 
 /// @title Algebra pool deployer
 /// @notice Is used by AlgebraFactory to deploy pools
-/// @dev Version: Algebra Integral 1.2.2
+/// @dev Version: Algebra Integral 1.3
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;
   bytes32 private cache1;
 
+  address private immutable extension;
   address private immutable factory;
 
-  constructor(address _factory) {
+  constructor(address _factory, address _extension) {
     require(_factory != address(0));
     factory = _factory;
+    extension = _extension;
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function getDeployParameters() external view override returns (address _plugin, address _factory, address _token0, address _token1) {
+  function getDeployParameters() external view override returns (address _plugin, address _factory, address _token0, address _token1, address _extension) {
     (_plugin, _token0, _token1) = _readFromCache();
     _factory = factory;
+    _extension = extension;
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
@@ -32,6 +35,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
     require(msg.sender == factory);
 
     _writeToCache(plugin, token0, token1);
+
     bytes memory _encodedParams;
     if (deployer == address(0)) {
       _encodedParams = abi.encode(token0, token1);

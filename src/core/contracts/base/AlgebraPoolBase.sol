@@ -35,7 +35,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     uint160 price;
     int24 tick;
     uint16 lastFee;
-    uint8 pluginConfig;
+    uint16 pluginConfig;
     uint16 communityFee;
     bool unlocked;
   }
@@ -48,6 +48,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   address public immutable override token0;
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override token1;
+  /// @notice The address of the pool extension contract used for delegatecall
+  address public immutable algebraPoolExtension;
 
   // ! IMPORTANT security note: the pool state can be manipulated
   // ! external contracts using this data must prevent read-only reentrancy
@@ -79,6 +81,11 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   address public override communityVault;
 
   /// @inheritdoc IAlgebraPoolState
+  address public override algebraFeeReceiver;
+  /// @inheritdoc IAlgebraPoolState
+  uint16 public override algebraFee;
+
+  /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
 
   /// @inheritdoc IAlgebraPoolState
@@ -99,7 +106,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   constructor() {
     address _plugin;
-    (_plugin, factory, token0, token1) = _getDeployParameters();
+    (_plugin, factory, token0, token1, algebraPoolExtension) = _getDeployParameters();
     (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     globalState.unlocked = true;
     if (_plugin != address(0)) {
@@ -113,7 +120,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     external
     view
     override
-    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
+    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint16 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
   {
     sqrtPrice = globalState.price;
     tick = globalState.tick;
@@ -144,20 +151,47 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @inheritdoc IAlgebraPoolState
   function fee() external view override returns (uint16 currentFee) {
     currentFee = globalState.lastFee;
-    uint8 pluginConfig = globalState.pluginConfig;
+    uint16 pluginConfig = globalState.pluginConfig;
 
     if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
   }
 
   /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
   /// Can be overridden in tests
-  function _getDeployParameters() internal virtual returns (address, address, address, address) {
+  function _getDeployParameters() internal virtual returns (address, address, address, address, address) {
     return IAlgebraPoolDeployer(msg.sender).getDeployParameters();
   }
 
   /// @dev Gets the default settings for pool initialization. Can be overridden in tests
-  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16) {
+  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16, uint16) {
     return IAlgebraFactory(factory).defaultConfigurationForPool();
+  }
+
+  /// @dev Uses the standard OZ Proxy._delegate() 
+  function _delegateToExtension() internal {
+    address _extension = algebraPoolExtension;
+    assembly {
+      // Copy msg.data. We take full control of memory in this inline assembly
+      // block because it will not return to Solidity code. We overwrite the
+      // Solidity scratch pad at memory position 0.
+      calldatacopy(0, 0, calldatasize())
+
+      // Call the implementation.
+      // out and outsize are 0 because we don't know the size yet.
+      let result := delegatecall(gas(), _extension, 0, calldatasize(), 0, 0)
+
+      // Copy the returned data.
+      returndatacopy(0, 0, returndatasize())
+
+      switch result
+      // delegatecall returns 0 on error.
+      case 0 {
+        revert(0, returndatasize()) 
+      }
+      default { 
+        return(0, returndatasize()) 
+      }
+    }
   }
 
   // The main external calls that are used by the pool. Can be overridden in tests
@@ -219,8 +253,18 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     emit Plugin(_plugin);
   }
 
-  function _setPluginConfig(uint8 _pluginConfig) internal {
+  function _setPluginConfig(uint16 _pluginConfig) internal {
     globalState.pluginConfig = _pluginConfig;
     emit PluginConfig(_pluginConfig);
+  }
+
+  function _setAlgebraFee(uint16 _algebraFee) internal {
+    algebraFee = _algebraFee;
+    emit AlgebraFee(_algebraFee);
+  }
+
+  function _setAlgebraFeeReceiver(address _algebraFeeReceiver) internal {
+    algebraFeeReceiver = _algebraFeeReceiver;
+    emit AlgebraFeeReceiver(_algebraFeeReceiver);
   }
 }
