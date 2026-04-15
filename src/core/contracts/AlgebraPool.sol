@@ -19,6 +19,8 @@ import './libraries/Plugins.sol';
 import './interfaces/plugin/IAlgebraPlugin.sol';
 import './interfaces/IAlgebraFactory.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
 /// @dev Version: Algebra Integral 1.3
@@ -170,7 +172,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       emit BurnFee(msg.sender, pluginFee);
       emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
     }
-    
+
     _unlock();
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
@@ -243,6 +245,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint128 currentLiquidity;
   }
 
+  struct SwapCache {
+    address recipient;
+    bool zeroToOne;
+    int256 amountRequired;
+    uint160 limitSqrtPrice;
+    bytes data;
+    uint24 overrideFee;
+    uint24 pluginFee;
+    uint256 amountInDecrease;
+  }
+
   /// @inheritdoc IAlgebraPoolActions
   function swap(
     address recipient,
@@ -251,50 +264,106 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
+    SwapCache memory _cache = SwapCache(recipient, zeroToOne, amountRequired, limitSqrtPrice, data, 0, 0, 0);
+
+    // amountInDecrease is either in token0 or token1 depending on zeroToOne
+    // can only be non-zero if exactIn!
+    // can only decrease the input token affecting the amount passed to the swap calculation
+    (_cache.amountInDecrease, _cache.overrideFee, _cache.pluginFee) = _beforeSwap(
+      _cache.recipient,
+      _cache.zeroToOne,
+      _cache.amountRequired,
+      _cache.limitSqrtPrice,
+      false,
+      data
+    );
     _lock();
     FeesAmount memory fees;
     {
       // scope to prevent "stack too deep"
       SwapEventParams memory eventParams;
       (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
-        overrideFee,
-        pluginFee,
-        zeroToOne,
-        amountRequired,
-        limitSqrtPrice
+        _cache.overrideFee,
+        _cache.pluginFee,
+        _cache.zeroToOne,
+        _cache.amountRequired - int256(_cache.amountInDecrease),
+        _cache.limitSqrtPrice
       );
+
+      // amountInIncrease, amountOutDecrease is either in token0 or token1 respectively depending on zeroToOne
+      // can only increase the input (for the exactOut case)
+      // can only decrease the output (for the exactIn case)
+      (uint256 amountInIncrease, uint256 amountOutDecrease) = _afterSwapCalculation(
+        _cache.recipient,
+        _cache.zeroToOne,
+        _cache.amountRequired,
+        _cache.limitSqrtPrice,
+        amount0,
+        amount1,
+        _cache.data
+      );
+
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-      if (zeroToOne) {
+
+      if (_cache.zeroToOne) {
+        // These amounts are representing pool <-> user payments
+        // Increase because amount1 is negative. It makes the pool send less to the user
+        amount1 += int256(amountOutDecrease);
+        // Increase amount0. It makes the user send more to the pool (this excess part will go to a plugin)
+        // amountInIncrease from _afterSwapCalculation() could be based on the amountIn as a result of swapCalculation (exactOut)
+        amount0 += int256(amountInIncrease);
         unchecked {
-          if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
+          if (amount1 < 0) _transfer(token1, _cache.recipient, uint256(-amount1)); // amount1 cannot be > 0
         }
-        _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
-        if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
+        // totalAmount0 represents total amount of input token that user must send to pool
+        int256 totalAmount0 = amount0 + int256(_cache.amountInDecrease);
+        // in case of exactIn amount0 returned from _calculateSwap should be equal to amountRequired - amountInDecrease
+        // FAKE. Because if there is not enough liquidity then amountIn might be less then amountRequired
+        //        if (_cache.amountRequired > 0 ) {
+        //          assert(_cache.amountRequired == totalAmount0);
+        //        }
+        // optionally user also has to pay amountInDecrease to plugin
+        // amountInDecrease from _beforeSwap() could be based on the amountIn given as input (exactIn)
+        _swapCallback(totalAmount0, amount1, data); // callback to get tokens from the msg.sender
+        if (balance0Before + uint256(totalAmount0) > _balanceToken0()) revert insufficientInputAmount();
+
+        if (amountInIncrease + _cache.amountInDecrease > 0) _transfer(token0, plugin, amountInIncrease + _cache.amountInDecrease);
+        if (amountOutDecrease > 0) _transfer(token1, plugin, amountOutDecrease);
         _changeReserves(amount0, amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0); // reflect reserve change and pay communityFee
       } else {
+        // These amounts are representing pool <-> user payments
+        // Increase because amount0 is negative. It makes the pool send less to the user
+        amount0 += int256(amountOutDecrease);
+        // Increase amount1. It makes the user send more to the pool
+        amount1 += int256(amountInIncrease);
+
         unchecked {
-          if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
+          if (amount0 < 0) _transfer(token0, _cache.recipient, uint256(-amount0)); // amount0 cannot be > 0
         }
-        _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
+        // optionally user also has to pay amountInDecrease to plugin
+        // amountInDecrease from _beforeSwap() could be based on the amountIn given as input (exactIn)
+        _swapCallback(amount0, amount1 + int256(_cache.amountInDecrease), data); // callback to get tokens from the msg.sender
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
+
+        if ((amountInIncrease + _cache.amountInDecrease) > 0) _transfer(token1, plugin, amountInIncrease + _cache.amountInDecrease);
+        if (amountOutDecrease > 0) _transfer(token0, plugin, amountOutDecrease);
         _changeReserves(amount0, amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount); // reflect reserve change and pay communityFee
       }
 
       _emitSwapEvent(
-        recipient,
+        _cache.recipient,
         amount0,
         amount1,
         eventParams.currentPrice,
         eventParams.currentLiquidity,
         eventParams.currentTick,
-        overrideFee,
-        pluginFee
+        _cache.overrideFee,
+        _cache.pluginFee
       );
     }
 
     _unlock();
-    _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
+    _afterSwap(_cache.recipient, _cache.zeroToOne, _cache.amountRequired, _cache.limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -332,7 +401,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (amountToSell == 0) revert insufficientInputAmount();
 
     _unlock();
-    (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    (, uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
     _lock();
 
     _updateReserves();
@@ -399,19 +468,64 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitPrice,
     bool payInAdvance,
     bytes calldata data
-  ) internal returns (uint24 overrideFee, uint24 pluginFee) {
+  ) internal returns (uint256 amountInDecrease, uint24 overrideFee, uint24 pluginFee) {
     uint16 pluginConfig = globalState.pluginConfig;
     if (pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
-      if (_isPlugin()) return (0, 0);
+      if (_isPlugin()) return (0, 0, 0);
       bytes4 selector;
-      (selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data);
+      (amountInDecrease, selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(
+        msg.sender,
+        recipient,
+        zto,
+        amount,
+        limitPrice,
+        payInAdvance,
+        data
+      );
       if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && (overrideFee > 0 || pluginFee > 0)) revert dynamicFeeDisabled();
+      // its not possible to decrease the calculated input amount (exactOut)
+      // only possible to decrease provided input amount (exactIn)
+      // TODO: add error
+      if ((amount < 0) && (amountInDecrease != 0)) revert();
       // we will check that fee is less than denominator inside the swap calculation
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
   }
 
-  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, uint256 totalSwapFeeAmount, bytes calldata data) internal {
+  function _afterSwapCalculation(
+    address recipient,
+    bool zto,
+    int256 amount,
+    uint160 limitPrice,
+    int256 amount0,
+    int256 amount1,
+    bytes memory data
+  ) internal returns (uint256 amountInIncrease, uint256 amountOutDecrease) {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_CALCULATION_FLAG)) {
+      if (_isPlugin()) return (0, 0);
+      bytes4 selector;
+      (selector, amountInIncrease, amountOutDecrease) = IAlgebraPlugin(plugin).afterSwapCalculation(
+        msg.sender,
+        recipient,
+        zto,
+        amount,
+        limitPrice,
+        amount0,
+        amount1,
+        data
+      );
+      // cannot decrease output amount if it's exactOut
+      // TODO: add error
+      if ((amount < 0) && (amountOutDecrease > 0)) revert();
+      // cannot increase input amount if it's exactIn
+      // should decrease using amountInDecrease returned from beforeSwap hook
+      // TODO: add error
+      if ((amount > 0) && (amountInIncrease > 0)) revert();
+      selector.shouldReturn(IAlgebraPlugin.afterSwapCalculation.selector);
+    }
+  }
+
+  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       if (_isPlugin()) return;
       IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, totalSwapFeeAmount, data).shouldReturn(

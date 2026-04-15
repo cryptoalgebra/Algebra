@@ -25,4 +25,5 @@ library Plugins {
   uint256 internal constant AFTER_INIT_FLAG = 1 << 6;
   uint256 internal constant DYNAMIC_FEE = 1 << 7;
   uint256 internal constant AFTER_CROSS_FLAG = 1 << 8;
+  uint256 internal constant AFTER_SWAP_CALCULATION_FLAG = 1 << 9;
 }
