@@ -32,10 +32,6 @@ contract MockFarmingPlugin is IAlgebraPlugin {
         return DEFAULT_PLUGIN_CONFIG;
     }
 
-    function handlePluginFee(uint256, uint256) external pure override returns (bytes4) {
-        return IAlgebraPlugin.handlePluginFee.selector;
-    }
-
     function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
         _updatePluginConfigInPool();
         return IAlgebraPlugin.beforeInitialize.selector;
@@ -46,8 +42,8 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     }
 
     function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata)
-        external view override onlyPool returns (bytes4, uint24) {
-        return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
+        external view override onlyPool returns (bytes4) {
+        return IAlgebraPlugin.beforeModifyPosition.selector;
     }
 
     function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata)
@@ -56,8 +52,8 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     }
 
     function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata)
-        external view override onlyPool returns (bytes4, uint24, uint24) {
-        return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
+        external view override onlyPool returns (uint256, bytes4, uint24) {
+        return (0, IAlgebraPlugin.beforeSwap.selector, 0);
     }
 
     function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, uint256, bytes calldata)

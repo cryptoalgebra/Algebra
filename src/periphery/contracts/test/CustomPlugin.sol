@@ -42,9 +42,9 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
         int24,
         int128,
         bytes calldata
-    ) external override returns (bytes4, uint24) {
+    ) external override returns (bytes4) {
         _updatePluginConfigInPool(); // should not be called, reset config
-        return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
+        return IAlgebraPlugin.beforeModifyPosition.selector;
     }
 
     /// @dev unused
@@ -70,9 +70,9 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
         uint160,
         bool,
         bytes calldata
-    ) external override returns (bytes4, uint24, uint24) {
+    ) external override returns (uint256, bytes4, uint24) {
         IAlgebraPool(pool).setFee(10000);
-        return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
+        return (0, IAlgebraPlugin.beforeSwap.selector, 0);
     }
 
     function afterSwap(
@@ -88,10 +88,6 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
     ) external override returns (bytes4) {
         IAlgebraPool(pool).setFee(100);
         return IAlgebraPlugin.afterSwap.selector;
-    }
-
-    function handlePluginFee(uint256, uint256) external pure returns (bytes4) {
-        return IAlgebraPlugin.handlePluginFee.selector;
     }
 
     /// @dev unused

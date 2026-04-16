@@ -9,12 +9,6 @@ interface IAlgebraPlugin {
   /// The last bit indicates whether the plugin contains dynamic fees logic
   function defaultPluginConfig() external view returns (uint16);
 
-  /// @notice Handle plugin fee transfer on plugin contract
-  /// @param pluginFee0 Fee0 amount transferred to plugin
-  /// @param pluginFee1 Fee1 amount transferred to plugin
-  /// @return bytes4 The function selector
-  function handlePluginFee(uint256 pluginFee0, uint256 pluginFee1) external returns (bytes4);
-
   /// @notice The hook called before the state of a pool is initialized
   /// @param sender The initial msg.sender for the initialize call
   /// @param sqrtPriceX96 The sqrt(price) of the pool as a Q64.96
@@ -44,7 +38,7 @@ interface IAlgebraPlugin {
     int24 topTick,
     int128 desiredLiquidityDelta,
     bytes calldata data
-  ) external returns (bytes4 selector, uint24 pluginFee);
+  ) external returns (bytes4 selector);
 
   /// @notice The hook called after a position is modified
   /// @param sender The initial msg.sender for the modify position call
@@ -81,7 +75,6 @@ interface IAlgebraPlugin {
   /// @return amountInDecrease
   /// @return selector The function selector for the hook
   /// @return feeOverride
-  /// @return pluginFee
   function beforeSwap(
     address sender,
     address recipient,
@@ -90,7 +83,7 @@ interface IAlgebraPlugin {
     uint160 limitSqrtPrice,
     bool withPaymentInAdvance,
     bytes calldata data
-  ) external returns (uint256 amountInDecrease, bytes4 selector, uint24 feeOverride, uint24 pluginFee);
+  ) external returns (uint256 amountInDecrease, bytes4 selector, uint24 feeOverride);
 
   /// @notice The hook called after swap calculation
   /// @param sender The initial msg.sender for the swap call

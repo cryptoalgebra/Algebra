@@ -118,11 +118,11 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         });
       })
 
-      describe('#swapExact1For0 with plugin fee on', () => {
+      describe('#swapExact1For0 with override fee on', () => {
         beforeEach('load the fixture', async () => {
           const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
           poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
-          await poolPlugin.setPluginFees(0, 1000);
+          await poolPlugin.setOverrideFee(1000);
           await pool.setPlugin(poolPlugin);
           await pool.setPluginConfig(255);
 
@@ -140,7 +140,6 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await snapshotGasCost(swapExact1For0(10000, wallet.address));
           expect((await pool.globalState()).price).to.not.eq(startingPrice);
           expect((await pool.globalState()).tick).to.eq(startingTick);
-          expect((await pool.getPluginFeePending())[1]).to.be.gt(0)
         });
 
         it('first swap in block with no tick movement, with transfer', async () => {
@@ -153,7 +152,6 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         it('first swap in block moves tick, no initialized crossings, with transfer', async () => {
           await pool.advanceTime(86400)
           await snapshotGasCost(swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address));
-          expect((await pool.getPluginFeePending())[1]).to.be.eq(0)
           expect((await pool.globalState()).tick).to.eq(startingTick + 1);
         });
       })

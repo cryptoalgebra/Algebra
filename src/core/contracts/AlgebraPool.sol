@@ -118,7 +118,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
     }
 
-    _changeReserves(int256(amount0), int256(amount1), 0, 0, 0, 0);
+    _changeReserves(int256(amount0), int256(amount1), 0, 0);
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
 
     _unlock();
@@ -136,7 +136,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     int128 liquidityDelta = -int128(amount);
 
-    uint24 pluginFee = _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
+    _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
     _lock();
 
     _updateReserves();
@@ -144,22 +144,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
       (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
-
-      if (pluginFee > 0) {
-        uint256 deltaPluginFeePending0;
-        uint256 deltaPluginFeePending1;
-
-        if (amount0 > 0) {
-          deltaPluginFeePending0 = FullMath.mulDiv(amount0, pluginFee, Constants.FEE_DENOMINATOR);
-          amount0 -= deltaPluginFeePending0;
-        }
-        if (amount1 > 0) {
-          deltaPluginFeePending1 = FullMath.mulDiv(amount1, pluginFee, Constants.FEE_DENOMINATOR);
-          amount1 -= deltaPluginFeePending1;
-        }
-
-        _changeReserves(0, 0, 0, 0, deltaPluginFeePending0, deltaPluginFeePending1);
-      }
 
       if (amount0 | amount1 != 0) {
         // since we do not support tokens whose total supply can exceed uint128, these casts are safe
@@ -169,7 +153,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
 
     if (amount | amount0 | amount1 != 0) {
-      emit BurnFee(msg.sender, pluginFee);
       emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
     }
 
@@ -187,12 +170,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     int24 topTick,
     int128 liquidityDelta,
     bytes calldata data
-  ) internal returns (uint24 pluginFee) {
+  ) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
-      if (_isPlugin()) return 0;
-      bytes4 selector;
-      (selector, pluginFee) = IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data);
-      if (pluginFee >= 1e6) revert incorrectPluginFee();
+      if (_isPlugin()) return;
+      bytes4 selector = IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data);
       selector.shouldReturn(IAlgebraPlugin.beforeModifyPosition.selector);
     }
   }
@@ -232,7 +213,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
         if (amount0 > 0) _transfer(token0, recipient, amount0);
         if (amount1 > 0) _transfer(token1, recipient, amount1);
-        _changeReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0, 0, 0);
+        _changeReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
       }
       emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
     }
@@ -252,7 +233,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice;
     bytes data;
     uint24 overrideFee;
-    uint24 pluginFee;
     uint256 amountInDecrease;
   }
 
@@ -264,12 +244,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    SwapCache memory _cache = SwapCache(recipient, zeroToOne, amountRequired, limitSqrtPrice, data, 0, 0, 0);
+    SwapCache memory _cache = SwapCache(recipient, zeroToOne, amountRequired, limitSqrtPrice, data, 0, 0);
 
     // amountInDecrease is either in token0 or token1 depending on zeroToOne
     // can only be non-zero if exactIn!
     // can only decrease the input token affecting the amount passed to the swap calculation
-    (_cache.amountInDecrease, _cache.overrideFee, _cache.pluginFee) = _beforeSwap(
+    (_cache.amountInDecrease, _cache.overrideFee) = _beforeSwap(
       _cache.recipient,
       _cache.zeroToOne,
       _cache.amountRequired,
@@ -284,7 +264,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       SwapEventParams memory eventParams;
       (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
         _cache.overrideFee,
-        _cache.pluginFee,
         _cache.zeroToOne,
         _cache.amountRequired - int256(_cache.amountInDecrease),
         _cache.limitSqrtPrice
@@ -329,7 +308,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
         if (amountInIncrease + _cache.amountInDecrease > 0) _transfer(token0, plugin, amountInIncrease + _cache.amountInDecrease);
         if (amountOutDecrease > 0) _transfer(token1, plugin, amountOutDecrease);
-        _changeReserves(amount0, amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0); // reflect reserve change and pay communityFee
+        _changeReserves(amount0, amount1, fees.communityFeeAmount, 0); // reflect reserve change and pay communityFee
       } else {
         // These amounts are representing pool <-> user payments
         // Increase because amount0 is negative. It makes the pool send less to the user
@@ -347,7 +326,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
         if ((amountInIncrease + _cache.amountInDecrease) > 0) _transfer(token1, plugin, amountInIncrease + _cache.amountInDecrease);
         if (amountOutDecrease > 0) _transfer(token0, plugin, amountOutDecrease);
-        _changeReserves(amount0, amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount); // reflect reserve change and pay communityFee
+        _changeReserves(amount0, amount1, 0, fees.communityFeeAmount); // reflect reserve change and pay communityFee
       }
 
       _emitSwapEvent(
@@ -357,8 +336,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         eventParams.currentPrice,
         eventParams.currentLiquidity,
         eventParams.currentTick,
-        _cache.overrideFee,
-        _cache.pluginFee
+        _cache.overrideFee
       );
     }
 
@@ -388,20 +366,20 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         _swapCallback(amountToSell, 0, data); // callback to get tokens from the msg.sender
         uint256 balanceAfter = _balanceToken0();
         amountReceived = (balanceAfter - balanceBefore).toInt256();
-        _changeReserves(amountReceived, 0, 0, 0, 0, 0);
+        _changeReserves(amountReceived, 0, 0, 0);
       } else {
         uint256 balanceBefore = _balanceToken1();
         _swapCallback(0, amountToSell, data); // callback to get tokens from the msg.sender
         uint256 balanceAfter = _balanceToken1();
         amountReceived = (balanceAfter - balanceBefore).toInt256();
-        _changeReserves(0, amountReceived, 0, 0, 0, 0);
+        _changeReserves(0, amountReceived, 0, 0);
       }
       if (amountReceived != amountToSell) amountToSell = amountReceived;
     }
     if (amountToSell == 0) revert insufficientInputAmount();
 
     _unlock();
-    (, uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    (, uint24 overrideFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
     _lock();
 
     _updateReserves();
@@ -410,7 +388,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     FeesAmount memory fees;
     (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
       overrideFee,
-      pluginFee,
       zeroToOne,
       amountToSell,
       limitSqrtPrice
@@ -422,12 +399,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount0); // return the leftovers
         if (leftover != 0) _transfer(token0, leftoversRecipient, leftover);
-        _changeReserves(-leftover.toInt256(), amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0); // reflect reserve change and pay communityFee
+        _changeReserves(-leftover.toInt256(), amount1, fees.communityFeeAmount, 0); // reflect reserve change and pay communityFee
       } else {
         if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount1); // return the leftovers
         if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
-        _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount); // reflect reserve change and pay communityFee
+        _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount); // reflect reserve change and pay communityFee
       }
     }
 
@@ -438,8 +415,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       eventParams.currentPrice,
       eventParams.currentLiquidity,
       eventParams.currentTick,
-      overrideFee,
-      pluginFee
+      overrideFee
     );
 
     _unlock();
@@ -454,10 +430,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 newPrice,
     uint128 newLiquidity,
     int24 newTick,
-    uint24 overrideFee,
-    uint24 pluginFee
+    uint24 overrideFee
   ) private {
-    emit SwapFee(msg.sender, overrideFee, pluginFee);
+    emit SwapFee(msg.sender, overrideFee);
     emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
   }
 
@@ -468,12 +443,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitPrice,
     bool payInAdvance,
     bytes calldata data
-  ) internal returns (uint256 amountInDecrease, uint24 overrideFee, uint24 pluginFee) {
+  ) internal returns (uint256 amountInDecrease, uint24 overrideFee) {
     uint16 pluginConfig = globalState.pluginConfig;
     if (pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
-      if (_isPlugin()) return (0, 0, 0);
+      if (_isPlugin()) return (0, 0);
       bytes4 selector;
-      (amountInDecrease, selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(
+      (amountInDecrease, selector, overrideFee) = IAlgebraPlugin(plugin).beforeSwap(
         msg.sender,
         recipient,
         zto,
@@ -482,7 +457,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         payInAdvance,
         data
       );
-      if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && (overrideFee > 0 || pluginFee > 0)) revert dynamicFeeDisabled();
+      if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && overrideFee > 0) revert dynamicFeeDisabled();
       // its not possible to decrease the calculated input amount (exactOut)
       // only possible to decrease provided input amount (exactIn)
       // TODO: add error
@@ -575,7 +550,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         uint256 communityFee1;
         if (paid1 > 0) communityFee1 = FullMath.mulDiv(paid1, _communityFee, Constants.COMMUNITY_FEE_DENOMINATOR);
 
-        _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1, 0, 0);
+        _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1);
       }
       emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
     }

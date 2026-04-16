@@ -48,11 +48,6 @@ interface IAlgebraPoolEvents {
   /// @param amount1 The amount of token1 withdrawn
   event Burn(address indexed owner, int24 indexed bottomTick, int24 indexed topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1);
 
-  /// @notice Emitted when a plugin fee is applied during a burn
-  /// @param owner The owner of the position
-  /// @param pluginFee The fee to be sent to the plugin
-  event BurnFee(address indexed owner, uint24 pluginFee);
-
   /// @notice Emitted by the pool for any swaps between token0 and token1
   /// @param sender The address that initiated the swap call, and that received the callback
   /// @param recipient The address that received the output of the swap
@@ -67,8 +62,7 @@ interface IAlgebraPoolEvents {
   /// @notice Emitted by the pool after any swaps
   /// @param sender The address that initiated the swap
   /// @param overrideFee The fee to be applied to the trade
-  /// @param pluginFee The fee to be sent to the plugin
-  event SwapFee(address indexed sender, uint24 overrideFee, uint24 pluginFee);
+  event SwapFee(address indexed sender, uint24 overrideFee);
 
   /// @notice Emitted by the pool for any flashes of token0/token1
   /// @param sender The address that initiated the swap call, and that received the callback

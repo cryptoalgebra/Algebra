@@ -71,9 +71,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @inheritdoc IAlgebraPoolState
   uint32 public override lastFeeTransferTimestamp;
 
-  uint104 internal pluginFeePending0;
-  uint104 internal pluginFeePending1;
-
   /// @inheritdoc IAlgebraPoolState
   address public override plugin;
 
@@ -142,10 +139,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @inheritdoc IAlgebraPoolState
   function getCommunityFeePending() external view override returns (uint128, uint128) {
     return (communityFeePending0, communityFeePending1);
-  }
-
-  function getPluginFeePending() external view override returns (uint128, uint128) {
-    return (pluginFeePending0, pluginFeePending1);
   }
 
   /// @inheritdoc IAlgebraPoolState

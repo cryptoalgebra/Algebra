@@ -12,7 +12,6 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   address public pool;
   uint16 public selectorsDisableConfig;
   uint24 public overrideFee;
-  uint24 public pluginFee;
   bool public isDisabled;
 
   uint256 public amountInDecrease;
@@ -91,17 +90,8 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     amountOutDecrease = newAmountOutDecrease;
   }
 
-  function handlePluginFee(uint256, uint256) external view override returns (bytes4 selector) {
-    if (isDisabled) return selector;
-    return IAlgebraPlugin.handlePluginFee.selector;
-  }
-
-  function setPluginFees(uint24 _overrideFee, uint24 _pluginFee) external {
-    (overrideFee, pluginFee) = (_overrideFee, _pluginFee);
-  }
-
-  function disablePluginFeeHandle() external {
-    isDisabled = true;
+  function setOverrideFee(uint24 _overrideFee) external {
+    overrideFee = _overrideFee;
   }
 
   /// @notice The hook called before the state of a pool is initialized
@@ -135,11 +125,11 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     int24 topTick,
     int128 desiredLiquidityDelta,
     bytes calldata data
-  ) external override returns (bytes4, uint24) {
+  ) external override returns (bytes4) {
     emit BeforeModifyPosition(sender, recipient, bottomTick, topTick, desiredLiquidityDelta, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG))
-      return (IAlgebraPlugin.beforeModifyPosition.selector, pluginFee);
-    return (IAlgebraPlugin.defaultPluginConfig.selector, pluginFee);
+      return IAlgebraPlugin.beforeModifyPosition.selector;
+    return IAlgebraPlugin.defaultPluginConfig.selector;
   }
 
   /// @notice The hook called after a position is modified
@@ -171,11 +161,11 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint160 limitSqrtPrice,
     bool withPaymentInAdvance,
     bytes calldata data
-  ) external override returns (uint256, bytes4, uint24, uint24) {
+  ) external override returns (uint256, bytes4, uint24) {
     emit BeforeSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, withPaymentInAdvance, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG))
-      return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, overrideFee, pluginFee);
-    return (0, IAlgebraPlugin.defaultPluginConfig.selector, overrideFee, pluginFee);
+      return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, overrideFee);
+    return (0, IAlgebraPlugin.defaultPluginConfig.selector, overrideFee);
   }
 
   /// @notice The hook called after swap calculation
