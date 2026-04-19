@@ -129,8 +129,8 @@ describe('AlgebraPoolExtension', () => {
       extension = (await ethers.getContractAt('AlgebraPoolExtension', extensionAddress)) as any as AlgebraPoolExtension;
     });
 
-    it('initialize reverts', async () => {
-      await expect(extension.initialize(encodePriceSqrt(1, 1))).to.be.reverted;
+    it('initialize succeeds', async () => {
+      await expect(extension.initialize(encodePriceSqrt(1, 1))).to.not.be.reverted;
     });
 
     it('swap reverts', async () => {

@@ -7,8 +7,10 @@ import './base/ReentrancyGuard.sol';
 
 import './libraries/Constants.sol';
 import './libraries/Plugins.sol';
+import './libraries/TickMath.sol';
 
 import './interfaces/IAlgebraFactory.sol';
+import './interfaces/plugin/IAlgebraPlugin.sol';
 
 /// @title Algebra pool extension
 /// @notice Contains permissioned setter logic, called via delegatecall from pool
@@ -18,6 +20,7 @@ import './interfaces/IAlgebraFactory.sol';
 /// @dev Version: Algebra Integral 1.3
 contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
   using Plugins for uint16;
+  using Plugins for bytes4;
 
   /// @dev Extension is deployed by the factory, so msg.sender == factory.
   /// Only factory immutable needed for this extension, it is used for permission checks
@@ -26,8 +29,32 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
     return (address(0), msg.sender, address(0), address(0), address(0));
   }
 
+  /// @inheritdoc IAlgebraPoolActions
+  function initialize(uint160 initialPrice) external override {
+    int24 tick = TickMath.getTickAtSqrtRatio(initialPrice); // getTickAtSqrtRatio checks validity of initialPrice inside
+    if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
+    globalState.price = initialPrice;
+    globalState.tick = tick;
+    emit Initialize(initialPrice, tick);
+
+    if (plugin != address(0)) {
+      IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
+    }
+
+    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee, uint16 _algebraFee) = _getDefaultConfiguration();
+
+    _setFee(_fee);
+    _setTickSpacing(_tickSpacing);
+    if (_communityFee != 0 && communityVault == address(0)) revert invalidNewCommunityFee(); // the pool should not accumulate a community fee without a vault
+    _setCommunityFee(_communityFee);
+    _setAlgebraFee(_algebraFee);
+
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
+      IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
+    }
+  }
+
   // Stub implementations for interface methods that remain in AlgebraPool
-  function initialize(uint160) external pure override { revert notAllowed(); }
   function mint(address, address, int24, int24, uint128, bytes calldata) external pure override returns (uint256, uint256, uint128) { revert notAllowed(); }
   function burn(int24, int24, uint128, bytes calldata) external pure override returns (uint256, uint256) { revert notAllowed(); }
   function collect(address, int24, int24, uint128, uint128) external pure override returns (uint128, uint128) { revert notAllowed(); }
