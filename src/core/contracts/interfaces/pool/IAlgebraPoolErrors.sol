@@ -62,6 +62,13 @@ interface IAlgebraPoolErrors {
   /// @param expectedSelector The expected selector
   error invalidHookResponse(bytes4 expectedSelector);
 
+  /// @notice Emitted if plugin returns non-zero amountInDecrease for exactOut swap
+  error invalidAmountInDecrease();
+  /// @notice Emitted if plugin returns invalid amountOutDecrease (exactOut or exceeds output amount)
+  error invalidAmountOutDecrease();
+  /// @notice Emitted if plugin returns non-zero amountInIncrease for exactIn swap
+  error invalidAmountInIncrease();
+
   // ####  LiquidityMath errors  ####
 
   /// @notice Emitted if liquidity underflows

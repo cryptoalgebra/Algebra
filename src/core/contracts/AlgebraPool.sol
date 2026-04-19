@@ -19,7 +19,6 @@ import './libraries/Plugins.sol';
 import './interfaces/plugin/IAlgebraPlugin.sol';
 import './interfaces/IAlgebraFactory.sol';
 
-import 'hardhat/console.sol';
 
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
@@ -308,7 +307,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
         if (amountInIncrease + _cache.amountInDecrease > 0) _transfer(token0, plugin, amountInIncrease + _cache.amountInDecrease);
         if (amountOutDecrease > 0) _transfer(token1, plugin, amountOutDecrease);
-        _changeReserves(amount0, amount1, fees.communityFeeAmount, 0); // reflect reserve change and pay communityFee
+        _changeReserves(amount0 - int256(amountInIncrease), amount1 - int256(amountOutDecrease), fees.communityFeeAmount, 0); // reflect reserve change and pay communityFee
       } else {
         // These amounts are representing pool <-> user payments
         // Increase because amount0 is negative. It makes the pool send less to the user
@@ -321,12 +320,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         }
         // optionally user also has to pay amountInDecrease to plugin
         // amountInDecrease from _beforeSwap() could be based on the amountIn given as input (exactIn)
-        _swapCallback(amount0, amount1 + int256(_cache.amountInDecrease), data); // callback to get tokens from the msg.sender
-        if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
+        int256 totalAmount1 = amount1 + int256(_cache.amountInDecrease);
+        _swapCallback(amount0, totalAmount1, data); // callback to get tokens from the msg.sender
+        if (balance1Before + uint256(totalAmount1) > _balanceToken1()) revert insufficientInputAmount();
 
         if ((amountInIncrease + _cache.amountInDecrease) > 0) _transfer(token1, plugin, amountInIncrease + _cache.amountInDecrease);
         if (amountOutDecrease > 0) _transfer(token0, plugin, amountOutDecrease);
-        _changeReserves(amount0, amount1, 0, fees.communityFeeAmount); // reflect reserve change and pay communityFee
+        _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(amountInIncrease), 0, fees.communityFeeAmount); // reflect reserve change and pay communityFee
       }
 
       _emitSwapEvent(
@@ -460,8 +460,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && overrideFee > 0) revert dynamicFeeDisabled();
       // its not possible to decrease the calculated input amount (exactOut)
       // only possible to decrease provided input amount (exactIn)
-      // TODO: add error
-      if ((amount < 0) && (amountInDecrease != 0)) revert();
+      if ((amount < 0) && (amountInDecrease != 0)) revert invalidAmountInDecrease();
+      // amountInDecrease must be less than amountRequired to keep remaining amount positive
+      if (amountInDecrease != 0 && amountInDecrease >= uint256(amount)) revert invalidAmountInDecrease();
       // we will check that fee is less than denominator inside the swap calculation
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
@@ -490,12 +491,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         data
       );
       // cannot decrease output amount if it's exactOut
-      // TODO: add error
-      if ((amount < 0) && (amountOutDecrease > 0)) revert();
+      if ((amount < 0) && (amountOutDecrease > 0)) revert invalidAmountOutDecrease();
       // cannot increase input amount if it's exactIn
       // should decrease using amountInDecrease returned from beforeSwap hook
-      // TODO: add error
-      if ((amount > 0) && (amountInIncrease > 0)) revert();
+      if ((amount > 0) && (amountInIncrease > 0)) revert invalidAmountInIncrease();
+      // amountInIncrease must fit in int256 to prevent overflow in subsequent arithmetic
+      if (amountInIncrease > uint256(type(int256).max)) revert invalidAmountInIncrease();
+      // amountOutDecrease should not exceed the actual output amount
+      if (amountOutDecrease > 0) {
+        uint256 absOutput = zto ? uint256(-amount1) : uint256(-amount0);
+        if (amountOutDecrease > absOutput) revert invalidAmountOutDecrease();
+      }
       selector.shouldReturn(IAlgebraPlugin.afterSwapCalculation.selector);
     }
   }
