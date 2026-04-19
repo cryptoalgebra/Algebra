@@ -2582,7 +2582,7 @@ describe('AlgebraPool', () => {
     });
   });
 
-  describe.only('With plugin', () => {
+  describe('With plugin', () => {
     let poolPlugin : MockPoolPlugin;
 
     beforeEach('initialize the pool', async () => {

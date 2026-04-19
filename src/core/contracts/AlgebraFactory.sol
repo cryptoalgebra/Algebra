@@ -73,7 +73,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0xcbbf3acbda0896ff567d732f53d2415bd2e7e877a2f0613f70a236acd71b939e;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x887ddca822dbf70e8830ba941caa02ceb6c943af35d0d888277e23f9655e0089;
 
   modifier onlyAlgebraFeeManager() {
     require(msg.sender == algebraFeeManager, 'only algebra fee manager');

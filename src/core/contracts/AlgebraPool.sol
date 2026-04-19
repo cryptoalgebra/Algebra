@@ -458,11 +458,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         data
       );
       if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && overrideFee > 0) revert dynamicFeeDisabled();
-      // its not possible to decrease the calculated input amount (exactOut)
-      // only possible to decrease provided input amount (exactIn)
-      if ((amount < 0) && (amountInDecrease != 0)) revert invalidAmountInDecrease();
-      // amountInDecrease must be less than amountRequired to keep remaining amount positive
-      if (amountInDecrease != 0 && amountInDecrease >= uint256(amount)) revert invalidAmountInDecrease();
+      // amountInDecrease is only valid for exactIn (amount > 0) and must be less than amount
+      if (amountInDecrease != 0 && (amount < 0 || amountInDecrease >= uint256(amount))) revert invalidAmountInDecrease();
       // we will check that fee is less than denominator inside the swap calculation
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
@@ -490,15 +487,11 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         amount1,
         data
       );
-      // cannot decrease output amount if it's exactOut
-      if ((amount < 0) && (amountOutDecrease > 0)) revert invalidAmountOutDecrease();
-      // cannot increase input amount if it's exactIn
-      // should decrease using amountInDecrease returned from beforeSwap hook
-      if ((amount > 0) && (amountInIncrease > 0)) revert invalidAmountInIncrease();
-      // amountInIncrease must fit in int256 to prevent overflow in subsequent arithmetic
-      if (amountInIncrease > uint256(type(int256).max)) revert invalidAmountInIncrease();
-      // amountOutDecrease should not exceed the actual output amount
+      // cannot increase input amount if it's exactIn; must fit in int256 to prevent overflow
+      if (amountInIncrease > 0 && (amount > 0 || amountInIncrease > uint256(type(int256).max))) revert invalidAmountInIncrease();
       if (amountOutDecrease > 0) {
+        // cannot decrease output amount if it's exactOut; should not exceed the actual output amount
+        if (amount < 0) revert invalidAmountOutDecrease();
         uint256 absOutput = zto ? uint256(-amount1) : uint256(-amount0);
         if (amountOutDecrease > absOutput) revert invalidAmountOutDecrease();
       }
