@@ -458,9 +458,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         data
       );
       if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && overrideFee > 0) revert dynamicFeeDisabled();
+      if (overrideFee >= Constants.FEE_DENOMINATOR) revert invalidOverrideFee();
       // amountInDecrease is only valid for exactIn (amount > 0) and must be less than amount
       if (amountInDecrease != 0 && (amount < 0 || amountInDecrease >= uint256(amount))) revert invalidAmountInDecrease();
-      // we will check that fee is less than denominator inside the swap calculation
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
   }

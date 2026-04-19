@@ -56,6 +56,8 @@ interface IAlgebraPoolErrors {
   error dynamicFeeActive();
   /// @notice Emitted if an attempt is made by plugin to change the fee value, but dynamic fee is disabled
   error dynamicFeeDisabled();
+  /// @notice Emitted if plugin returns overrideFee that is >= 100% (FEE_DENOMINATOR)
+  error invalidOverrideFee();
   /// @notice Emitted if an attempt is made to change the plugin configuration, but the plugin is not connected
   error pluginIsNotConnected();
   /// @notice Emitted if a plugin returns invalid selector after hook call
