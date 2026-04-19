@@ -89,20 +89,14 @@ abstract contract ReservesManager is AlgebraPoolBase {
         feePending0 > type(uint104).max ||
         feePending1 > type(uint104).max
       ) {
-        (uint256 feeSent0, uint256 feeSent1) = _transferCommunityFees(feePending0, feePending1, communityVault);
-        (communityFeePending0, communityFeePending1) = (0, 0);
-        (deltaR0, deltaR1) = (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
-        lastFeeTransferTimestamp = _blockTimestamp();
+        (deltaR0, deltaR1) = _sendPendingCommunityFees(feePending0, feePending1, deltaR0, deltaR1);
       } else {
         (communityFeePending0, communityFeePending1) = (uint104(feePending0), uint104(feePending1));
       }
     } else if (_blockTimestamp() - lastFeeTransferTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) {
       (uint104 feePending0, uint104 feePending1) = (communityFeePending0, communityFeePending1);
       if (feePending0 | feePending1 != 0) {
-        (uint256 feeSent0, uint256 feeSent1) = _transferCommunityFees(feePending0, feePending1, communityVault);
-        (communityFeePending0, communityFeePending1) = (0, 0);
-        (deltaR0, deltaR1) = (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
-        lastFeeTransferTimestamp = _blockTimestamp();
+        (deltaR0, deltaR1) = _sendPendingCommunityFees(feePending0, feePending1, deltaR0, deltaR1);
       }
     }
 
@@ -111,6 +105,18 @@ abstract contract ReservesManager is AlgebraPoolBase {
     if (deltaR0 != 0) _reserve0 = (uint256(int256(_reserve0) + deltaR0)).toUint128();
     if (deltaR1 != 0) _reserve1 = (uint256(int256(_reserve1) + deltaR1)).toUint128();
     (reserve0, reserve1) = (uint128(_reserve0), uint128(_reserve1));
+  }
+
+  function _sendPendingCommunityFees(
+    uint256 feePending0,
+    uint256 feePending1,
+    int256 deltaR0,
+    int256 deltaR1
+  ) private returns (int256, int256) {
+    (uint256 feeSent0, uint256 feeSent1) = _transferCommunityFees(feePending0, feePending1, communityVault);
+    (communityFeePending0, communityFeePending1) = (0, 0);
+    lastFeeTransferTimestamp = _blockTimestamp();
+    return (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
   }
 
   /// @notice Transfers community fees with algebra fee split
