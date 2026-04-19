@@ -80,12 +80,13 @@ abstract contract ReservesManager is AlgebraPoolBase {
     uint256 communityFee0,
     uint256 communityFee1
   ) internal {
+    bool feeTransferDue = _blockTimestamp() - lastFeeTransferTimestamp >= Constants.FEE_TRANSFER_FREQUENCY;
     if (communityFee0 > 0 || communityFee1 > 0) {
       uint256 feePending0 = communityFeePending0 + communityFee0;
       uint256 feePending1 = communityFeePending1 + communityFee1;
 
       if (
-        _blockTimestamp() - lastFeeTransferTimestamp >= Constants.FEE_TRANSFER_FREQUENCY ||
+        feeTransferDue ||
         feePending0 > type(uint104).max ||
         feePending1 > type(uint104).max
       ) {
@@ -93,7 +94,7 @@ abstract contract ReservesManager is AlgebraPoolBase {
       } else {
         (communityFeePending0, communityFeePending1) = (uint104(feePending0), uint104(feePending1));
       }
-    } else if (_blockTimestamp() - lastFeeTransferTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) {
+    } else if (feeTransferDue) {
       (uint104 feePending0, uint104 feePending1) = (communityFeePending0, communityFeePending1);
       if (feePending0 | feePending1 != 0) {
         (deltaR0, deltaR1) = _sendPendingCommunityFees(feePending0, feePending1, deltaR0, deltaR1);
