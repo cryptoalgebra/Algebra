@@ -111,6 +111,21 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
     }
 
     /// @dev unused
+    function afterSwapCalculation(
+        address,
+        address,
+        bool,
+        int256,
+        uint160,
+        int256,
+        int256,
+        bytes memory
+    ) external override returns (bytes4, uint256, uint256) {
+        _updatePluginConfigInPool(); // should not be called, reset config
+        return (IAlgebraPlugin.afterSwapCalculation.selector, 0, 0);
+    }
+
+    /// @dev unused
     function afterCross(
         bool,
         uint256,

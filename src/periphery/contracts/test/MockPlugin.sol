@@ -74,6 +74,19 @@ contract MockPlugin is IAlgebraPlugin {
         return IAlgebraPlugin.afterFlash.selector;
     }
 
+    function afterSwapCalculation(
+        address,
+        address,
+        bool,
+        int256,
+        uint160,
+        int256,
+        int256,
+        bytes memory
+    ) external pure returns (bytes4, uint256, uint256) {
+        return (IAlgebraPlugin.afterSwapCalculation.selector, 0, 0);
+    }
+
     function afterCross(
         bool,
         uint256,
