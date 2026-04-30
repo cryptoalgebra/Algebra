@@ -17,7 +17,7 @@ abstract contract PeripheryPayments is IPeripheryPayments, PeripheryImmutableSta
         require(msg.sender == WNativeToken, 'Not WNativeToken');
     }
 
-    function _balanceOfToken(address token) private view returns (uint256) {
+    function _balanceOfToken(address token) internal view returns (uint256) {
         return (IERC20(token).balanceOf(address(this)));
     }
 

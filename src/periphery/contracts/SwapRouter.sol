@@ -103,6 +103,34 @@ contract SwapRouter is
 
         return uint256(-(zeroToOne ? amount1 : amount0));
     }
+    
+    /// @dev Performs a single exact input swap
+    function exactInputSupportingFeeOnTransferTokensInternal(
+        address leftoversRecipient,
+        address recipient,
+        uint256 amountIn,
+        uint160 limitSqrtPrice,
+        SwapCallbackData memory data
+    ) private returns (uint256 amountOut) {
+        if (recipient == address(0)) recipient = address(this); // allow swapping to the router address with address 0
+
+        (address tokenIn, address deployer, address tokenOut) = data.path.decodeFirstPool();
+
+        bool zeroToOne = tokenIn < tokenOut;
+
+        (int256 amount0, int256 amount1) = getPool(deployer, tokenIn, tokenOut).swapWithPaymentInAdvance(
+                leftoversRecipient,
+                recipient,
+                zeroToOne,
+                amountIn.toInt256(),
+                limitSqrtPrice == 0
+                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                    : limitSqrtPrice,
+                abi.encode(data)
+            );
+
+        return uint256(-(zeroToOne ? amount1 : amount0));
+    }
 
     /// @inheritdoc ISwapRouter
     function exactInputSingle(
@@ -154,6 +182,43 @@ contract SwapRouter is
     }
 
     /// @inheritdoc ISwapRouter
+    function exactInputSupportingFeeOnTransferTokens(
+        ExactInputParams memory params
+    ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
+        address payer = msg.sender;
+        address leftoversRecipient = msg.sender;
+
+        while (true) {
+            bool hasMultiplePools = params.path.hasMultiplePools();
+
+            // the outputs of prior swaps become the inputs to subsequent ones
+            params.amountIn = exactInputSupportingFeeOnTransferTokensInternal(
+                leftoversRecipient,
+                hasMultiplePools ? address(this) : params.recipient, // for intermediate swaps, this contract custodies
+                params.amountIn,
+                0,
+                SwapCallbackData({
+                    path: params.path.getFirstPool(), // only the first pool in the path is necessary
+                    payer: payer
+                })
+            );
+
+            // decide whether to continue or terminate
+            if (hasMultiplePools) {
+                (, , address tokenOut) = params.path.decodeFirstPool();
+                params.amountIn = _balanceOfToken(tokenOut); // use actual balance: router starts each hop with zero balance of intermediate tokens
+                payer = address(this); // at this point, the caller has paid
+                params.path = params.path.skipToken();
+            } else {
+                amountOut = params.amountIn;
+                break;
+            }
+        }
+
+        require(amountOut >= params.amountOutMinimum, 'Too little received');
+    }
+
+        /// @inheritdoc ISwapRouter
     function exactInputSingleSupportingFeeOnTransferTokens(
         ExactInputSingleParams calldata params
     ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {

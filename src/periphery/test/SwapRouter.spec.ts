@@ -703,6 +703,78 @@ describe('SwapRouter', function () {
       });
     });
 
+    describe('#exactInputSupportingFeeOnTransferTokens', () => {
+      async function exactInputSupportingFeeOnTransferTokens(
+        _tokens: string[],
+        amountIn: number = 300000,
+        amountOutMinimum: number = 100000,
+        setTime: number = 1
+      ): Promise<ContractTransactionResponse> {
+        const params = {
+          path: encodePath(_tokens),
+          recipient: trader.address,
+          deadline: 1,
+          amountIn,
+          amountOutMinimum,
+        };
+
+        // ensure that the swap fails if the limit is tighter
+        params.amountOutMinimum *= 5;
+        await expect(router.connect(trader).exactInputSupportingFeeOnTransferTokens(params)).to.be.revertedWith(
+          'Too little received'
+        );
+        params.amountOutMinimum /= 5;
+
+        if (setTime != 1) await router.setTime(setTime);
+
+        return router.connect(trader).exactInputSupportingFeeOnTransferTokens(params);
+      }
+
+      beforeEach('turn on fee', async () => {
+        await tokens[0].setFee(50);
+        await tokens[1].setFee(50);
+        await tokens[2].setFee(50);
+      });
+
+      it('reverts if deadline passed', async () => {
+        await expect(exactInputSupportingFeeOnTransferTokens(path, 300000, 100000, 2)).to.be.revertedWith('Transaction too old');
+      });
+
+      it('multi-pool 0 -> 1 -> 2', async () => {
+        const traderBefore = await getBalances(trader.address);
+
+        await exactInputSupportingFeeOnTransferTokens(path);
+
+        const traderAfter = await getBalances(trader.address);
+
+        expect(traderAfter.token0).to.be.eq(traderBefore.token0 - 300000n);
+        expect(traderAfter.token2).to.be.gt(traderBefore.token2);
+      });
+
+      it('multi-pool 2 -> 1 -> 0', async () => {
+        const traderBefore = await getBalances(trader.address);
+
+        await exactInputSupportingFeeOnTransferTokens(path.slice().reverse());
+
+        const traderAfter = await getBalances(trader.address);
+
+        expect(traderAfter.token2).to.be.eq(traderBefore.token2 - 300000n);
+        expect(traderAfter.token0).to.be.gt(traderBefore.token0);
+      });
+
+      it('regular exactInput reverts on the same fee-on-transfer multihop path', async () => {
+        const params = {
+          path: encodePath(path),
+          recipient: trader.address,
+          deadline: 1,
+          amountIn: 300000,
+          amountOutMinimum: 1,
+        };
+
+        await expect(router.connect(trader).exactInput(params)).to.be.reverted;
+      });
+    });
+
     describe('#exactOutput', () => {
       async function exactOutput(
         _tokens: string[],
