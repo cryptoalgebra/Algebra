@@ -10,10 +10,14 @@ async function main() {
 
   // WNativeTokenAddress
   const WNativeTokenAddress = '0x4200000000000000000000000000000000000006';
+  const underlyingTokenAddress = ethers.ZeroAddress;
+  const wrappedTokenAddress = ethers.ZeroAddress;
   const signers = await hre.ethers.getSigners();
   const ProxyAdmin = signers[0].address;
 
   deploysData.wrapped = WNativeTokenAddress;
+  deploysData.underlyingToken = underlyingTokenAddress;
+  deploysData.wrappedToken = wrappedTokenAddress;
 
   const entryPointFactory = await hre.ethers.getContractFactory('AlgebraCustomPoolEntryPoint')
   const entryPoint = await entryPointFactory.deploy(deploysData.factory)
@@ -55,7 +59,13 @@ async function main() {
   console.log('QuoterV2 deployed to:', QuoterV2.target);
 
   const SwapRouterFactory = await hre.ethers.getContractFactory('SwapRouter');
-  const SwapRouter = await SwapRouterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
+  const SwapRouter = await SwapRouterFactory.deploy(
+    deploysData.factory,
+    WNativeTokenAddress,
+    deploysData.poolDeployer,
+    underlyingTokenAddress,
+    wrappedTokenAddress
+  );
 
   await SwapRouter.waitForDeployment();
 

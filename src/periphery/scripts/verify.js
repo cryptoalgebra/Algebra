@@ -1,6 +1,7 @@
 const hre = require("hardhat");
 const fs = require('fs');
 const path = require('path');
+const { ethers } = require('ethers');
 
 async function main() {
 
@@ -24,7 +25,9 @@ async function main() {
         constructorArguments: [
             deploysData.factory,
             deploysData.wrapped,
-            deploysData.poolDeployer
+            deploysData.poolDeployer,
+            deploysData.underlyingToken,
+            deploysData.wrappedToken
         ],
         });
 

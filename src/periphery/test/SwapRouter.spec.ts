@@ -1,7 +1,14 @@
 import { MaxUint256, Contract, ContractTransactionResponse, Wallet, ZeroAddress } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { IWNativeToken, MockTimeNonfungiblePositionManager, MockTimeSwapRouter, TestERC20 } from '../typechain';
+import {
+  IWNativeToken,
+  MockTimeNonfungiblePositionManager,
+  MockTimeSwapRouter,
+  MockTimeSwapRouterWithWrappedToken,
+  MockWrappedToken,
+  TestERC20,
+} from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { FeeAmount, TICK_SPACINGS } from './shared/constants';
 import snapshotGasCost from './shared/snapshotGasCost';
@@ -1175,6 +1182,220 @@ describe('SwapRouter', function () {
             expect(poolAfter.token0).to.be.eq(poolBefore.token0 + 3n);
           });
         });
+      });
+    });
+
+    describe('Wrapped token support', () => {
+      let underlying: TestERC20WithAddress;
+      let wrapped: MockWrappedToken & { address: string };
+      let wrappedRouter: MockTimeSwapRouterWithWrappedToken;
+
+      beforeEach(async () => {
+        const tokenFactory = await ethers.getContractFactory('TestERC20');
+        underlying = (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress;
+        underlying.address = await underlying.getAddress();
+
+        const wrappedFactory = await ethers.getContractFactory('MockWrappedToken');
+        wrapped = (await wrappedFactory.deploy(underlying)) as any as MockWrappedToken & { address: string };
+        wrapped.address = await wrapped.getAddress();
+
+        const routerFactory = await ethers.getContractFactory('MockTimeSwapRouterWithWrappedToken');
+        wrappedRouter = (await routerFactory.deploy(
+          factory,
+          wnative,
+          await factory.poolDeployer(),
+          underlying,
+          wrapped
+        )) as any as MockTimeSwapRouterWithWrappedToken;
+
+        await underlying.approve(wrapped, MaxUint256);
+        await underlying.connect(trader).approve(wrappedRouter, MaxUint256);
+        await wrapped.connect(trader).approve(wrappedRouter, MaxUint256);
+        await underlying.transfer(trader.address, expandTo18Decimals(1_000_000));
+
+        for (const token of tokens) {
+          await token.connect(trader).approve(wrappedRouter, MaxUint256);
+        }
+      });
+
+      async function expectNoWrappedRouterBalance() {
+        const routerAddress = await wrappedRouter.getAddress();
+        expect(await underlying.balanceOf(routerAddress)).to.be.eq(0n);
+        expect(await wrapped.balanceOf(routerAddress)).to.be.eq(0n);
+      }
+
+      async function createPoolWrappedToken(tokenAddress: string) {
+        await wrapped.wrap(liquidity * 2);
+        await wrapped.approve(nft, MaxUint256);
+
+        return createPool(nft, wallet, wrapped.address, tokenAddress, ZERO_ADDRESS);
+      }
+
+      it('wraps and unwraps through router helper methods', async () => {
+        const traderUnderlyingBefore = await underlying.balanceOf(trader.address);
+        const traderWrappedBefore = await wrapped.balanceOf(trader.address);
+
+        await wrappedRouter.connect(trader).wrapToken(12, 6, trader.address);
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore - 12n);
+        expect(await wrapped.balanceOf(trader.address)).to.be.eq(traderWrappedBefore + 6n);
+
+        await wrappedRouter.connect(trader).unwrapToken(6, 12, trader.address);
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore);
+        expect(await wrapped.balanceOf(trader.address)).to.be.eq(traderWrappedBefore);
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('wraps the received underlying token balance for fee-on-transfer tokens', async () => {
+        await underlying.setFee(50);
+
+        const traderUnderlyingBefore = await underlying.balanceOf(trader.address);
+        const traderWrappedBefore = await wrapped.balanceOf(trader.address);
+
+        await wrappedRouter.connect(trader).wrapToken(1000, 451, trader.address);
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore - 1000n);
+        expect(await wrapped.balanceOf(trader.address)).to.be.eq(traderWrappedBefore + 451n);
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('wraps the router underlying token balance when amountIn is zero', async () => {
+        const traderUnderlyingBefore = await underlying.balanceOf(trader.address);
+        const traderWrappedBefore = await wrapped.balanceOf(trader.address);
+
+        await underlying.connect(trader).transfer(await wrappedRouter.getAddress(), 12);
+        await wrappedRouter.connect(trader).wrapToken(0, 6, trader.address);
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore - 12n);
+        expect(await wrapped.balanceOf(trader.address)).to.be.eq(traderWrappedBefore + 6n);
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('wraps the router underlying token balance plus pulled tokens', async () => {
+        const traderUnderlyingBefore = await underlying.balanceOf(trader.address);
+        const traderWrappedBefore = await wrapped.balanceOf(trader.address);
+
+        await underlying.connect(trader).transfer(await wrappedRouter.getAddress(), 4);
+        await wrappedRouter.connect(trader).wrapToken(6, 5, trader.address);
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore - 10n);
+        expect(await wrapped.balanceOf(trader.address)).to.be.eq(traderWrappedBefore + 5n);
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('reverts when wrapped output is below minimum', async () => {
+        await expect(wrappedRouter.connect(trader).wrapToken(11, 6, trader.address)).to.be.revertedWith(
+          'Insufficient wrapped token'
+        );
+
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('unwraps the router wrapped token balance when amountIn is zero', async () => {
+        const traderUnderlyingBefore = await underlying.balanceOf(trader.address);
+        const traderWrappedBefore = await wrapped.balanceOf(trader.address);
+
+        await wrappedRouter.connect(trader).wrapToken(12, 6, trader.address);
+        await wrapped.connect(trader).transfer(await wrappedRouter.getAddress(), 6);
+        await wrappedRouter.connect(trader).unwrapToken(0, 12, trader.address);
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore);
+        expect(await wrapped.balanceOf(trader.address)).to.be.eq(traderWrappedBefore);
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('unwraps the router wrapped token balance plus pulled tokens', async () => {
+        const traderUnderlyingBefore = await underlying.balanceOf(trader.address);
+        const traderWrappedBefore = await wrapped.balanceOf(trader.address);
+
+        await wrappedRouter.connect(trader).wrapToken(20, 10, trader.address);
+        await wrapped.connect(trader).transfer(await wrappedRouter.getAddress(), 4);
+        await wrappedRouter.connect(trader).unwrapToken(6, 20, trader.address);
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore);
+        expect(await wrapped.balanceOf(trader.address)).to.be.eq(traderWrappedBefore);
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('reverts when underlying output is below minimum', async () => {
+        await wrappedRouter.connect(trader).wrapToken(12, 6, trader.address);
+
+        await expect(wrappedRouter.connect(trader).unwrapToken(6, 13, trader.address)).to.be.revertedWith(
+          'Insufficient underlying token'
+        );
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(expandTo18Decimals(1_000_000) - 12n);
+        expect(await wrapped.balanceOf(trader.address)).to.be.eq(6n);
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('wraps underlying token before exact input swaps through multicall', async () => {
+        await createPoolWrappedToken(tokens[0].address);
+
+        const pool = await factory.poolByPair(wrapped.address, tokens[0].address);
+        const poolBefore = await getBalances(pool);
+        const poolWrappedBefore = await wrapped.balanceOf(pool);
+        const traderBefore = await getBalances(trader.address);
+        const traderUnderlyingBefore = await underlying.balanceOf(trader.address);
+
+        const params = {
+          path: encodePath([wrapped.address, ZERO_ADDRESS, tokens[0].address]),
+          recipient: trader.address,
+          deadline: 1,
+          amountIn: 3,
+          amountOutMinimum: 1,
+        };
+
+        await expect(
+          wrappedRouter.connect(trader).multicall([
+            wrappedRouter.interface.encodeFunctionData('wrapToken', [6, 3, trader.address]),
+            wrappedRouter.interface.encodeFunctionData('exactInput', [params]),
+          ])
+        )
+          .to.emit(wrapped, 'Transfer')
+          .withArgs(trader.address, pool, 3);
+
+        const poolAfter = await getBalances(pool);
+        const traderAfter = await getBalances(trader.address);
+
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore - 6n);
+        expect(traderAfter.token0).to.be.eq(traderBefore.token0 + 1n);
+        expect(await wrapped.balanceOf(pool)).to.be.eq(poolWrappedBefore + 3n);
+        expect(poolAfter.token0).to.be.eq(poolBefore.token0 - 1n);
+        await expectNoWrappedRouterBalance();
+      });
+
+      it('unwraps wrapped token output to underlying token', async () => {
+        await createPoolWrappedToken(tokens[0].address);
+
+        const pool = await factory.poolByPair(tokens[0].address, wrapped.address);
+        const poolBefore = await getBalances(pool);
+        const poolWrappedBefore = await wrapped.balanceOf(pool);
+        const traderBefore = await getBalances(trader.address);
+        const traderUnderlyingBefore = await underlying.balanceOf(trader.address);
+
+        const params = {
+          path: encodePath([tokens[0].address, ZERO_ADDRESS, wrapped.address]),
+          recipient: await wrappedRouter.getAddress(),
+          deadline: 1,
+          amountIn: 3,
+          amountOutMinimum: 1,
+        };
+
+        await wrappedRouter.connect(trader).multicall([
+          wrappedRouter.interface.encodeFunctionData('exactInput', [params]),
+          wrappedRouter.interface.encodeFunctionData('unwrapToken', [0, 2, trader.address]),
+        ]);
+
+        const poolAfter = await getBalances(pool);
+        const traderAfter = await getBalances(trader.address);
+
+        expect(traderAfter.token0).to.be.eq(traderBefore.token0 - 3n);
+        expect(await underlying.balanceOf(trader.address)).to.be.eq(traderUnderlyingBefore + 2n);
+        expect(poolAfter.token0).to.be.eq(poolBefore.token0 + 3n);
+        expect(await wrapped.balanceOf(pool)).to.be.eq(poolWrappedBefore - 1n);
+        await expectNoWrappedRouterBalance();
       });
     });
 

@@ -6,6 +6,7 @@ import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import './interfaces/ISwapRouter.sol';
+import './interfaces/external/IWrappedToken.sol';
 import './base/PeripheryImmutableState.sol';
 import './base/PeripheryValidation.sol';
 import './base/PeripheryPaymentsWithFee.sol';
@@ -14,6 +15,7 @@ import './base/SelfPermit.sol';
 import './libraries/Path.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/CallbackValidation.sol';
+import './libraries/TransferHelper.sol';
 
 /// @title Algebra Integral 1.2.2 Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
@@ -37,11 +39,58 @@ contract SwapRouter is
     /// @dev Transient storage variable used for returning the computed amount in for an exact output swap.
     uint256 private amountInCached = DEFAULT_AMOUNT_IN_CACHED;
 
+    /// @notice The underlying token that can be wrapped by this router.
+    address public immutable underlyingToken;
+    /// @notice The wrapped token used in pools for the configured underlying token.
+    address public immutable wrappedToken;
+
     constructor(
         address _factory,
         address _WNativeToken,
-        address _poolDeployer
-    ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
+        address _poolDeployer,
+        address _underlyingToken,
+        address _wrappedToken
+    ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {
+        underlyingToken = _underlyingToken;
+        wrappedToken = _wrappedToken;
+    }
+
+    /// @inheritdoc ISwapRouter
+    function wrapToken(
+        uint256 amountIn,
+        uint256 amountOutMinimum,
+        address recipient
+    ) external payable override returns (uint256 amountOut) {
+        if (amountIn > 0) TransferHelper.safeTransferFrom(underlyingToken, msg.sender, address(this), amountIn);
+
+        uint256 balanceUnderlyingToken = _balanceOfToken(underlyingToken);
+        if (balanceUnderlyingToken > 0) {
+            TransferHelper.safeApprove(underlyingToken, wrappedToken, balanceUnderlyingToken);
+            IWrappedToken(wrappedToken).wrap(balanceUnderlyingToken);
+        }
+
+        amountOut = _balanceOfToken(wrappedToken);
+        require(amountOut >= amountOutMinimum, 'Insufficient wrapped token');
+
+        if (recipient != address(this) && amountOut > 0) TransferHelper.safeTransfer(wrappedToken, recipient, amountOut);
+    }
+
+    /// @inheritdoc ISwapRouter
+    function unwrapToken(
+        uint256 amountIn,
+        uint256 amountMinimum,
+        address recipient
+    ) external payable override returns (uint256 amountOut) {
+        if (amountIn > 0) TransferHelper.safeTransferFrom(wrappedToken, msg.sender, address(this), amountIn);
+
+        uint256 balanceWrappedToken = _balanceOfToken(wrappedToken);
+        if (balanceWrappedToken > 0) IWrappedToken(wrappedToken).unwrap(balanceWrappedToken);
+
+        amountOut = _balanceOfToken(underlyingToken);
+        require(amountOut >= amountMinimum, 'Insufficient underlying token');
+
+        if (recipient != address(this) && amountOut > 0) TransferHelper.safeTransfer(underlyingToken, recipient, amountOut);
+    }
 
     /// @dev Returns the pool for the given token pair. The pool contract may or may not exist.
     function getPool(address deployer, address tokenA, address tokenB) private view returns (IAlgebraPool) {
@@ -103,7 +152,7 @@ contract SwapRouter is
 
         return uint256(-(zeroToOne ? amount1 : amount0));
     }
-    
+
     /// @dev Performs a single exact input swap
     function exactInputSupportingFeeOnTransferTokensInternal(
         address leftoversRecipient,
@@ -119,15 +168,13 @@ contract SwapRouter is
         bool zeroToOne = tokenIn < tokenOut;
 
         (int256 amount0, int256 amount1) = getPool(deployer, tokenIn, tokenOut).swapWithPaymentInAdvance(
-                leftoversRecipient,
-                recipient,
-                zeroToOne,
-                amountIn.toInt256(),
-                limitSqrtPrice == 0
-                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
-                    : limitSqrtPrice,
-                abi.encode(data)
-            );
+            leftoversRecipient,
+            recipient,
+            zeroToOne,
+            amountIn.toInt256(),
+            limitSqrtPrice == 0 ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1) : limitSqrtPrice,
+            abi.encode(data)
+        );
 
         return uint256(-(zeroToOne ? amount1 : amount0));
     }
@@ -218,7 +265,7 @@ contract SwapRouter is
         require(amountOut >= params.amountOutMinimum, 'Too little received');
     }
 
-        /// @inheritdoc ISwapRouter
+    /// @inheritdoc ISwapRouter
     function exactInputSingleSupportingFeeOnTransferTokens(
         ExactInputSingleParams calldata params
     ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {

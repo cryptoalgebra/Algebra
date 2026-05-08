@@ -9,6 +9,28 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/callback/IAlgebraSwapC
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 interface ISwapRouter is IAlgebraSwapCallback {
+    /// @notice Wraps underlying tokens and sends wrapped tokens to recipient.
+    /// @param amountIn The amount of underlying tokens to pull from `msg.sender`, or 0 to wrap the router's balance
+    /// @param amountOutMinimum The minimum amount of wrapped tokens that must be received
+    /// @param recipient The address receiving wrapped tokens
+    /// @return amountOut The amount of wrapped tokens received
+    function wrapToken(
+        uint256 amountIn,
+        uint256 amountOutMinimum,
+        address recipient
+    ) external payable returns (uint256 amountOut);
+
+    /// @notice Unwraps wrapped tokens and sends underlying tokens to recipient.
+    /// @param amountIn The amount of wrapped tokens to pull from `msg.sender`, or 0 to unwrap the router's balance
+    /// @param amountMinimum The minimum amount of underlying tokens that must be received
+    /// @param recipient The address receiving underlying tokens
+    /// @return amountOut The amount of underlying tokens received
+    function unwrapToken(
+        uint256 amountIn,
+        uint256 amountMinimum,
+        address recipient
+    ) external payable returns (uint256 amountOut);
+
     struct ExactInputSingleParams {
         address tokenIn;
         address tokenOut;

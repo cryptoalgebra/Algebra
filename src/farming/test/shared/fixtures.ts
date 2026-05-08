@@ -82,7 +82,7 @@ export const v3RouterFixture: () => Promise<{
   const { wnative } = await wnativeFixture();
   const [factory, deployer, pluginFactory, ownerSigner] = await v3CoreFactoryFixture();
   const routerFactory = await ethers.getContractFactory(SwapRouter.abi, SwapRouter.bytecode);
-  const router = (await routerFactory.deploy(factory, wnative, deployer)) as any as ISwapRouter;
+  const router = (await routerFactory.deploy(factory, wnative, deployer, ZERO_ADDRESS, ZERO_ADDRESS)) as any as ISwapRouter;
 
   return { factory, wnative, deployer, router, pluginFactory, ownerSigner };
 };
