@@ -41,6 +41,140 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 pluginFeeAmount;
   }
 
+  /// @notice Records a single tick crossing during swap simulation
+  struct CrossInfo {
+    int24 tick;
+    uint256 feeGrowthInput; // value of totalFeeGrowthInput at the moment this tick is crossed
+  }
+
+  /// @notice Full result of a swap simulation, including all state changes and tick crossings
+  struct SimulationResult {
+    int256 amount0;
+    int256 amount1;
+    uint160 currentPrice;
+    int24 currentTick;
+    uint128 currentLiquidity;
+    bool crossedAnyTick;
+    bool exactInput;
+    int24 prevInitializedTick;
+    int24 nextInitializedTick;
+    uint256 totalFeeGrowthInput;
+    uint256 feeGrowthOutput; // loaded upfront; same value applies to every crossing
+    uint256 communityFee;
+    int256 amountRequiredInitial;
+    int256 amountCalculated;
+    FeesAmount fees;
+    CrossInfo[] crossings; // pre-allocated to MAX_TICKS_CROSSED; valid entries: [0, crossingsCount)
+    uint256 crossingsCount;
+  }
+
+  uint256 private constant MAX_TICKS_CROSSED = 200;
+
+  /// @dev Simulates a swap fully in view context. Returns a SimulationResult describing all
+  /// state changes. No storage writes are performed; tick crossings are recorded in result.crossings
+  /// so the caller can replay them with ticks.cross() to update outerFeeGrowth accumulators.
+  /// @param fee     Effective total fee (hundredths of a bip). Must already include pluginFee.
+  /// @param pluginFee  Plugin's portion of fee, used only for fee splitting; pass 0 for view quotes.
+  /// @param zeroToOne  Swap direction: true = token0 → token1
+  /// @param amountRequired  Positive = exact input, negative = exact output
+  /// @param limitSqrtPrice  Sqrt price at which the swap must stop
+  function _simulateSwap(
+    uint24 fee,
+    uint24 pluginFee,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice
+  ) private view returns (SimulationResult memory result) {
+    if (amountRequired == 0) revert zeroAmountRequired();
+    if (amountRequired == type(int256).min) revert invalidAmountRequired();
+
+    (result.currentLiquidity, result.prevInitializedTick, result.nextInitializedTick) = (liquidity, prevTickGlobal, nextTickGlobal);
+    (result.currentPrice, result.currentTick, result.communityFee) = (globalState.price, globalState.tick, globalState.communityFee);
+    if (result.currentPrice == 0) revert notInitialized();
+
+    // Load feeGrowthOutput upfront (same for the entire swap regardless of how many ticks are crossed)
+    if (zeroToOne) {
+      if (limitSqrtPrice >= result.currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
+      result.totalFeeGrowthInput = totalFeeGrowth0Token;
+      result.feeGrowthOutput = totalFeeGrowth1Token;
+    } else {
+      if (limitSqrtPrice <= result.currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
+      result.totalFeeGrowthInput = totalFeeGrowth1Token;
+      result.feeGrowthOutput = totalFeeGrowth0Token;
+    }
+
+    result.crossings = new CrossInfo[](MAX_TICKS_CROSSED);
+    result.exactInput = amountRequired > 0;
+    result.amountRequiredInitial = amountRequired;
+
+    PriceMovementCache memory step;
+    unchecked {
+      do {
+        int24 nextTick = zeroToOne ? result.prevInitializedTick : result.nextInitializedTick;
+        step.stepSqrtPrice = result.currentPrice;
+        step.nextTickPrice = TickMath.getSqrtRatioAtTick(nextTick);
+
+        (result.currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
+          zeroToOne,
+          result.currentPrice,
+          (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) ? limitSqrtPrice : uint160(step.nextTickPrice),
+          result.currentLiquidity,
+          amountRequired,
+          fee
+        );
+
+        if (result.exactInput) {
+          amountRequired -= (step.input + step.feeAmount).toInt256();
+          result.amountCalculated = result.amountCalculated.sub(step.output.toInt256());
+        } else {
+          amountRequired += step.output.toInt256();
+          result.amountCalculated = result.amountCalculated.add((step.input + step.feeAmount).toInt256());
+        }
+
+        if (result.communityFee > 0) {
+          uint256 delta = (step.feeAmount.mul(result.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
+          step.feeAmount -= delta;
+          result.fees.communityFeeAmount += delta;
+        }
+
+        if (pluginFee > 0 && fee > 0) {
+          uint256 delta = FullMath.mulDiv(step.feeAmount, pluginFee, fee);
+          step.feeAmount -= delta;
+          result.fees.pluginFeeAmount += delta;
+        }
+
+        if (result.currentLiquidity > 0) result.totalFeeGrowthInput += FullMath.mulDiv(step.feeAmount, Constants.Q128, result.currentLiquidity);
+
+        if (result.currentPrice == step.nextTickPrice) {
+          // Record crossing so _calculateSwap can replay ticks.cross() for outerFeeGrowth
+          result.crossings[result.crossingsCount] = CrossInfo(nextTick, result.totalFeeGrowthInput);
+          result.crossingsCount++;
+          result.crossedAnyTick = true;
+
+          // Read tick data without writing outerFeeGrowth
+          int128 liquidityDelta;
+          if (zeroToOne) {
+            (liquidityDelta, result.prevInitializedTick, ) = ticks.crossView(nextTick);
+            liquidityDelta = -liquidityDelta;
+            (result.currentTick, result.nextInitializedTick) = (nextTick - 1, nextTick);
+          } else {
+            (liquidityDelta, , result.nextInitializedTick) = ticks.crossView(nextTick);
+            (result.currentTick, result.prevInitializedTick) = (nextTick, nextTick);
+          }
+          result.currentLiquidity = LiquidityMath.addDelta(result.currentLiquidity, liquidityDelta);
+        } else if (result.currentPrice != step.stepSqrtPrice) {
+          result.currentTick = TickMath.getTickAtSqrtRatio(result.currentPrice);
+          break;
+        }
+      } while (amountRequired != 0 && result.currentPrice != limitSqrtPrice);
+
+      int256 amountSpent = result.amountRequiredInitial - amountRequired;
+      (result.amount0, result.amount1) = zeroToOne == result.exactInput
+        ? (amountSpent, result.amountCalculated)
+        : (result.amountCalculated, amountSpent);
+    }
+  }
+
   function _calculateSwap(
     uint24 overrideFee,
     uint24 pluginFee,
@@ -48,114 +182,53 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     int256 amountRequired,
     uint160 limitSqrtPrice
   ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, FeesAmount memory fees) {
-    if (amountRequired == 0) revert zeroAmountRequired();
-    if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
-
-    SwapCalculationCache memory cache;
-    (cache.amountRequiredInitial, cache.exactInput, cache.pluginFee) = (amountRequired, amountRequired > 0, pluginFee);
-
-    // load from one storage slot
-    (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick) = (liquidity, prevTickGlobal, nextTickGlobal);
-
-    // load from one storage slot too
-    (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.lastFee, globalState.communityFee);
-    if (currentPrice == 0) revert notInitialized();
+    uint24 fee = globalState.lastFee;
     if (overrideFee != 0) {
-      cache.fee = overrideFee + pluginFee;
-      if (cache.fee >= 1e6) revert incorrectPluginFee();
-    } else {
-      if (pluginFee != 0) {
-        cache.fee += pluginFee;
-        if (cache.fee >= 1e6) revert incorrectPluginFee();
+      fee = overrideFee + pluginFee;
+      if (fee >= 1e6) revert incorrectPluginFee();
+    } else if (pluginFee != 0) {
+      fee += pluginFee;
+      if (fee >= 1e6) revert incorrectPluginFee();
+    }
+
+    SimulationResult memory result = _simulateSwap(fee, pluginFee, zeroToOne, amountRequired, limitSqrtPrice);
+
+    // Replay tick crossings to update outerFeeGrowth accumulators in storage.
+    // feeGrowthInput captured per-crossing; feeGrowthOutput is constant for the whole swap.
+    unchecked {
+      for (uint256 i = 0; i < result.crossingsCount; i++) {
+        CrossInfo memory c = result.crossings[i];
+        if (zeroToOne) {
+          ticks.cross(c.tick, c.feeGrowthInput, result.feeGrowthOutput);
+        } else {
+          ticks.cross(c.tick, result.feeGrowthOutput, c.feeGrowthInput);
+        }
       }
     }
 
-    if (zeroToOne) {
-      if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
-      cache.totalFeeGrowthInput = totalFeeGrowth0Token;
-    } else {
-      if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
-      cache.totalFeeGrowthInput = totalFeeGrowth1Token;
-    }
-
-    PriceMovementCache memory step;
-    unchecked {
-      // swap until there is remaining input or output tokens or we reach the price limit
-      do {
-        int24 nextTick = zeroToOne ? cache.prevInitializedTick : cache.nextInitializedTick;
-        step.stepSqrtPrice = currentPrice;
-        step.nextTickPrice = TickMath.getSqrtRatioAtTick(nextTick);
-
-        (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
-          zeroToOne, // if zeroToOne then the price is moving down
-          currentPrice,
-          (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the nearest of the next tick and the limit price
-            ? limitSqrtPrice
-            : uint160(step.nextTickPrice), // cast is safe
-          currentLiquidity,
-          amountRequired,
-          cache.fee
-        );
-
-        if (cache.exactInput) {
-          amountRequired -= (step.input + step.feeAmount).toInt256(); // decrease remaining input amount
-          cache.amountCalculated = cache.amountCalculated.sub(step.output.toInt256()); // decrease calculated output amount
-        } else {
-          amountRequired += step.output.toInt256(); // increase remaining output amount (since its negative)
-          cache.amountCalculated = cache.amountCalculated.add((step.input + step.feeAmount).toInt256()); // increase calculated input amount
-        }
-
-        if (cache.communityFee > 0) {
-          uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
-          step.feeAmount -= delta;
-          fees.communityFeeAmount += delta;
-        }
-
-        if (cache.pluginFee > 0 && cache.fee > 0) {
-          uint256 delta = FullMath.mulDiv(step.feeAmount, cache.pluginFee, cache.fee);
-          step.feeAmount -= delta;
-          fees.pluginFeeAmount += delta;
-        }
-
-        if (currentLiquidity > 0) cache.totalFeeGrowthInput += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
-
-        // min or max tick can not be crossed due to limitSqrtPrice check
-        if (currentPrice == step.nextTickPrice) {
-          // crossing tick
-          if (!cache.crossedAnyTick) {
-            cache.crossedAnyTick = true;
-            cache.totalFeeGrowthOutput = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
-          }
-
-          int128 liquidityDelta;
-          if (zeroToOne) {
-            (liquidityDelta, cache.prevInitializedTick, ) = ticks.cross(nextTick, cache.totalFeeGrowthInput, cache.totalFeeGrowthOutput);
-            liquidityDelta = -liquidityDelta;
-            (currentTick, cache.nextInitializedTick) = (nextTick - 1, nextTick);
-          } else {
-            (liquidityDelta, , cache.nextInitializedTick) = ticks.cross(nextTick, cache.totalFeeGrowthOutput, cache.totalFeeGrowthInput);
-            (currentTick, cache.prevInitializedTick) = (nextTick, nextTick);
-          }
-          currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-        } else if (currentPrice != step.stepSqrtPrice) {
-          currentTick = TickMath.getTickAtSqrtRatio(currentPrice); // the price has changed but hasn't reached the target
-          break; // since the price hasn't reached the target, amountRequired should be 0
-        }
-      } while (amountRequired != 0 && currentPrice != limitSqrtPrice); // check stop condition
-
-      int256 amountSpent = cache.amountRequiredInitial - amountRequired; // spent amount could be less than initially specified (e.g. reached limit)
-      (amount0, amount1) = zeroToOne == cache.exactInput ? (amountSpent, cache.amountCalculated) : (cache.amountCalculated, amountSpent);
-    }
-
-    (globalState.price, globalState.tick) = (currentPrice, currentTick);
-
-    if (cache.crossedAnyTick) {
-      (liquidity, prevTickGlobal, nextTickGlobal) = (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick);
+    (globalState.price, globalState.tick) = (result.currentPrice, result.currentTick);
+    if (result.crossedAnyTick) {
+      (liquidity, prevTickGlobal, nextTickGlobal) = (result.currentLiquidity, result.prevInitializedTick, result.nextInitializedTick);
     }
     if (zeroToOne) {
-      totalFeeGrowth0Token = cache.totalFeeGrowthInput;
+      totalFeeGrowth0Token = result.totalFeeGrowthInput;
     } else {
-      totalFeeGrowth1Token = cache.totalFeeGrowthInput;
+      totalFeeGrowth1Token = result.totalFeeGrowthInput;
     }
+
+    return (result.amount0, result.amount1, result.currentPrice, result.currentTick, result.currentLiquidity, result.fees);
+  }
+
+  /// @notice View-only swap simulation. Calls _simulateSwap with pluginFee=0 (no fee splitting).
+  /// @param fee The fee override in hundredths of a bip (1e-6). Pass 0 to use the pool's lastFee.
+  function _calculateSwapView(
+    uint24 fee,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice
+  ) internal view returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, FeesAmount memory fees) {
+    if (fee == 0) fee = globalState.lastFee;
+    SimulationResult memory result = _simulateSwap(fee, 0, zeroToOne, amountRequired, limitSqrtPrice);
+    return (result.amount0, result.amount1, result.currentPrice, result.currentTick, result.currentLiquidity, result.fees);
   }
 }

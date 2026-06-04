@@ -298,6 +298,18 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolActions
+  function quoteSwap(
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    uint24 fee
+  ) external view override returns (int256 amount0, int256 amount1, uint160 newPrice, int24 newTick, uint128 newLiquidity, uint256 communityFeeAmount) {
+    FeesAmount memory fees;
+    (amount0, amount1, newPrice, newTick, newLiquidity, fees) = _calculateSwapView(fee, zeroToOne, amountRequired, limitSqrtPrice);
+    communityFeeAmount = fees.communityFeeAmount;
+  }
+
+  /// @inheritdoc IAlgebraPoolActions
   function swapWithPaymentInAdvance(
     address leftoversRecipient,
     address recipient,

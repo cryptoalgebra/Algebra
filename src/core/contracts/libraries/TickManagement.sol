@@ -125,6 +125,20 @@ library TickManagement {
     return (data.liquidityDelta, data.prevTick, data.nextTick);
   }
 
+  /// @notice Read-only version of cross: returns tick data without updating outerFeeGrowth accumulators
+  /// @param self The mapping containing all tick information for initialized ticks
+  /// @param tick The destination tick of the transition
+  /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
+  /// @return prevTick The previous active tick before _tick_
+  /// @return nextTick The next active tick after _tick_
+  function crossView(
+    mapping(int24 => Tick) storage self,
+    int24 tick
+  ) internal view returns (int128 liquidityDelta, int24 prevTick, int24 nextTick) {
+    Tick storage data = self[tick];
+    return (data.liquidityDelta, data.prevTick, data.nextTick);
+  }
+
   /// @notice Used for initial setup of ticks list
   /// @param self The mapping containing all tick information for initialized ticks
   function initTickState(mapping(int24 => Tick) storage self) internal {

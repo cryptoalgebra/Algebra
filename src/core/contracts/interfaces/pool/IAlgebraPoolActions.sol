@@ -113,4 +113,23 @@ interface IAlgebraPoolActions {
   /// @param amount1 The amount of token1 to send
   /// @param data Any data to be passed through to the callback
   function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external;
+
+  /// @notice Simulates a swap without executing it. Safe to call on-chain.
+  /// @dev Does not invoke any plugin hooks. Community fee is applied; plugin fee is not split (pluginFee=0).
+  /// @param zeroToOne True to swap token0 for token1, false for the reverse direction
+  /// @param amountRequired The desired amount of tokens: positive = exact input, negative = exact output
+  /// @param limitSqrtPrice The sqrt price at which the swap must stop (Q64.96)
+  /// @param fee Fee override in hundredths of a bip (1e-6). Pass 0 to use the pool's current lastFee.
+  /// @return amount0 The net change in token0 balance of the pool (positive = pool receives)
+  /// @return amount1 The net change in token1 balance of the pool (positive = pool receives)
+  /// @return newPrice The sqrt price after the simulated swap (Q64.96)
+  /// @return newTick The tick corresponding to newPrice
+  /// @return newLiquidity The active liquidity after the simulated swap
+  /// @return communityFeeAmount The community fee accrued during the simulated swap
+  function quoteSwap(
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    uint24 fee
+  ) external view returns (int256 amount0, int256 amount1, uint160 newPrice, int24 newTick, uint128 newLiquidity, uint256 communityFeeAmount);
 }
