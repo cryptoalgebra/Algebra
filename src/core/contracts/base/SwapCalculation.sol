@@ -5,10 +5,11 @@ import '../libraries/PriceMovementMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
+import './SwapCrossingBuffer.sol';
 
 /// @title Algebra swap calculation abstract contract
 /// @notice Contains _calculateSwap encapsulating internal logic of swaps
-abstract contract SwapCalculation is AlgebraPoolBase {
+abstract contract SwapCalculation is AlgebraPoolBase, SwapCrossingBuffer {
   using TickManagement for mapping(int24 => TickManagement.Tick);
   using SafeCast for uint256;
   using LowGasSafeMath for uint256;
@@ -41,12 +42,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 pluginFeeAmount;
   }
 
-  /// @notice Records a single tick crossing during swap simulation
-  struct CrossInfo {
-    int24 tick;
-    uint256 feeGrowthInput; // value of totalFeeGrowthInput at the moment this tick is crossed
-  }
-
   /// @notice Full result of a swap simulation, including all state changes and tick crossings
   struct SimulationResult {
     int256 amount0;
@@ -64,15 +59,12 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     int256 amountRequiredInitial;
     int256 amountCalculated;
     FeesAmount fees;
-    CrossInfo[] crossings; // pre-allocated to MAX_TICKS_CROSSED; valid entries: [0, crossingsCount)
+    uint256 crossingsBuffer;
     uint256 crossingsCount;
   }
 
-  uint256 private constant MAX_TICKS_CROSSED = 200;
-
-  /// @dev Simulates a swap fully in view context. Returns a SimulationResult describing all
-  /// state changes. No storage writes are performed; tick crossings are recorded in result.crossings
-  /// so the caller can replay them with ticks.cross() to update outerFeeGrowth accumulators.
+  /// @dev Simulates a swap and stores tick crossings in a memory buffer so the caller can
+  /// replay them with ticks.cross() to update outerFeeGrowth accumulators.
   /// @param fee     Effective total fee (hundredths of a bip). Must already include pluginFee.
   /// @param pluginFee  Plugin's portion of fee, used only for fee splitting; pass 0 for view quotes.
   /// @param zeroToOne  Swap direction: true = token0 → token1
@@ -83,7 +75,8 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint24 pluginFee,
     bool zeroToOne,
     int256 amountRequired,
-    uint160 limitSqrtPrice
+    uint160 limitSqrtPrice,
+    bool recordCrossings
   ) private view returns (SimulationResult memory result) {
     if (amountRequired == 0) revert zeroAmountRequired();
     if (amountRequired == type(int256).min) revert invalidAmountRequired();
@@ -103,11 +96,11 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       result.feeGrowthOutput = totalFeeGrowth0Token;
     }
 
-    result.crossings = new CrossInfo[](MAX_TICKS_CROSSED);
     result.exactInput = amountRequired > 0;
     result.amountRequiredInitial = amountRequired;
 
     PriceMovementCache memory step;
+    if (recordCrossings) result.crossingsBuffer = _allocateCrossingBuffer();
     unchecked {
       do {
         int24 nextTick = zeroToOne ? result.prevInitializedTick : result.nextInitializedTick;
@@ -147,7 +140,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
         if (result.currentPrice == step.nextTickPrice) {
           // Record crossing so _calculateSwap can replay ticks.cross() for outerFeeGrowth
-          result.crossings[result.crossingsCount] = CrossInfo(nextTick, result.totalFeeGrowthInput);
+          if (recordCrossings) _appendCrossing(result.crossingsBuffer, result.crossingsCount, nextTick, result.totalFeeGrowthInput);
           result.crossingsCount++;
           result.crossedAnyTick = true;
 
@@ -191,17 +184,17 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       if (fee >= 1e6) revert incorrectPluginFee();
     }
 
-    SimulationResult memory result = _simulateSwap(fee, pluginFee, zeroToOne, amountRequired, limitSqrtPrice);
+    SimulationResult memory result = _simulateSwap(fee, pluginFee, zeroToOne, amountRequired, limitSqrtPrice, true);
 
     // Replay tick crossings to update outerFeeGrowth accumulators in storage.
     // feeGrowthInput captured per-crossing; feeGrowthOutput is constant for the whole swap.
     unchecked {
       for (uint256 i = 0; i < result.crossingsCount; i++) {
-        CrossInfo memory c = result.crossings[i];
+        (int24 crossingTick, uint256 crossingFeeGrowthInput) = _loadCrossing(result.crossingsBuffer, i);
         if (zeroToOne) {
-          ticks.cross(c.tick, c.feeGrowthInput, result.feeGrowthOutput);
+          ticks.cross(crossingTick, crossingFeeGrowthInput, result.feeGrowthOutput);
         } else {
-          ticks.cross(c.tick, result.feeGrowthOutput, c.feeGrowthInput);
+          ticks.cross(crossingTick, result.feeGrowthOutput, crossingFeeGrowthInput);
         }
       }
     }
@@ -226,9 +219,13 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
-  ) internal view returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, FeesAmount memory fees) {
+  )
+    internal
+    view
+    returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, FeesAmount memory fees)
+  {
     if (fee == 0) fee = globalState.lastFee;
-    SimulationResult memory result = _simulateSwap(fee, 0, zeroToOne, amountRequired, limitSqrtPrice);
+    SimulationResult memory result = _simulateSwap(fee, 0, zeroToOne, amountRequired, limitSqrtPrice, false);
     return (result.amount0, result.amount1, result.currentPrice, result.currentTick, result.currentLiquidity, result.fees);
   }
 }
