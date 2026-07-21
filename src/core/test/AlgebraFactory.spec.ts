@@ -237,6 +237,7 @@ describe('AlgebraFactory', () => {
       const create = customPoolCreator.createCustomPool(_factory, tokens[0], tokens[1], data);
 
       await expect(create).to.emit(_factory, 'CustomPool');
+      await expect(create).to.emit(_factory, 'Pool');
       await expect(create).to.emit(customPoolCreator, 'BeforeCreateHook');
 
       await expect(customPoolCreator.createCustomPool(_factory, tokens[0], tokens[1], data)).to.be.reverted;

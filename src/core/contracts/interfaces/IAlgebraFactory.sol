@@ -22,13 +22,15 @@ interface IAlgebraFactory {
   /// @param timestamp The timestamp of ownership renouncement
   event RenounceOwnershipFinish(uint256 timestamp);
 
-  /// @notice Emitted when a pool is created
+  /// @notice Emitted when any pool is created, including custom pools
+  /// @dev Also emitted for custom pools, alongside CustomPool, so that indexers watching only
+  /// this event still discover the pool
   /// @param token0 The first token of the pool by address sort order
   /// @param token1 The second token of the pool by address sort order
   /// @param pool The address of the created pool
   event Pool(address indexed token0, address indexed token1, address pool);
 
-  /// @notice Emitted when a pool is created
+  /// @notice Emitted when a custom pool is created, in addition to Pool event
   /// @param deployer The corresponding custom deployer contract
   /// @param token0 The first token of the pool by address sort order
   /// @param token1 The second token of the pool by address sort order

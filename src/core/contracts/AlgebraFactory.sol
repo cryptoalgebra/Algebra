@@ -150,9 +150,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     _poolByPair[token0][token1] = pool;
     _poolByPair[token1][token0] = pool;
 
-    if (deployer == address(0)) {
-      emit Pool(token0, token1, pool);
-    } else {
+    // also emit Pool for custom pools so indexers that only watch this event still discover them
+    emit Pool(token0, token1, pool);
+    if (deployer != address(0)) {
       emit CustomPool(deployer, token0, token1, pool);
     }
 
