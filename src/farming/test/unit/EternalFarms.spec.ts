@@ -118,7 +118,7 @@ describe('unit/EternalFarms', () => {
       expect(context.eternalFarming.connect(actors.farmingDeployer()).claimRewardFrom(context.rewardToken, lpUser0.address, lpUser0.address, 100)).to
         .be.revertedWithoutReason;
 
-      expect(context.eternalFarming.connect(actors.farmingDeployer()).enterFarming(dummyKey, 1)).to.be.revertedWithoutReason;
+      expect(context.eternalFarming.connect(actors.farmingDeployer()).enterFarming(dummyKey, 1, 0, 0)).to.be.revertedWithoutReason;
 
       expect(context.eternalFarming.connect(actors.farmingDeployer()).exitFarming(dummyKey, 1, ZERO_ADDRESS)).to.be.revertedWithoutReason;
 
@@ -668,7 +668,9 @@ describe('unit/EternalFarms', () => {
               bonusRewardToken: context.bonusRewardToken,
               nonce: localNonce,
             },
-            tokenId
+            tokenId,
+            0,
+            0
           )
         ).to.be.revertedWithCustomError(context.eternalFarming, 'tokenAlreadyFarmed');
       });
