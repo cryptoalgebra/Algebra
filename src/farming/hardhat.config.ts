@@ -15,7 +15,7 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
     evmVersion: 'paris',
     optimizer: {
       enabled: true,
-      runs: 10000,
+      runs: 1000,
     },
     metadata: {
       bytecodeHash: 'none',

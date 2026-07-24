@@ -38,6 +38,8 @@ interface IAlgebraEternalFarming {
   error reentrancyLock();
   error poolReentrancyLock();
 
+  error farmingBufferTooLong();
+
   /// @notice Returns hash of 'INCENTIVE_MAKER_ROLE', used as role for incentive creation
   function INCENTIVE_MAKER_ROLE() external view returns (bytes32);
 
@@ -111,16 +113,59 @@ interface IAlgebraEternalFarming {
   /// @param _farmingCenter The new farming center contract address
   function setFarmingCenterAddress(address _farmingCenter) external;
 
+  /// @notice The global default anti-JIT farming buffer, in seconds. Rewards earned less than this many
+  /// seconds after a position's vesting timestamp are forfeited to the protocol owner
+  /// @dev `0` disables forfeiture by default; a per-pool override can still apply, see `poolFarmingBuffer`
+  function defaultFarmingBuffer() external view returns (uint64);
+
+  /// @notice Per-pool override for the anti-JIT farming buffer, 0 means "use defaultFarmingBuffer"
+  /// @param pool The Algebra pool
+  function poolFarmingBuffer(address pool) external view returns (uint64);
+
+  /// @notice Sets the anti-JIT farming buffer
+  /// @dev only farmings administrator. Capped at 7 days
+  /// @param pool The pool to set the buffer for, or zero address to set the global default
+  /// @param buffer The new buffer, in seconds
+  function setFarmingBuffer(address pool, uint64 buffer) external;
+
+  /// @notice Withdraws forfeited rewards from the protocol-owned bucket (rewards(address(0), token))
+  /// @dev only incentive maker or factory owner
+  /// @param token The reward token to withdraw
+  /// @param to The recipient of the withdrawn tokens
+  /// @param amount The amount to withdraw. Withdraws the entire bucket balance if set to 0 or greater than the balance
+  function withdrawForfeitedRewards(IERC20Minimal token, address to, uint256 amount) external;
+
+  /// @notice Whether position owner is exempt from the anti-JIT farming buffer, e.g. a trusted ALM vault
+  /// @param owner The position owner (e.g. a vault contract holding the NFT on behalf of depositors)
+  function isBufferExempt(address owner) external view returns (bool);
+
+  /// @notice Sets whether position owner is exempt from the anti-JIT farming buffer
+  /// @dev only incentive maker or factory owner
+  /// @param owner The position owner to exempt
+  /// @param exempt The new exemption status
+  function setBufferExempt(address owner, bool exempt) external;
+
   /// @notice enter farming for Algebra LP token
   /// @param key The key of the incentive for which to enter farming
   /// @param tokenId The ID of the token to enter farming
-  function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
+  /// @param prevLiquidity The token's liquidity immediately before this call, or 0 on first entry
+  /// @param prevEnteredTimestamp The token's vesting timestamp immediately before this call, or 0 on first entry
+  function enterFarming(IncentiveKey memory key, uint256 tokenId, uint128 prevLiquidity, uint64 prevEnteredTimestamp) external;
 
   /// @notice exitFarmings for Algebra LP token
   /// @param key The key of the incentive for which to exit farming
   /// @param tokenId The ID of the token to exit farming
   /// @param _owner Owner of the token
-  function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external;
+  /// @return reward The amount of main token (token0) accrued for this farm
+  /// @return bonusReward The amount of bonus token (token1) accrued for this farm
+  /// @return forfeited True if the accrued reward was forfeited to the protocol-owned bucket instead of the owner
+  /// @return liquidity The token's liquidity just before exit, for the caller to thread into a following `enterFarming`
+  /// @return enteredTimestamp The token's vesting timestamp just before exit, for the caller to thread into a following `enterFarming`
+  function exitFarming(
+    IncentiveKey memory key,
+    uint256 tokenId,
+    address _owner
+  ) external returns (uint256 reward, uint256 bonusReward, bool forfeited, uint128 liquidity, uint64 enteredTimestamp);
 
   /// @notice Transfers `amountRequested` of accrued `rewardToken` (if possible) rewards from the contract to the recipient `to`
   /// @param rewardToken The token being distributed as a reward
@@ -156,12 +201,23 @@ interface IAlgebraEternalFarming {
   /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
   /// @return tickLower The lower tick of position,
   /// @return tickUpper The upper tick of position,
+  /// @return enteredTimestamp The liquidity-weighted vesting timestamp used by the anti-JIT farming buffer,
   /// @return innerRewardGrowth0 The last saved reward0 growth inside position,
   /// @return innerRewardGrowth1 The last saved reward1 growth inside position
   function farms(
     uint256 tokenId,
     bytes32 incentiveId
-  ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1);
+  )
+    external
+    view
+    returns (
+      uint128 liquidity,
+      int24 tickLower,
+      int24 tickUpper,
+      uint64 enteredTimestamp,
+      uint256 innerRewardGrowth0,
+      uint256 innerRewardGrowth1
+    );
 
   /// @notice Returns connected to pool incentive key
   function incentiveKeys(
@@ -187,8 +243,13 @@ interface IAlgebraEternalFarming {
   /// @param tokenId The ID of the token to exit farming
   /// @param _owner Owner of the token
   /// @return reward The amount of main token (token0) collected
-  /// @param bonusReward The amount of bonus token (token1) collected
-  function collectRewards(IncentiveKey memory key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward);
+  /// @return bonusReward The amount of bonus token (token1) collected
+  /// @return forfeited True if the collected reward was forfeited to the protocol-owned bucket instead of the owner
+  function collectRewards(
+    IncentiveKey memory key,
+    uint256 tokenId,
+    address _owner
+  ) external returns (uint256 reward, uint256 bonusReward, bool forfeited);
 
   /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
   /// @param incentiveId The stopped incentive
@@ -277,4 +338,29 @@ interface IAlgebraEternalFarming {
   /// @notice Emitted when status of `isEmergencyWithdrawActivated` changes
   /// @param newStatus New value of `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if active.
   event EmergencyWithdraw(bool newStatus);
+
+  /// @notice Emitted when the anti-JIT farming buffer is changed
+  /// @param pool The pool the buffer was set for, or `address(0)` if the global default was changed
+  /// @param buffer The new buffer, in seconds
+  event PoolFarmingBuffer(address indexed pool, uint64 buffer);
+
+  /// @notice Emitted when accrued reward is forfeited to the protocol-owned bucket because it was earned
+  /// less than the farming buffer after the position's vesting timestamp
+  /// @param tokenId The unique identifier of an Algebra LP token
+  /// @param incentiveId The incentive in which the token is farming
+  /// @param owner The owner of the position whose reward was forfeited
+  /// @param reward The amount of main token (token0) forfeited
+  /// @param bonusReward The amount of bonus token (token1) forfeited
+  event RewardsForfeited(uint256 indexed tokenId, bytes32 indexed incentiveId, address indexed owner, uint256 reward, uint256 bonusReward);
+
+  /// @notice Emitted when forfeited rewards are withdrawn from the protocol-owned bucket
+  /// @param token The reward token withdrawn
+  /// @param to The recipient of the withdrawn tokens
+  /// @param amount The amount withdrawn
+  event ForfeitedRewardsWithdrawn(address indexed token, address indexed to, uint256 amount);
+
+  /// @notice Emitted when an owner's anti-JIT farming buffer exemption changes
+  /// @param owner The position owner
+  /// @param exempt The new exemption status
+  event BufferExemptionChanged(address indexed owner, bool exempt);
 }

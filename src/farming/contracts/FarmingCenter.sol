@@ -51,7 +51,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     deposits[tokenId] = incentiveId;
     nonfungiblePositionManager.switchFarmingStatus(tokenId, true);
 
-    IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
+    IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId, 0, 0);
   }
 
   /// @inheritdoc IFarmingCenter
@@ -91,7 +91,12 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
       if (liquidity == 0 || virtualPoolAddresses[address(key.pool)] == address(0)) {
         _exitFarming(key, tokenId, tokenOwner); // nft burned or incentive deactivated, exit completely
       } else {
-        IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
+        // capture the position's pre-change liquidity/vesting timestamp
+        (, , , uint128 prevLiquidity, uint64 prevEnteredTimestamp) = IAlgebraEternalFarming(eternalFarming).exitFarming(
+          key,
+          tokenId,
+          tokenOwner
+        );
 
         if (
           IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key)) ||
@@ -101,7 +106,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
           _switchFarmingStatusOff(tokenId);
         } else {
           // reenter with new liquidity value
-          IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
+          IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId, prevLiquidity, prevEnteredTimestamp);
         }
       }
     }
@@ -111,8 +116,8 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   function collectRewards(
     IncentiveKey memory key,
     uint256 tokenId
-  ) external override isApprovedOrOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
-    (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
+  ) external override isApprovedOrOwner(tokenId) returns (uint256 reward, uint256 bonusReward, bool forfeited) {
+    (reward, bonusReward, forfeited) = eternalFarming.collectRewards(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
   }
 
   /// @inheritdoc IFarmingCenter

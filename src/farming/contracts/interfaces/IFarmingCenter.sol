@@ -69,7 +69,8 @@ interface IFarmingCenter is IMulticall {
   /// @param tokenId The id of position NFT
   /// @return reward The amount of collected reward
   /// @return bonusReward The amount of collected  bonus reward
-  function collectRewards(IncentiveKey memory key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward);
+  /// @return forfeited True if the collected reward was forfeited to the protocol-owned bucket instead of the owner
+  function collectRewards(IncentiveKey memory key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward, bool forfeited);
 
   /// @notice Used to claim and send rewards from farming(s)
   /// @dev can be used via static call to get current rewards for user
