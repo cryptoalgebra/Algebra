@@ -249,7 +249,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   /// @inheritdoc IAlgebraEternalFarming
   function withdrawForfeitedRewards(IERC20Minimal token, address to, uint256 amount) external override onlyIncentiveMaker {
-    uint256 withdrawn = _claimReward(token, address(0), to, amount);
+    uint256 bucketBefore = rewards[address(0)][token];
+    _claimReward(token, address(0), to, amount);
+    uint256 withdrawn = bucketBefore - rewards[address(0)][token];
     emit ForfeitedRewardsWithdrawn(address(token), to, withdrawn);
   }
 
