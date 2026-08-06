@@ -13,6 +13,15 @@ contract MockMsgSenderPlugin is IAlgebraPlugin {
     address public lastSwapSender;
     address public lastModifyPositionSender;
 
+    /// @dev When set, `beforeSwap` reverts with the reported sender abi-encoded as its revert data, instead
+    /// of just recording it in storage. Needed to observe what the hook saw when the caller (e.g. a quoter)
+    /// always causes the swap itself to revert, which would otherwise roll back the `lastSwapSender` write too
+    bool public revertWithSenderOnSwap;
+
+    function setRevertWithSenderOnSwap(bool _revertWithSenderOnSwap) external {
+        revertWithSenderOnSwap = _revertWithSenderOnSwap;
+    }
+
     uint8 internal constant HOOKS_CONFIG = uint8(1) | uint8(1 << 2); // BEFORE_SWAP_FLAG | BEFORE_POSITION_MODIFY_FLAG
 
     function defaultPluginConfig() external pure returns (uint8) {
@@ -68,7 +77,14 @@ contract MockMsgSenderPlugin is IAlgebraPlugin {
         bool,
         bytes calldata
     ) external returns (bytes4, uint24, uint24) {
-        lastSwapSender = IMsgSender(sender).msgSender();
+        address reportedSender = IMsgSender(sender).msgSender();
+        lastSwapSender = reportedSender;
+        if (revertWithSenderOnSwap) {
+            bytes memory data = abi.encode(reportedSender);
+            assembly ('memory-safe') {
+                revert(add(data, 32), mload(data))
+            }
+        }
         return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
     }
 
