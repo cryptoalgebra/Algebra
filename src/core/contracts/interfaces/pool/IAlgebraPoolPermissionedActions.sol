@@ -10,6 +10,11 @@ interface IAlgebraPoolPermissionedActions {
   /// @param newCommunityFee The new community fee percent in thousandths (1e-3)
   function setCommunityFee(uint16 newCommunityFee) external;
 
+  /// @notice Set the token in which the swap fee is collected. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
+  /// @dev The fee growth already accrued in the other token is not migrated, positions can still collect it
+  /// @param newFeeMode The new fee mode: 0 - the input token of each swap, 1 - always token0, 2 - always token1
+  function setFeeMode(uint8 newFeeMode) external;
+
   /// @notice Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   /// @param newTickSpacing The new tick spacing value
   function setTickSpacing(int24 newTickSpacing) external;
