@@ -7,7 +7,7 @@ contract PoolMockEchidna is AlgebraPool {
   uint256 internal balance0;
   uint256 internal balance1;
 
-  function donate(uint256 amount0, uint256 amount1) public {
+  function donate(uint256 amount0, uint256 amount1) public virtual {
     balance0 += amount0;
     balance1 += amount1;
   }
@@ -65,6 +65,12 @@ contract PoolMockEchidna is AlgebraPool {
   function swapWithPaymentInAdvanceWrapped(bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, uint256 pay0, uint256 pay1) public {
     bytes memory data = abi.encode(MintData(pay0, pay1));
     IAlgebraPool(this).swapWithPaymentInAdvance(address(this), address(this), zeroToOne, amountRequired, limitSqrtPrice, data);
+  }
+
+  function setFeeModeWrapped(uint8 newFeeMode) public {
+    newFeeMode = newFeeMode % (Constants.MAX_FEE_MODE + 1);
+    if (newFeeMode == globalState.feeMode) return;
+    IAlgebraPool(this).setFeeMode(newFeeMode);
   }
 
   function hasRoleOrOwner(bytes32, address) public pure returns (bool) {
