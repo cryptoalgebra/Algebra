@@ -1,0 +1,29 @@
+# Property mode: every `echidna_*` view function must keep returning true.
+# Used for the stateful pool invariants.
+#
+#   echidna . --contract PropFeeTokenIsolationEchidnaTest --config echidna.property.yaml
+#   echidna . --contract PropReservesEchidnaTest          --config echidna.property.yaml
+#   echidna . --contract PropBalancesEchidnaTest          --config echidna.property.yaml
+#
+# IMPORTANT: run `npx hardhat clean && npx hardhat compile` before a campaign, not a plain recompile.
+# Hardhat keeps old build-info files around on an incremental build and crytic-compile reads all of them,
+# so a stale copy of a test contract can be the one that actually gets fuzzed. The symptom is a counterexample
+# that contradicts a `require` in the current source.
+
+testMode: property
+testLimit: 500000
+seqLen: 100
+shrinkLimit: 5000
+
+# the pool mock mints its own balances in the callbacks, so no funding is needed
+balanceContract: 0
+balanceAddr: 0
+
+# the pool mocks inherit the full AlgebraPool and exceed the 24576 byte mainnet limit,
+# so the deploy-time code size check has to be lifted
+codeSize: 0xffffffff
+
+corpusDir: echidna-corpus-property
+coverage: true
+
+cryticArgs: ['--hardhat-ignore-compile']
