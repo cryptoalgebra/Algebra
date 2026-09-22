@@ -562,7 +562,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   function _getTickInPoolAndCheckLock(IAlgebraPool pool) internal view returns (int24 tick) {
     bool poolUnlocked;
-    (, tick, , , , poolUnlocked) = pool.globalState();
+    (, tick, , , , poolUnlocked, ) = pool.globalState();
     if (!poolUnlocked) revert poolReentrancyLock();
   }
 

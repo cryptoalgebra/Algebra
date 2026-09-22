@@ -31,6 +31,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @param pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
   /// @param communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
   /// @param unlocked  Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
+  /// @param feeMode The token in which the swap fee is collected, see `Constants.FEE_MODE_*`
   struct GlobalState {
     uint160 price;
     int24 tick;
@@ -38,6 +39,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     uint8 pluginConfig;
     uint16 communityFee;
     bool unlocked;
+    uint8 feeMode;
   }
 
   /// @inheritdoc IAlgebraPoolImmutables
@@ -197,6 +199,11 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   function _setCommunityFee(uint16 _communityFee) internal {
     globalState.communityFee = _communityFee;
     emit CommunityFee(_communityFee);
+  }
+
+  function _setFeeMode(uint8 _feeMode) internal {
+    globalState.feeMode = _feeMode;
+    emit FeeMode(_feeMode);
   }
 
   function _setCommunityFeeVault(address _communityFeeVault) internal {
