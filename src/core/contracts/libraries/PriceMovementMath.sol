@@ -118,13 +118,11 @@ library PriceMovementMath {
     uint24 fee
   ) internal pure returns (uint160 resultPrice, uint256 input, uint256 output, uint256 feeAmount) {
     unchecked {
-      function(uint160, uint160, uint128) pure returns (uint256) getInputTokenAmount = zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10;
-
       if (amountAvailable >= 0) {
         // exactIn or not
         if (feeOnInput) {
           uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
-          input = getInputTokenAmount(targetPrice, currentPrice, liquidity);
+          input = (zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10)(targetPrice, currentPrice, liquidity);
           if (amountAvailableAfterFee >= input) {
             resultPrice = targetPrice;
             feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
@@ -132,122 +130,74 @@ library PriceMovementMath {
             resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
             assert(targetPrice != resultPrice); // should always be true
 
-            input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
+            input = (zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10)(resultPrice, currentPrice, liquidity);
             // we didn't reach the target, so take the remainder of the maximum input as fee
             feeAmount = uint256(amountAvailable) - input; // input <= amountAvailable due to used formulas. This invariant is checked by fuzzy tests
           }
 
           output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
         } else {
-          (resultPrice, input, output, feeAmount) = _moveExactInWithFeeOnOutput(
-            zeroToOne,
-            currentPrice,
-            targetPrice,
-            liquidity,
-            uint256(amountAvailable),
-            fee
-          );
+          // the input is not charged, so all of it moves the price
+          input = (zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10)(targetPrice, currentPrice, liquidity);
+          if (uint256(amountAvailable) >= input) {
+            resultPrice = targetPrice;
+          } else {
+            resultPrice = getNewPriceAfterInput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
+            assert(targetPrice != resultPrice);
+            // no fee to absorb the rounding remainder, it is left in the reserves
+            input = uint256(amountAvailable);
+          }
+          output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
+          // the released amount is gross, so the fee is a plain share of it
+          feeAmount = FullMath.mulDivRoundingUp(output, fee, Constants.FEE_DENOMINATOR);
+          output -= feeAmount;
         }
       } else {
-        function(uint160, uint160, uint128) pure returns (uint256) getOutputTokenAmount = zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10;
-
         amountAvailable = -amountAvailable;
         if (amountAvailable < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
 
         if (feeOnInput) {
-          output = getOutputTokenAmount(targetPrice, currentPrice, liquidity);
+          output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(targetPrice, currentPrice, liquidity);
 
           if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
           else {
             resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
 
             // should be always true if the price is in the allowed range
-            if (targetPrice != resultPrice) output = getOutputTokenAmount(resultPrice, currentPrice, liquidity);
+            if (targetPrice != resultPrice) output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
 
             // cap the output amount to not exceed the remaining output amount
             if (output > uint256(amountAvailable)) output = uint256(amountAvailable);
           }
 
-          input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
+          input = (zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10)(resultPrice, currentPrice, liquidity);
           feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
         } else {
-          (resultPrice, input, output, feeAmount) = _moveExactOutWithFeeOnOutput(
-            zeroToOne,
-            currentPrice,
-            targetPrice,
-            liquidity,
-            uint256(amountAvailable),
-            fee
-          );
+          // amountAvailable is net, so the pool releases it grossed up by the fee
+          uint256 grossRequired = uint256(amountAvailable) + FullMath.mulDivRoundingUp(uint256(amountAvailable), fee, Constants.FEE_DENOMINATOR - fee);
+          // the sum overflows at fee >= 50%, saturate instead of wrapping
+          if (grossRequired < uint256(amountAvailable)) grossRequired = type(uint256).max;
+          output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(targetPrice, currentPrice, liquidity);
+          // compared with the grossed up amount, otherwise the price overshoots the target
+          if (grossRequired >= output) {
+            resultPrice = targetPrice;
+            feeAmount = FullMath.mulDivRoundingUp(output, fee, Constants.FEE_DENOMINATOR);
+            output -= feeAmount;
+          } else {
+            resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, grossRequired, zeroToOne);
+            if (targetPrice != resultPrice) output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
+            // cap the released amount to the grossed up requirement
+            if (output > grossRequired) output = grossRequired;
+            // the fee is the remainder, a second rounded share would leave the recipient short
+            if (output > uint256(amountAvailable)) {
+              feeAmount = output - uint256(amountAvailable);
+              output = uint256(amountAvailable);
+            }
+          }
+          input = (zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10)(resultPrice, currentPrice, liquidity);
         }
       }
     }
   }
 
-  /// @dev The input is not charged, so the whole `amountAvailable` moves the price
-  function _moveExactInWithFeeOnOutput(
-    bool zeroToOne,
-    uint160 currentPrice,
-    uint160 targetPrice,
-    uint128 liquidity,
-    uint256 amountAvailable,
-    uint24 fee
-  ) private pure returns (uint160 resultPrice, uint256 input, uint256 output, uint256 feeAmount) {
-    unchecked {
-      input = (zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10)(targetPrice, currentPrice, liquidity);
-      if (amountAvailable >= input) {
-        resultPrice = targetPrice;
-      } else {
-        resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailable, zeroToOne);
-        assert(targetPrice != resultPrice); // should always be true
-
-        input = amountAvailable; // no fee to absorb the rounding remainder, so it is left in the reserves
-      }
-
-      // the released amount is gross, the fee is carved out of it
-      output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
-      feeAmount = FullMath.mulDivRoundingUp(output, fee, Constants.FEE_DENOMINATOR);
-      output -= feeAmount;
-    }
-  }
-
-  /// @dev `amountAvailable` is net, so the pool has to release it grossed up by the fee
-  function _moveExactOutWithFeeOnOutput(
-    bool zeroToOne,
-    uint160 currentPrice,
-    uint160 targetPrice,
-    uint128 liquidity,
-    uint256 amountAvailable,
-    uint24 fee
-  ) private pure returns (uint160 resultPrice, uint256 input, uint256 output, uint256 feeAmount) {
-    unchecked {
-      function(uint160, uint160, uint128) pure returns (uint256) getOutputTokenAmount = zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10;
-
-      uint256 grossRequired = amountAvailable + FullMath.mulDivRoundingUp(amountAvailable, fee, Constants.FEE_DENOMINATOR - fee);
-      output = getOutputTokenAmount(targetPrice, currentPrice, liquidity);
-
-      // must be compared with the grossed up amount, otherwise the price could overshoot the target below
-      if (grossRequired >= output) {
-        resultPrice = targetPrice;
-        feeAmount = FullMath.mulDivRoundingUp(output, fee, Constants.FEE_DENOMINATOR); // gross is known, so a plain share of it
-        output -= feeAmount;
-      } else {
-        resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, grossRequired, zeroToOne);
-
-        // should be always true if the price is in the allowed range
-        if (targetPrice != resultPrice) output = getOutputTokenAmount(resultPrice, currentPrice, liquidity);
-
-        // cap the released amount to not exceed the grossed up requirement
-        if (output > grossRequired) output = grossRequired;
-
-        // take the remainder over the request as fee: a second rounded share would leave the recipient 1 wei short
-        if (output > amountAvailable) {
-          feeAmount = output - amountAvailable;
-          output = amountAvailable;
-        }
-      }
-
-      input = (zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10)(resultPrice, currentPrice, liquidity);
-    }
-  }
 }
