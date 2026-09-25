@@ -234,6 +234,28 @@ describe('PriceMovementMath with fee on output', () => {
     });
   });
 
+  describe('overflow of the grossed up request', () => {
+    // at a fee of 50% or more, net + fee(net) can exceed uint256. This amount makes the sum land exactly on
+    // 2**256, so an unguarded addition wraps to zero and the step degenerates into an empty swap
+    const fee = 500001n;
+    const amount = 57895928826568860395590068933358945238727139062835616379164752546372556906838n;
+
+    for (const { name, price, far } of directions) {
+      it('saturates instead of wrapping (' + name + ')', async () => {
+        const liquidity = expandTo18Decimals(2);
+
+        const onInput = await run(true, price, far, liquidity, -amount, fee);
+        const onOutput = await run(false, price, far, liquidity, -amount, fee);
+
+        // the request dwarfs the step, so both modes have to run all the way to the target
+        expect(onInput.sqrtQ).to.eq(far);
+        expect(onOutput.sqrtQ).to.eq(far);
+        expect(onOutput.amountOut).to.not.eq(0n);
+        expect(onOutput.amountIn).to.not.eq(0n);
+      });
+    }
+  });
+
   describe('counterexamples found by echidna', () => {
     it('at a zero fee the two modes agree on the price and on what the trader pays, but not on the split', async () => {
       // the default mode books the rounding remainder as a fee even at a zero rate
