@@ -1,0 +1,28 @@
+# Assertion mode for the stateful suites: every `assert` inside the wrapper functions is a property.
+# The stateless math libraries use echidna.math.yaml instead, which runs one call per sequence.
+#
+#   echidna . --contract AssertFeeModeSwapEchidnaTest --config echidna.assertion.yaml
+#   echidna . --contract AssertSwapEchidnaTest        --config echidna.assertion.yaml
+#
+# IMPORTANT: run `npx hardhat clean && npx hardhat compile` before a campaign, not a plain recompile.
+# Hardhat keeps old build-info files around on an incremental build and crytic-compile reads all of them,
+# so a stale copy of a test contract can be the one that actually gets fuzzed. The symptom is a counterexample
+# that contradicts a `require` in the current source.
+
+testMode: assertion
+testLimit: 500000
+seqLen: 50
+shrinkLimit: 5000
+
+# the pool mock mints its own balances in the callbacks, so no funding is needed
+balanceContract: 0
+balanceAddr: 0
+
+# the pool mocks inherit the full AlgebraPool and exceed the 24576 byte mainnet limit,
+# so the deploy-time code size check has to be lifted
+codeSize: 0xffffffff
+
+corpusDir: echidna-corpus-assertion
+coverage: true
+
+cryticArgs: ['--hardhat-ignore-compile']

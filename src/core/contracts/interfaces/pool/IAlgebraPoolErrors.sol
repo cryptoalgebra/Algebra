@@ -54,6 +54,8 @@ interface IAlgebraPoolErrors {
   error invalidNewTickSpacing();
   /// @notice Emitted if new community fee exceeds max allowed value
   error invalidNewCommunityFee();
+  /// @notice Emitted if new fee mode is not a known value or is equal to the current one
+  error invalidNewFeeMode();
 
   /// @notice Emitted if an attempt is made to manually change the fee value, but dynamic fee is enabled
   error dynamicFeeActive();

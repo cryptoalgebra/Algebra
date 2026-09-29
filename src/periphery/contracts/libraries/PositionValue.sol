@@ -169,7 +169,7 @@ library PositionValue {
         int24 bottomTick,
         int24 topTick
     ) private view returns (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) {
-        (, int24 currentTick, , , , ) = pool.globalState();
+        (, int24 currentTick, , , , , ) = pool.globalState();
         (uint256 lowerOuterFeeGrowth0Token, uint256 lowerOuterFeeGrowth1Token) = _getOuterFeeGrowth(pool, bottomTick);
         (uint256 upperOuterFeeGrowth0Token, uint256 upperOuterFeeGrowth1Token) = _getOuterFeeGrowth(pool, topTick);
 

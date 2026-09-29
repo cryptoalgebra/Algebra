@@ -1,0 +1,24 @@
+# Assertion mode for the stateless math libraries.
+#
+# Every function in these contracts is `pure`, so a call tells us nothing about the next one: a long sequence
+# is just wasted budget, since `testLimit` counts transactions rather than sequences. With `seqLen: 1` every
+# transaction is an independent test case and shrinking has a single call to minimise instead of fifty.
+#
+#   echidna . --contract PriceMovementMathEchidnaTest --config echidna.math.yaml --workers 4
+#   echidna . --contract TokenDeltaMathEchidnaTest    --config echidna.math.yaml --workers 4
+#   echidna . --contract FullMathEchidnaTest          --config echidna.math.yaml --workers 4
+#
+# IMPORTANT: run `npx hardhat clean && npx hardhat compile` before a campaign, not a plain recompile.
+# Hardhat keeps old build-info files around on an incremental build and crytic-compile reads all of them,
+# so a stale copy of a test contract can be the one that actually gets fuzzed. The symptom is a counterexample
+# that contradicts a `require` in the current source.
+
+testMode: assertion
+testLimit: 2000000
+seqLen: 1
+shrinkLimit: 5000
+
+corpusDir: echidna-corpus-math
+coverage: true
+
+cryticArgs: ['--hardhat-ignore-compile']
