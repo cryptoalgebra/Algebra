@@ -25,6 +25,12 @@ library Constants {
 
   uint16 internal constant MAX_COMMUNITY_FEE = 1e3; // 100%
   uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 1e3;
+
+  // the token in which the swap fee is collected
+  uint8 internal constant FEE_MODE_DEFAULT = 0; // the fee is collected in the input token of each swap
+  uint8 internal constant FEE_MODE_TOKEN0 = 1; // the fee is always collected in token0
+  uint8 internal constant FEE_MODE_TOKEN1 = 2; // the fee is always collected in token1
+  uint8 internal constant MAX_FEE_MODE = 2;
   // role that can change settings in pools
   bytes32 internal constant POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
 }

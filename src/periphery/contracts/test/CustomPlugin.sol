@@ -16,7 +16,7 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
     bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
     function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
-        (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
+        (price, tick, fee, pluginConfig, , , ) = IAlgebraPoolState(pool).globalState();
     }
 
     /// @inheritdoc IAlgebraPlugin

@@ -271,15 +271,16 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
-        _changeReserves(amount0, amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0); // reflect reserve change and pay communityFee
       } else {
         unchecked {
           if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
-        _changeReserves(amount0, amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount); // reflect reserve change and pay communityFee
       }
+      // reflect reserve change and pay communityFee. The fees are in the fee token, not necessarily the input one
+      if (fees.inToken0) _changeReserves(amount0, amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0);
+      else _changeReserves(amount0, amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount);
 
       _emitSwapEvent(
         recipient,
@@ -348,17 +349,21 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     );
 
     unchecked {
-      // transfer to the recipient
+      // transfer to the recipient. The fees are in the fee token, not necessarily the input one
       if (zeroToOne) {
         if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount0); // return the leftovers
         if (leftover != 0) _transfer(token0, leftoversRecipient, leftover);
-        _changeReserves(-leftover.toInt256(), amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0); // reflect reserve change and pay communityFee
+        // reflect reserve change and pay communityFee
+        if (fees.inToken0) _changeReserves(-leftover.toInt256(), amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0);
+        else _changeReserves(-leftover.toInt256(), amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount);
       } else {
         if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount1); // return the leftovers
         if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
-        _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount); // reflect reserve change and pay communityFee
+        // reflect reserve change and pay communityFee
+        if (fees.inToken0) _changeReserves(amount0, -leftover.toInt256(), fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0);
+        else _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount);
       }
     }
 
@@ -488,6 +493,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       (newCommunityFee != 0 && communityVault == address(0))
     ) revert invalidNewCommunityFee();
     _setCommunityFee(newCommunityFee);
+  }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setFeeMode(uint8 newFeeMode) external override onlyUnlocked {
+    _checkIfAdministrator();
+    if (newFeeMode > Constants.MAX_FEE_MODE || newFeeMode == globalState.feeMode) revert invalidNewFeeMode();
+    _setFeeMode(newFeeMode);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions

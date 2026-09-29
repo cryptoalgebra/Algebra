@@ -105,6 +105,10 @@ interface IAlgebraPoolEvents {
   /// @param communityFeeNew The updated value of the community fee in thousandths (1e-3)
   event CommunityFee(uint16 communityFeeNew);
 
+  /// @notice Emitted when the token in which the swap fee is collected is changed by the pool
+  /// @param feeModeNew The updated value of the fee mode: 0 - the input token of each swap, 1 - always token0, 2 - always token1
+  event FeeMode(uint8 feeModeNew);
+
   /// @notice Emitted when the tick spacing changes
   /// @param newTickSpacing The updated value of the new tick spacing
   event TickSpacing(int24 newTickSpacing);
