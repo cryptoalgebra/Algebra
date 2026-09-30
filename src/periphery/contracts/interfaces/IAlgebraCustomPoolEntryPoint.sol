@@ -40,7 +40,7 @@ interface IAlgebraCustomPoolEntryPoint is IAlgebraPluginFactory {
     /// @dev Only corresponding custom pool deployer contract can call this function
     /// @param pool The address of the Algebra Integral custom pool
     /// @param newConfig The new plugin configuration bitmap
-    function setPluginConfig(address pool, uint8 newConfig) external;
+    function setPluginConfig(address pool, uint16 newConfig) external;
 
     /// @notice Changes the fee value in the Algebra Integral custom pool
     /// @dev Only corresponding custom pool deployer contract can call this function.

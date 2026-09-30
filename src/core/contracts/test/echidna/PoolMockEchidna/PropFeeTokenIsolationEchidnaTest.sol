@@ -21,7 +21,7 @@ contract PropFeeTokenIsolationEchidnaTest is PoolMockEchidna {
   }
 
   function echidna_check_pending_fees_are_in_fee_token_only() public view returns (bool) {
-    return communityFeePending1 == 0 && pluginFeePending1 == 0;
+    return communityFeePending1 == 0;
   }
 
   function echidna_check_balance0_reserve0() public view returns (bool) {

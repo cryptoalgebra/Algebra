@@ -2,15 +2,14 @@
 pragma solidity =0.8.20;
 
 import '../libraries/SafeCast.sol';
-import '../libraries/Plugins.sol';
 import './AlgebraPoolBase.sol';
-import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/pool/IAlgebraPoolErrors.sol';
+import '../interfaces/IAlgebraFactory.sol';
+import '../interfaces/vault/IAlgebraCommunityVaultFeeHandler.sol';
 /// @title Algebra reserves management abstract contract
 /// @notice Encapsulates logic for tracking and changing pool reserves
 /// @dev The reserve mechanism allows the pool to keep track of unexpected increases in balances
 abstract contract ReservesManager is AlgebraPoolBase {
-  using Plugins for bytes4;
   using SafeCast for uint256;
 
   /// @dev The tracked token0 and token1 reserves of pool
@@ -69,100 +68,6 @@ abstract contract ReservesManager is AlgebraPoolBase {
     }
   }
 
-  /// @notice Accrues fees and transfers them to `recipient`
-  /// @dev If we transfer fees, writes zeros to the storage slot specified by the slot argument
-  /// If we do not transfer fees, returns actual pendingFees
-  function _accrueAndTransferFees(
-    uint256 fee0,
-    uint256 fee1,
-    uint256 lastTimestamp,
-    bytes32 receiverSlot,
-    bytes32 feePendingSlot
-  ) internal returns (uint104, uint104, uint256, uint256) {
-    if (fee0 | fee1 != 0) {
-      uint256 feePending0;
-      uint256 feePending1;
-      assembly {
-        // Load the storage slot specified by the slot argument
-        let sl := sload(feePendingSlot)
-        // Extract the uint104 value
-        feePending0 := and(sl, 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
-        // Shift right by 104 bits and extract the uint104 value
-        feePending1 := and(shr(104, sl), 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
-      }
-      feePending0 += fee0;
-      feePending1 += fee1;
-
-      if (
-        _blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY || feePending0 > type(uint104).max || feePending1 > type(uint104).max
-      ) {
-        // use sload from slot (like pointer dereference) to avoid gas
-        address recipient;
-        assembly {
-          recipient := sload(receiverSlot)
-        }
-        (uint256 feeSent0, uint256 feeSent1) = _transferFees(feePending0, feePending1, recipient);
-        // use sload from slot (like pointer dereference) to avoid gas
-        // override `lastFeeTransferTimestamp` with zeros is OK
-        // because we will update it later
-        assembly {
-          sstore(feePendingSlot, 0)
-        }
-        // sent fees return 0 pending and sent fees
-        return (0, 0, feeSent0, feeSent1);
-      } else {
-        // didn't send fees return pending fees and 0 sent
-        return (uint104(feePending0), uint104(feePending1), 0, 0);
-      }
-    } else {
-      if (_blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) {
-        uint256 feePending0;
-        uint256 feePending1;
-        assembly {
-          // Load the storage slot specified by the slot argument
-          let sl := sload(feePendingSlot)
-          // Extract the uint104 value
-          feePending0 := and(sl, 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
-          // Shift right by 104 bits and extract the uint104 value
-          feePending1 := and(shr(104, sl), 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
-        }
-
-        if (feePending0 | feePending1 != 0) {
-          address recipient;
-          // use sload from slot (like pointer dereference) to avoid gas
-          assembly {
-            recipient := sload(receiverSlot)
-          }
-          (uint256 feeSent0, uint256 feeSent1) = _transferFees(feePending0, feePending1, recipient);
-          // use sload from slot (like pointer dereference) to avoid gas
-          assembly {
-            sstore(feePendingSlot, 0)
-          }
-          // sent fees return 0 pending and sent fees
-          return (0, 0, feeSent0, feeSent1);
-        }
-      }
-      // didn't either sent fees or increased pending
-      return (0, 0, 0, 0);
-    }
-  }
-
-  function _transferFees(uint256 feePending0, uint256 feePending1, address feesRecipient) private returns (uint256, uint256) {
-    uint256 feeSent0;
-    uint256 feeSent1;
-
-    if (feePending0 > 0) {
-      _transfer(token0, feesRecipient, feePending0);
-      feeSent0 = feePending0;
-    }
-    if (feePending1 > 0) {
-      _transfer(token1, feesRecipient, feePending1);
-      feeSent1 = feePending1;
-    }
-
-    return (feeSent0, feeSent1);
-  }
-
   /// @notice Applies deltas to reserves and pays communityFees
   /// @dev Community fee is sent to the vault at a specified frequency or when variables communityFeePending{0,1} overflow
   /// @param deltaR0 Amount of token0 to add/subtract to/from reserve0, must not exceed uint128
@@ -173,62 +78,27 @@ abstract contract ReservesManager is AlgebraPoolBase {
     int256 deltaR0,
     int256 deltaR1,
     uint256 communityFee0,
-    uint256 communityFee1,
-    uint256 pluginFee0,
-    uint256 pluginFee1
+    uint256 communityFee1
   ) internal {
-    if (communityFee0 > 0 || communityFee1 > 0 || pluginFee0 > 0 || pluginFee1 > 0) {
-      bytes32 feePendingSlot;
-      bytes32 feeRecipientSlot;
-      uint32 lastTimestamp = lastFeeTransferTimestamp;
-      bool feeSent;
+    bool feeTransferDue = _blockTimestamp() - lastFeeTransferTimestamp >= Constants.FEE_TRANSFER_FREQUENCY;
+    if (communityFee0 > 0 || communityFee1 > 0) {
+      uint256 feePending0 = communityFeePending0 + communityFee0;
+      uint256 feePending1 = communityFeePending1 + communityFee1;
 
-      assembly {
-        feePendingSlot := communityFeePending0.slot
-        feeRecipientSlot := communityVault.slot
-      }
-      // pass feeRecipientSlot to avoid redundant sload of an address
-      (uint104 feePending0, uint104 feePending1, uint256 feeSent0, uint256 feeSent1) = _accrueAndTransferFees(
-        communityFee0,
-        communityFee1,
-        lastTimestamp,
-        feeRecipientSlot,
-        feePendingSlot
-      );
-      if (feeSent0 | feeSent1 != 0) {
-        // sent fees so decrease deltas
-        (deltaR0, deltaR1) = (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
-        feeSent = true;
+      if (
+        feeTransferDue ||
+        feePending0 > type(uint104).max ||
+        feePending1 > type(uint104).max
+      ) {
+        (deltaR0, deltaR1) = _sendPendingCommunityFees(feePending0, feePending1, deltaR0, deltaR1);
       } else {
-        // update pending if we accrued fees
-        if (feePending0 | feePending1 != 0) (communityFeePending0, communityFeePending1) = (feePending0, feePending1);
+        (communityFeePending0, communityFeePending1) = (uint104(feePending0), uint104(feePending1));
       }
-
-      assembly {
-        feePendingSlot := pluginFeePending0.slot
-        feeRecipientSlot := plugin.slot
+    } else if (feeTransferDue) {
+      (uint104 feePending0, uint104 feePending1) = (communityFeePending0, communityFeePending1);
+      if (feePending0 | feePending1 != 0) {
+        (deltaR0, deltaR1) = _sendPendingCommunityFees(feePending0, feePending1, deltaR0, deltaR1);
       }
-      // pass feeRecipientSlot to avoid redundant sload of an address
-      (feePending0, feePending1, feeSent0, feeSent1) = _accrueAndTransferFees(
-        pluginFee0,
-        pluginFee1,
-        lastTimestamp,
-        feeRecipientSlot,
-        feePendingSlot
-      );
-      if (feeSent0 | feeSent1 != 0) {
-        // sent fees so decrease deltas
-        (deltaR0, deltaR1) = (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
-        feeSent = true;
-
-        // notify plugin about sent fees
-        IAlgebraPlugin(plugin).handlePluginFee(feeSent0, feeSent1).shouldReturn(IAlgebraPlugin.handlePluginFee.selector);
-      } else {
-        // update pending if we accrued fees
-        if (feePending0 | feePending1 != 0) (pluginFeePending0, pluginFeePending1) = (feePending0, feePending1);
-      }
-
-      if (feeSent) lastFeeTransferTimestamp = _blockTimestamp();
     }
 
     if (deltaR0 | deltaR1 == 0) return;
@@ -236,5 +106,59 @@ abstract contract ReservesManager is AlgebraPoolBase {
     if (deltaR0 != 0) _reserve0 = (uint256(int256(_reserve0) + deltaR0)).toUint128();
     if (deltaR1 != 0) _reserve1 = (uint256(int256(_reserve1) + deltaR1)).toUint128();
     (reserve0, reserve1) = (uint128(_reserve0), uint128(_reserve1));
+  }
+
+  function _sendPendingCommunityFees(
+    uint256 feePending0,
+    uint256 feePending1,
+    int256 deltaR0,
+    int256 deltaR1
+  ) private returns (int256, int256) {
+    (uint256 feeSent0, uint256 feeSent1) = _transferCommunityFees(feePending0, feePending1, communityVault);
+    (communityFeePending0, communityFeePending1) = (0, 0);
+    lastFeeTransferTimestamp = _blockTimestamp();
+    return (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
+  }
+
+  /// @notice Transfers community fees with algebra fee split
+  /// @dev Splits the accumulated community fees between algebraFeeReceiver and communityVault.
+  /// If algebraFee >= communityFee, all community fees go to algebraFeeReceiver.
+  function _transferCommunityFees(uint256 feePending0, uint256 feePending1, address communityVaultAddr) private returns (uint256, uint256) {
+    uint256 algebraFeeAmount0;
+    uint256 algebraFeeAmount1;
+    address _algebraFeeReceiver;
+
+    uint16 _algebraFee = algebraFee;
+    if (_algebraFee > 0) {
+      uint16 _communityFee = globalState.communityFee;
+      if (_communityFee > 0) {
+        _algebraFeeReceiver = algebraFeeReceiver;
+        if (_algebraFeeReceiver != address(0)) {
+          if (_algebraFee >= _communityFee) {
+            algebraFeeAmount0 = feePending0;
+            algebraFeeAmount1 = feePending1;
+          } else {
+            if (feePending0 > 0) algebraFeeAmount0 = FullMath.mulDiv(feePending0, _algebraFee, _communityFee);
+            if (feePending1 > 0) algebraFeeAmount1 = FullMath.mulDiv(feePending1, _algebraFee, _communityFee);
+          }
+          if (algebraFeeAmount0 > 0) _transfer(token0, _algebraFeeReceiver, algebraFeeAmount0);
+          if (algebraFeeAmount1 > 0) _transfer(token1, _algebraFeeReceiver, algebraFeeAmount1);
+        }
+      }
+    }
+
+    uint256 communityVaultAmount0 = feePending0 - algebraFeeAmount0;
+    uint256 communityVaultAmount1 = feePending1 - algebraFeeAmount1;
+
+    if (communityVaultAmount0 > 0) _transfer(token0, communityVaultAddr, communityVaultAmount0);
+    if (communityVaultAmount1 > 0) _transfer(token1, communityVaultAddr, communityVaultAmount1);
+
+    emit CommunityFeeTransfer(communityVaultAddr, _algebraFeeReceiver, communityVaultAmount0, communityVaultAmount1, algebraFeeAmount0, algebraFeeAmount1);
+
+    if (communityVaultAmount0 | communityVaultAmount1 != 0) {
+      IAlgebraCommunityVaultFeeHandler(communityVaultAddr).handleCommunityFee(token0, token1, communityVaultAmount0, communityVaultAmount1);
+    }
+
+    return (feePending0, feePending1);
   }
 }

@@ -10,18 +10,18 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 contract CustomPlugin is Timestamp, IAlgebraPlugin {
-    using Plugins for uint8;
+    using Plugins for uint16;
 
     address public pool;
     bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
-    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
+    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint16 pluginConfig) {
         (price, tick, fee, pluginConfig, , , ) = IAlgebraPoolState(pool).globalState();
     }
 
     /// @inheritdoc IAlgebraPlugin
-    uint8 public constant override defaultPluginConfig =
-        uint8(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+    uint16 public constant override defaultPluginConfig =
+        uint16(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
     function beforeInitialize(address, uint160) external override returns (bytes4) {
         pool = msg.sender;
@@ -42,9 +42,9 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
         int24,
         int128,
         bytes calldata
-    ) external override returns (bytes4, uint24) {
+    ) external override returns (bytes4) {
         _updatePluginConfigInPool(); // should not be called, reset config
-        return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
+        return IAlgebraPlugin.beforeModifyPosition.selector;
     }
 
     /// @dev unused
@@ -70,9 +70,9 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
         uint160,
         bool,
         bytes calldata
-    ) external override returns (bytes4, uint24, uint24) {
+    ) external override returns (uint256, bytes4, uint24) {
         IAlgebraPool(pool).setFee(10000);
-        return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
+        return (0, IAlgebraPlugin.beforeSwap.selector, 0);
     }
 
     function afterSwap(
@@ -83,14 +83,11 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
         uint160,
         int256,
         int256,
+        uint256,
         bytes calldata
     ) external override returns (bytes4) {
         IAlgebraPool(pool).setFee(100);
         return IAlgebraPlugin.afterSwap.selector;
-    }
-
-    function handlePluginFee(uint256, uint256) external pure returns (bytes4) {
-        return IAlgebraPlugin.handlePluginFee.selector;
     }
 
     /// @dev unused
@@ -113,10 +110,37 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
         return IAlgebraPlugin.afterFlash.selector;
     }
 
-    function _updatePluginConfigInPool() internal {
-        uint8 newPluginConfig = defaultPluginConfig;
+    /// @dev unused
+    function afterSwapCalculation(
+        address,
+        address,
+        bool,
+        int256,
+        uint160,
+        int256,
+        int256,
+        bytes memory
+    ) external override returns (bytes4, uint256, uint256) {
+        _updatePluginConfigInPool(); // should not be called, reset config
+        return (IAlgebraPlugin.afterSwapCalculation.selector, 0, 0);
+    }
 
-        (, , , uint8 currentPluginConfig) = _getPoolState();
+    /// @dev unused
+    function afterCross(
+        bool,
+        uint256,
+        uint256,
+        int24,
+        int128
+    ) external override returns (bytes4) {
+        _updatePluginConfigInPool(); // should not be called, reset config
+        return IAlgebraPlugin.afterCross.selector;
+    }
+
+    function _updatePluginConfigInPool() internal {
+        uint16 newPluginConfig = defaultPluginConfig;
+
+        (, , , uint16 currentPluginConfig) = _getPoolState();
         if (currentPluginConfig != newPluginConfig) {
             IAlgebraPool(pool).setPluginConfig(newPluginConfig);
         }

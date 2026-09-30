@@ -19,38 +19,18 @@ import './libraries/Plugins.sol';
 import './interfaces/plugin/IAlgebraPlugin.sol';
 import './interfaces/IAlgebraFactory.sol';
 
+
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
-/// @dev Version: Algebra Integral 1.2.3
+/// @dev Version: Algebra Integral 1.3
 contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positions, SwapCalculation, ReservesManager {
   using SafeCast for uint256;
   using SafeCast for uint128;
-  using Plugins for uint8;
+  using Plugins for uint16;
   using Plugins for bytes4;
 
   /// @inheritdoc IAlgebraPoolActions
-  function initialize(uint160 initialPrice) external override {
-    int24 tick = TickMath.getTickAtSqrtRatio(initialPrice); // getTickAtSqrtRatio checks validity of initialPrice inside
-    if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
-    globalState.price = initialPrice;
-    globalState.tick = tick;
-    emit Initialize(initialPrice, tick);
-
-    if (plugin != address(0)) {
-      IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
-    }
-
-    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = _getDefaultConfiguration();
-
-    _setFee(_fee);
-    _setTickSpacing(_tickSpacing);
-    if (_communityFee != 0 && communityVault == address(0)) revert invalidNewCommunityFee(); // the pool should not accumulate a community fee without a vault
-    _setCommunityFee(_communityFee);
-
-    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
-      IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
-    }
-  }
+  function initialize(uint160) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolActions
   function mint(
@@ -115,7 +95,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
     }
 
-    _changeReserves(int256(amount0), int256(amount1), 0, 0, 0, 0);
+    _changeReserves(int256(amount0), int256(amount1), 0, 0);
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
 
     _unlock();
@@ -133,7 +113,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     int128 liquidityDelta = -int128(amount);
 
-    uint24 pluginFee = _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
+    _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
     _lock();
 
     _updateReserves();
@@ -141,22 +121,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
       (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
-
-      if (pluginFee > 0) {
-        uint256 deltaPluginFeePending0;
-        uint256 deltaPluginFeePending1;
-
-        if (amount0 > 0) {
-          deltaPluginFeePending0 = FullMath.mulDiv(amount0, pluginFee, Constants.FEE_DENOMINATOR);
-          amount0 -= deltaPluginFeePending0;
-        }
-        if (amount1 > 0) {
-          deltaPluginFeePending1 = FullMath.mulDiv(amount1, pluginFee, Constants.FEE_DENOMINATOR);
-          amount1 -= deltaPluginFeePending1;
-        }
-
-        _changeReserves(0, 0, 0, 0, deltaPluginFeePending0, deltaPluginFeePending1);
-      }
 
       if (amount0 | amount1 != 0) {
         // since we do not support tokens whose total supply can exceed uint128, these casts are safe
@@ -166,10 +130,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
 
     if (amount | amount0 | amount1 != 0) {
-      emit BurnFee(msg.sender, pluginFee);
       emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
     }
-    
+
     _unlock();
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
@@ -184,12 +147,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     int24 topTick,
     int128 liquidityDelta,
     bytes calldata data
-  ) internal returns (uint24 pluginFee) {
+  ) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
-      if (_isPlugin()) return 0;
-      bytes4 selector;
-      (selector, pluginFee) = IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data);
-      if (pluginFee >= 1e6) revert incorrectPluginFee();
+      if (_isPlugin()) return;
+      bytes4 selector = IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data);
       selector.shouldReturn(IAlgebraPlugin.beforeModifyPosition.selector);
     }
   }
@@ -229,7 +190,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
         if (amount0 > 0) _transfer(token0, recipient, amount0);
         if (amount1 > 0) _transfer(token1, recipient, amount1);
-        _changeReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0, 0, 0);
+        _changeReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
       }
       emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
     }
@@ -242,6 +203,16 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint128 currentLiquidity;
   }
 
+  struct SwapCache {
+    address recipient;
+    bool zeroToOne;
+    int256 amountRequired;
+    uint160 limitSqrtPrice;
+    bytes data;
+    uint24 overrideFee;
+    uint256 amountInDecrease;
+  }
+
   /// @inheritdoc IAlgebraPoolActions
   function swap(
     address recipient,
@@ -250,52 +221,109 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
-    _lock();
+    SwapCache memory _cache = SwapCache(recipient, zeroToOne, amountRequired, limitSqrtPrice, data, 0, 0);
 
+    // amountInDecrease is either in token0 or token1 depending on zeroToOne
+    // can only be non-zero if exactIn!
+    // can only decrease the input token affecting the amount passed to the swap calculation
+    (_cache.amountInDecrease, _cache.overrideFee) = _beforeSwap(
+      _cache.recipient,
+      _cache.zeroToOne,
+      _cache.amountRequired,
+      _cache.limitSqrtPrice,
+      false,
+      data
+    );
+    _lock();
+    FeesAmount memory fees;
     {
       // scope to prevent "stack too deep"
       SwapEventParams memory eventParams;
-      FeesAmount memory fees;
       (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
-        overrideFee,
-        pluginFee,
-        zeroToOne,
-        amountRequired,
-        limitSqrtPrice
+        _cache.overrideFee,
+        _cache.zeroToOne,
+        _cache.amountRequired - int256(_cache.amountInDecrease),
+        _cache.limitSqrtPrice
       );
+
+      // amountInIncrease, amountOutDecrease is either in token0 or token1 respectively depending on zeroToOne
+      // can only increase the input (for the exactOut case)
+      // can only decrease the output (for the exactIn case)
+      (uint256 amountInIncrease, uint256 amountOutDecrease) = _afterSwapCalculation(
+        _cache.recipient,
+        _cache.zeroToOne,
+        _cache.amountRequired,
+        _cache.limitSqrtPrice,
+        amount0,
+        amount1,
+        _cache.data
+      );
+
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-      if (zeroToOne) {
+
+      if (_cache.zeroToOne) {
+        // These amounts are representing pool <-> user payments
+        // Increase because amount1 is negative. It makes the pool send less to the user
+        amount1 += int256(amountOutDecrease);
+        // Increase amount0. It makes the user send more to the pool (this excess part will go to a plugin)
+        // amountInIncrease from _afterSwapCalculation() could be based on the amountIn as a result of swapCalculation (exactOut)
+        amount0 += int256(amountInIncrease);
         unchecked {
-          if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
+          if (amount1 < 0) _transfer(token1, _cache.recipient, uint256(-amount1)); // amount1 cannot be > 0
         }
-        _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
-        if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
+        // totalAmount0 represents total amount of input token that user must send to pool
+        int256 totalAmount0 = amount0 + int256(_cache.amountInDecrease);
+        // in case of exactIn amount0 returned from _calculateSwap should be equal to amountRequired - amountInDecrease
+        // FAKE. Because if there is not enough liquidity then amountIn might be less then amountRequired
+        //        if (_cache.amountRequired > 0 ) {
+        //          assert(_cache.amountRequired == totalAmount0);
+        //        }
+        // optionally user also has to pay amountInDecrease to plugin
+        // amountInDecrease from _beforeSwap() could be based on the amountIn given as input (exactIn)
+        _swapCallback(totalAmount0, amount1, data); // callback to get tokens from the msg.sender
+        if (balance0Before + uint256(totalAmount0) > _balanceToken0()) revert insufficientInputAmount();
+
+        if (amountInIncrease + _cache.amountInDecrease > 0) _transfer(token0, plugin, amountInIncrease + _cache.amountInDecrease);
+        if (amountOutDecrease > 0) _transfer(token1, plugin, amountOutDecrease);
+        // reflect reserve change and pay communityFee
+        if (fees.inToken0) _changeReserves(amount0 - int256(amountInIncrease), amount1 - int256(amountOutDecrease), fees.communityFeeAmount, 0);
+        else _changeReserves(amount0 - int256(amountInIncrease), amount1 - int256(amountOutDecrease), 0, fees.communityFeeAmount);
       } else {
+        // These amounts are representing pool <-> user payments
+        // Increase because amount0 is negative. It makes the pool send less to the user
+        amount0 += int256(amountOutDecrease);
+        // Increase amount1. It makes the user send more to the pool
+        amount1 += int256(amountInIncrease);
+
         unchecked {
-          if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
+          if (amount0 < 0) _transfer(token0, _cache.recipient, uint256(-amount0)); // amount0 cannot be > 0
         }
-        _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
-        if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
+        // optionally user also has to pay amountInDecrease to plugin
+        // amountInDecrease from _beforeSwap() could be based on the amountIn given as input (exactIn)
+        int256 totalAmount1 = amount1 + int256(_cache.amountInDecrease);
+        _swapCallback(amount0, totalAmount1, data); // callback to get tokens from the msg.sender
+        if (balance1Before + uint256(totalAmount1) > _balanceToken1()) revert insufficientInputAmount();
+
+        if ((amountInIncrease + _cache.amountInDecrease) > 0) _transfer(token1, plugin, amountInIncrease + _cache.amountInDecrease);
+        if (amountOutDecrease > 0) _transfer(token0, plugin, amountOutDecrease);
+        // reflect reserve change and pay communityFee
+        if (fees.inToken0) _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(amountInIncrease), fees.communityFeeAmount, 0);
+        else _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(amountInIncrease), 0, fees.communityFeeAmount);
       }
-      // reflect reserve change and pay communityFee. The fees are in the fee token, not necessarily the input one
-      if (fees.inToken0) _changeReserves(amount0, amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0);
-      else _changeReserves(amount0, amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount);
 
       _emitSwapEvent(
-        recipient,
+        _cache.recipient,
         amount0,
         amount1,
         eventParams.currentPrice,
         eventParams.currentLiquidity,
         eventParams.currentTick,
-        overrideFee,
-        pluginFee
+        _cache.overrideFee
       );
     }
 
     _unlock();
-    _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    _afterSwap(_cache.recipient, _cache.zeroToOne, _cache.amountRequired, _cache.limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -320,20 +348,20 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         _swapCallback(amountToSell, 0, data); // callback to get tokens from the msg.sender
         uint256 balanceAfter = _balanceToken0();
         amountReceived = (balanceAfter - balanceBefore).toInt256();
-        _changeReserves(amountReceived, 0, 0, 0, 0, 0);
+        _changeReserves(amountReceived, 0, 0, 0);
       } else {
         uint256 balanceBefore = _balanceToken1();
         _swapCallback(0, amountToSell, data); // callback to get tokens from the msg.sender
         uint256 balanceAfter = _balanceToken1();
         amountReceived = (balanceAfter - balanceBefore).toInt256();
-        _changeReserves(0, amountReceived, 0, 0, 0, 0);
+        _changeReserves(0, amountReceived, 0, 0);
       }
       if (amountReceived != amountToSell) amountToSell = amountReceived;
     }
     if (amountToSell == 0) revert insufficientInputAmount();
 
     _unlock();
-    (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    (, uint24 overrideFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
     _lock();
 
     _updateReserves();
@@ -342,7 +370,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     FeesAmount memory fees;
     (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
       overrideFee,
-      pluginFee,
       zeroToOne,
       amountToSell,
       limitSqrtPrice
@@ -355,15 +382,15 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         uint256 leftover = uint256(amountToSell - amount0); // return the leftovers
         if (leftover != 0) _transfer(token0, leftoversRecipient, leftover);
         // reflect reserve change and pay communityFee
-        if (fees.inToken0) _changeReserves(-leftover.toInt256(), amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0);
-        else _changeReserves(-leftover.toInt256(), amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount);
+        if (fees.inToken0) _changeReserves(-leftover.toInt256(), amount1, fees.communityFeeAmount, 0);
+        else _changeReserves(-leftover.toInt256(), amount1, 0, fees.communityFeeAmount);
       } else {
         if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount1); // return the leftovers
         if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
         // reflect reserve change and pay communityFee
-        if (fees.inToken0) _changeReserves(amount0, -leftover.toInt256(), fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0);
-        else _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount);
+        if (fees.inToken0) _changeReserves(amount0, -leftover.toInt256(), fees.communityFeeAmount, 0);
+        else _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount);
       }
     }
 
@@ -374,12 +401,11 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       eventParams.currentPrice,
       eventParams.currentLiquidity,
       eventParams.currentTick,
-      overrideFee,
-      pluginFee
+      overrideFee
     );
 
     _unlock();
-    _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
+    _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
   }
 
   /// @dev internal function to reduce bytecode size
@@ -390,10 +416,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 newPrice,
     uint128 newLiquidity,
     int24 newTick,
-    uint24 overrideFee,
-    uint24 pluginFee
+    uint24 overrideFee
   ) private {
-    emit SwapFee(msg.sender, overrideFee, pluginFee);
+    emit SwapFee(msg.sender, overrideFee);
     emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
   }
 
@@ -404,22 +429,66 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitPrice,
     bool payInAdvance,
     bytes calldata data
-  ) internal returns (uint24 overrideFee, uint24 pluginFee) {
-    uint8 pluginConfig = globalState.pluginConfig;
+  ) internal returns (uint256 amountInDecrease, uint24 overrideFee) {
+    uint16 pluginConfig = globalState.pluginConfig;
     if (pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       if (_isPlugin()) return (0, 0);
       bytes4 selector;
-      (selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data);
-      if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && (overrideFee > 0 || pluginFee > 0)) revert dynamicFeeDisabled();
-      // we will check that fee is less than denominator inside the swap calculation
+      (amountInDecrease, selector, overrideFee) = IAlgebraPlugin(plugin).beforeSwap(
+        msg.sender,
+        recipient,
+        zto,
+        amount,
+        limitPrice,
+        payInAdvance,
+        data
+      );
+      if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && overrideFee > 0) revert dynamicFeeDisabled();
+      if (overrideFee >= Constants.FEE_DENOMINATOR) revert invalidOverrideFee();
+      // amountInDecrease is only valid for exactIn (amount > 0) and must be less than amount
+      if (amountInDecrease != 0 && (amount < 0 || amountInDecrease >= uint256(amount))) revert invalidAmountInDecrease();
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
   }
 
-  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {
+  function _afterSwapCalculation(
+    address recipient,
+    bool zto,
+    int256 amount,
+    uint160 limitPrice,
+    int256 amount0,
+    int256 amount1,
+    bytes memory data
+  ) internal returns (uint256 amountInIncrease, uint256 amountOutDecrease) {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_CALCULATION_FLAG)) {
+      if (_isPlugin()) return (0, 0);
+      bytes4 selector;
+      (selector, amountInIncrease, amountOutDecrease) = IAlgebraPlugin(plugin).afterSwapCalculation(
+        msg.sender,
+        recipient,
+        zto,
+        amount,
+        limitPrice,
+        amount0,
+        amount1,
+        data
+      );
+      // cannot increase input amount if it's exactIn; must fit in int256 to prevent overflow
+      if (amountInIncrease > 0 && (amount > 0 || amountInIncrease > uint256(type(int256).max))) revert invalidAmountInIncrease();
+      if (amountOutDecrease > 0) {
+        // cannot decrease output amount if it's exactOut; should not exceed the actual output amount
+        if (amount < 0) revert invalidAmountOutDecrease();
+        uint256 absOutput = zto ? uint256(-amount1) : uint256(-amount0);
+        if (amountOutDecrease > absOutput) revert invalidAmountOutDecrease();
+      }
+      selector.shouldReturn(IAlgebraPlugin.afterSwapCalculation.selector);
+    }
+  }
+
+  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, uint256 totalSwapFeeAmount, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       if (_isPlugin()) return;
-      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
+      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, totalSwapFeeAmount, data).shouldReturn(
         IAlgebraPlugin.afterSwap.selector
       );
     }
@@ -466,7 +535,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         uint256 communityFee1;
         if (paid1 > 0) communityFee1 = FullMath.mulDiv(paid1, _communityFee, Constants.COMMUNITY_FEE_DENOMINATOR);
 
-        _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1, 0, 0);
+        _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1);
       }
       emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
     }
@@ -477,71 +546,35 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
   }
 
-  /// @dev using function to save bytecode
-  function _checkIfAdministrator() private view {
-    if (!IAlgebraFactory(factory).hasRoleOrOwner(Constants.POOLS_ADMINISTRATOR_ROLE, msg.sender)) revert notAllowed();
-  }
-
-  // permissioned actions use reentrancy lock to prevent call from callback (to keep the correct order of events, etc.)
+  // Permissioned setters are delegated to the extension contract to reduce pool bytecode size.
+  // Setters are called rarely, so the additional gas overhead of delegatecall is acceptable
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint16 newCommunityFee) external override onlyUnlocked {
-    _checkIfAdministrator();
-    if (
-      newCommunityFee > Constants.MAX_COMMUNITY_FEE ||
-      newCommunityFee == globalState.communityFee ||
-      (newCommunityFee != 0 && communityVault == address(0))
-    ) revert invalidNewCommunityFee();
-    _setCommunityFee(newCommunityFee);
-  }
+  function setCommunityFee(uint16) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setFeeMode(uint8 newFeeMode) external override onlyUnlocked {
-    _checkIfAdministrator();
-    if (newFeeMode > Constants.MAX_FEE_MODE || newFeeMode == globalState.feeMode) revert invalidNewFeeMode();
-    _setFeeMode(newFeeMode);
-  }
+  function setFeeMode(uint8) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setTickSpacing(int24 newTickSpacing) external override onlyUnlocked {
-    _checkIfAdministrator();
-    if (newTickSpacing <= 0 || newTickSpacing > Constants.MAX_TICK_SPACING || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
-    _setTickSpacing(newTickSpacing);
-  }
+  function setTickSpacing(int24) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPlugin(address newPluginAddress) external override onlyUnlocked {
-    _checkIfAdministrator();
-    _setPluginConfig(0);
-    _setPlugin(newPluginAddress);
-  }
+  function setPlugin(address) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPluginConfig(uint8 newConfig) external override onlyUnlocked {
-    address _plugin = plugin;
-    if (_plugin == address(0)) revert pluginIsNotConnected(); // it is not allowed to set plugin config without plugin
-
-    if (msg.sender != _plugin) _checkIfAdministrator();
-
-    _setPluginConfig(newConfig);
-  }
+  function setPluginConfig(uint16) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityVault(address newCommunityVault) external override onlyUnlocked {
-    // factory is allowed to set initial vault
-    if (msg.sender != factory) _checkIfAdministrator();
-    if (newCommunityVault == address(0) && globalState.communityFee != 0) _setCommunityFee(0); // the pool should not accumulate a community fee without a vault
-    _setCommunityFeeVault(newCommunityVault); // accumulated but not yet sent to the vault community fees once will be sent to the `newCommunityVault` address
-  }
+  function setCommunityVault(address) external override { _delegateToExtension(); }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setFee(uint16 newFee) external override {
-    _checkIfAdministrator();
-    bool isDynamicFeeEnabled = globalState.pluginConfig.hasFlag(Plugins.DYNAMIC_FEE);
-    if (!globalState.unlocked) revert locked(); // cheaper to check lock here
-    if (isDynamicFeeEnabled) revert dynamicFeeActive();
-    _setFee(newFee);
-  }
+  function setFee(uint16) external override { _delegateToExtension(); }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setAlgebraFee(uint16) external override { _delegateToExtension(); }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setAlgebraFeeReceiver(address) external override { _delegateToExtension(); }
 
   /// @dev using function to save bytecode
   function _checkIfPlugin() private view {

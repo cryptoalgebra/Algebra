@@ -11,15 +11,7 @@ import SwapRouter from '@cryptoalgebra/integral-periphery/artifacts/contracts/Sw
 import WNativeToken from './external/WNativeToken.json';
 import { linkLibraries } from './linkLibraries';
 import { ISwapRouter, IWNativeToken, NFTDescriptor } from '@cryptoalgebra/integral-periphery/typechain';
-import {
-  abi as PLUGIN_FACTORY_ABI,
-  bytecode as PLUGIN_FACTORY_BYTECODE,
-} from '@cryptoalgebra/default-plugin/artifacts/contracts/AlgebraDefaultPluginFactory.sol/AlgebraDefaultPluginFactory.json';
 
-import {
-  abi as PLUGIN_ABI,
-  bytecode as PLUGIN_BYTECODE,
-} from '@cryptoalgebra/default-plugin/artifacts/contracts/AlgebraDefaultPlugin.sol/AlgebraDefaultPlugin.json';
 import {
   AlgebraEternalFarming,
   TestERC20,
@@ -30,8 +22,8 @@ import {
   IAlgebraPool,
   TestIncentiveId,
   FarmingCenter,
-  IAlgebraDefaultPluginFactory,
-  IFarmingPlugin
+  MockFarmingPluginFactory,
+  MockFarmingPlugin,
 } from '../../typechain';
 import { FeeAmount, encodePriceSqrt, MAX_GAS_LIMIT, ZERO_ADDRESS } from '../shared';
 import { ActorFixture } from './actors';
@@ -49,7 +41,7 @@ export const wnativeFixture: () => Promise<WNativeTokenFixture> = async () => {
   return { wnative };
 };
 
-const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer, IAlgebraDefaultPluginFactory, Signer]> = async () => {
+const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer, MockFarmingPluginFactory, Signer]> = async () => {
   const [deployer] = await ethers.getSigners();
   // precompute
   const poolDeployerAddress = getCreateAddress({
@@ -61,10 +53,10 @@ const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer
   const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as any as IAlgebraFactory;
 
   const poolDeployerFactory = await ethers.getContractFactory(AlgebraPoolDeployerJson.abi, AlgebraPoolDeployerJson.bytecode);
-  const _deployer = (await poolDeployerFactory.deploy(_factory)) as any as IAlgebraPoolDeployer;
+  const _deployer = (await poolDeployerFactory.deploy(_factory, await _factory.poolExtension())) as any as IAlgebraPoolDeployer;
 
-  const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI, PLUGIN_FACTORY_BYTECODE);
-  const pluginFactory = (await pluginContractFactory.deploy(_factory)) as any as IAlgebraDefaultPluginFactory;
+  const pluginContractFactory = await ethers.getContractFactory('MockFarmingPluginFactory');
+  const pluginFactory = (await pluginContractFactory.deploy(_factory)) as any as MockFarmingPluginFactory;
 
   await _factory.setDefaultPluginFactory(pluginFactory);
 
@@ -76,7 +68,7 @@ export const v3RouterFixture: () => Promise<{
   factory: IAlgebraFactory;
   deployer: IAlgebraPoolDeployer;
   router: ISwapRouter;
-  pluginFactory: IAlgebraDefaultPluginFactory;
+  pluginFactory: MockFarmingPluginFactory;
   ownerSigner: Signer;
 }> = async () => {
   const { wnative } = await wnativeFixture();
@@ -99,7 +91,7 @@ type AlgebraFactoryFixture = {
   router: ISwapRouter;
   nft: INonfungiblePositionManager;
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20];
-  pluginFactory: IAlgebraDefaultPluginFactory;
+  pluginFactory: MockFarmingPluginFactory;
   ownerSigner: Signer;
 };
 
@@ -228,8 +220,8 @@ export type AlgebraFixtureType = {
   pool12: string;
   factory: IAlgebraFactory;
   poolObj: IAlgebraPool;
-  pluginObj: IFarmingPlugin;
-  pluginFactory: IAlgebraDefaultPluginFactory;
+  pluginObj: MockFarmingPlugin;
+  pluginFactory: MockFarmingPluginFactory;
   router: ISwapRouter;
   eternalFarming: AlgebraEternalFarming;
   farmingCenter: FarmingCenter;
@@ -284,9 +276,9 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   const poolObj = poolFactory.attach(pool01) as any as IAlgebraPool;
 
-  const pluginContractFactory = new ethers.ContractFactory(PLUGIN_ABI, PLUGIN_BYTECODE, signer);
+  const pluginContractFactory = await ethers.getContractFactory('MockFarmingPlugin');
 
-  const pluginObj = pluginContractFactory.attach(await poolObj.connect(signer).plugin()) as any as IFarmingPlugin;
+  const pluginObj = pluginContractFactory.attach(await poolObj.connect(signer).plugin()) as any as MockFarmingPlugin;
 
   return {
     nft,

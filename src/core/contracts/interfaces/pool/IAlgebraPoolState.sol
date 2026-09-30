@@ -20,7 +20,7 @@ interface IAlgebraPoolState {
   function safelyGetStateOfAMM()
     external
     view
-    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick);
+    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint16 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick);
 
   /// @notice Allows to easily get current reentrancy lock status
   /// @dev can be used to prevent read-only reentrancy.
@@ -45,7 +45,7 @@ interface IAlgebraPoolState {
   function globalState()
     external
     view
-    returns (uint160 price, int24 tick, uint16 lastFee, uint8 pluginConfig, uint16 communityFee, bool unlocked, uint8 feeMode);
+    returns (uint160 price, int24 tick, uint16 lastFee, uint16 pluginConfig, uint16 communityFee, bool unlocked, uint8 feeMode);
 
   /// @notice Look up information about a specific tick in the pool
   /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
@@ -81,12 +81,6 @@ interface IAlgebraPoolState {
   /// @return communityFeePending0 The amount of token0 that will be sent to the vault
   /// @return communityFeePending1 The amount of token1 that will be sent to the vault
   function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
-
-  /// @notice The amounts of token0 and token1 that will be sent to the plugin
-  /// @dev Will be sent FEE_TRANSFER_FREQUENCY after feeLastTransferTimestamp
-  /// @return pluginFeePending0 The amount of token0 that will be sent to the plugin
-  /// @return pluginFeePending1 The amount of token1 that will be sent to the plugin
-  function getPluginFeePending() external view returns (uint128 pluginFeePending0, uint128 pluginFeePending1);
 
   /// @notice Returns the address of currently used plugin
   /// @dev The plugin is subject to change
@@ -153,6 +147,14 @@ interface IAlgebraPoolState {
   /// This value is an int24 to avoid casting even though it is always positive.
   /// @return The current tick spacing
   function tickSpacing() external view returns (int24);
+
+  /// @notice The algebra fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
+  /// @return The current algebra fee value
+  function algebraFee() external view returns (uint16);
+
+  /// @notice The address that receives the algebra fee part of community fees
+  /// @return The algebra fee receiver address
+  function algebraFeeReceiver() external view returns (address);
 
   /// @notice The previous initialized tick before (or at) current global tick
   /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**

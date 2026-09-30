@@ -4,6 +4,7 @@ pragma solidity =0.8.20;
 import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IAlgebraFactory.sol';
 import '../interfaces/vault/IAlgebraVaultFactory.sol';
+import './MockAlgebraPoolExtension.sol';
 
 import './MockTimeAlgebraPool.sol';
 
@@ -14,15 +15,18 @@ contract MockTimeAlgebraPoolDeployer {
   bytes32 private cache0;
   bytes32 private cache1;
 
+  /// @dev extension address for pool constructor
+  address private _poolExtension;
+
   bytes32 public immutable mockPoolHash;
 
   constructor() {
     mockPoolHash = keccak256(type(MockTimeAlgebraPool).creationCode);
   }
 
-  function getDeployParameters() external view returns (address, address, address, address) {
+  function getDeployParameters() external view returns (address, address, address, address, address) {
     (address dataStorage, address token0, address token1) = _readFromCache();
-    return (dataStorage, factory, token0, token1);
+    return (dataStorage, factory, token0, token1, _poolExtension);
   }
 
   event PoolDeployed(address pool);
@@ -30,6 +34,9 @@ contract MockTimeAlgebraPoolDeployer {
   function deployMock(address _factory, address token0, address token1) external returns (address pool) {
     factory = _factory;
     _writeToCache(address(0), token0, token1);
+
+    _poolExtension = address(new MockAlgebraPoolExtension());
+
     pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
     (cache0, cache1) = (bytes32(0), bytes32(0));
     emit PoolDeployed(pool);
