@@ -12,10 +12,7 @@ import {
   abi as SWAPROUTER_ABI,
   bytecode as SWAPROUTER_BYTECODE,
 } from '@cryptoalgebra/integral-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json';
-import {
-  abi as PLUGIN_FACTORY_ABI,
-  bytecode as PLUGIN_FACTORY_BYTECODE,
-} from '@cryptoalgebra/default-plugin/artifacts/contracts/AlgebraDefaultPluginFactory.sol/AlgebraDefaultPluginFactory.json';
+
 import {
   abi as WNATIVE_ABI,
   bytecode as WNATIVE_BYTECODE,
@@ -45,9 +42,9 @@ const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
   const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as any as IAlgebraFactory;
 
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE);
-  const poolDeployer = await poolDeployerFactory.deploy(_factory);
+  const poolDeployer = await poolDeployerFactory.deploy(_factory, await _factory.poolExtension());
 
-  const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI, PLUGIN_FACTORY_BYTECODE);
+  const pluginContractFactory = await ethers.getContractFactory('MockFarmingPluginFactory');
   const pluginFactory = await pluginContractFactory.deploy(_factory);
 
   await _factory.setDefaultPluginFactory(pluginFactory);

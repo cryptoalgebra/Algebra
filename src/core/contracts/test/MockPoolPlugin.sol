@@ -10,10 +10,13 @@ import './TestERC20.sol';
 
 contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   address public pool;
-  uint8 public selectorsDisableConfig;
+  uint16 public selectorsDisableConfig;
   uint24 public overrideFee;
-  uint24 public pluginFee;
   bool public isDisabled;
+
+  uint256 public amountInDecrease;
+  uint256 public amountInIncrease;
+  uint256 public amountOutDecrease;
 
   constructor(address _pool) {
     pool = _pool;
@@ -41,6 +44,16 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     bool withPaymentInAdvance,
     bytes data
   );
+  event AfterSwapCalculation(
+    address sender,
+    address recipient,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    int256 amount0,
+    int256 amount1,
+    bytes data
+  );
   event AfterSwap(
     address sender,
     address recipient,
@@ -53,28 +66,32 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   );
   event BeforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes data);
   event AfterFlash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data);
+  event AfterCross(bool zeroToOne, uint256 swapStepAmount, uint256 feeStepAmount, int24 tick, int128 liquidityDelta);
 
-  function defaultPluginConfig() external view override returns (uint8) {}
+  function defaultPluginConfig() external view override returns (uint16) {}
 
   function getCurrentFee() external pure override returns (uint16 fee) {
     return 220;
   }
 
-  function setSelectorDisable(uint8 newSelectorsDisableConfig) external {
+  function setSelectorDisable(uint16 newSelectorsDisableConfig) external {
     selectorsDisableConfig = newSelectorsDisableConfig;
   }
 
-  function handlePluginFee(uint256, uint256) external view override returns (bytes4 selector) {
-    if (isDisabled) return selector;
-    return IAlgebraPlugin.handlePluginFee.selector;
+  function setAmountInDecrease(uint256 newAmountInDecrease) external {
+    amountInDecrease = newAmountInDecrease;
   }
 
-  function setPluginFees(uint24 _overrideFee, uint24 _pluginFee) external {
-    (overrideFee, pluginFee) = (_overrideFee, _pluginFee);
+  function setAmountInIncrease(uint256 newAmountInIncrease) external {
+    amountInIncrease = newAmountInIncrease;
   }
 
-  function disablePluginFeeHandle() external {
-    isDisabled = true;
+  function setAmountOutDecrease(uint256 newAmountOutDecrease) external {
+    amountOutDecrease = newAmountOutDecrease;
+  }
+
+  function setOverrideFee(uint24 _overrideFee) external {
+    overrideFee = _overrideFee;
   }
 
   /// @notice The hook called before the state of a pool is initialized
@@ -108,11 +125,11 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     int24 topTick,
     int128 desiredLiquidityDelta,
     bytes calldata data
-  ) external override returns (bytes4, uint24) {
+  ) external override returns (bytes4) {
     emit BeforeModifyPosition(sender, recipient, bottomTick, topTick, desiredLiquidityDelta, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG))
-      return (IAlgebraPlugin.beforeModifyPosition.selector, pluginFee);
-    return (IAlgebraPlugin.defaultPluginConfig.selector, pluginFee);
+      return IAlgebraPlugin.beforeModifyPosition.selector;
+    return IAlgebraPlugin.defaultPluginConfig.selector;
   }
 
   /// @notice The hook called after a position is modified
@@ -144,10 +161,30 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint160 limitSqrtPrice,
     bool withPaymentInAdvance,
     bytes calldata data
-  ) external override returns (bytes4, uint24, uint24) {
+  ) external override returns (uint256, bytes4, uint24) {
     emit BeforeSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, withPaymentInAdvance, data);
-    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG)) return (IAlgebraPlugin.beforeSwap.selector, overrideFee, pluginFee);
-    return (IAlgebraPlugin.defaultPluginConfig.selector, overrideFee, pluginFee);
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG))
+      return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, overrideFee);
+    return (0, IAlgebraPlugin.defaultPluginConfig.selector, overrideFee);
+  }
+
+  /// @notice The hook called after swap calculation
+  /// @param sender The initial msg.sender for the swap call
+  /// @return bytes4 The function selector for the hook
+  function afterSwapCalculation(
+    address sender,
+    address recipient,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    int256 amount0,
+    int256 amount1,
+    bytes calldata data
+  ) external override returns (bytes4, uint256, uint256) {
+    emit AfterSwapCalculation(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_SWAP_CALCULATION_FLAG))
+      return (IAlgebraPlugin.afterSwapCalculation.selector, amountInIncrease, amountOutDecrease);
+    return (IAlgebraPlugin.defaultPluginConfig.selector, 0, 0);
   }
 
   /// @notice The hook called after a swap
@@ -161,6 +198,7 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
+    uint256,
     bytes calldata data
   ) external override returns (bytes4) {
     emit AfterSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
@@ -219,5 +257,17 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata) external {
     if (amount0Owed > 0) TestERC20(IAlgebraPool(pool).token0()).transfer(pool, amount0Owed);
     if (amount1Owed > 0) TestERC20(IAlgebraPool(pool).token1()).transfer(pool, amount1Owed);
+  }
+
+  function afterCross(
+    bool zeroToOne,
+    uint256 swapStepAmount,
+    uint256 feeStepAmount,
+    int24 tick,
+    int128 liquidityDelta
+  ) external override returns (bytes4) {
+    emit AfterCross(zeroToOne, swapStepAmount, feeStepAmount, tick, liquidityDelta);
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_CROSS_FLAG)) return IAlgebraPlugin.afterCross.selector;
+    return IAlgebraPlugin.defaultPluginConfig.selector;
   }
 }

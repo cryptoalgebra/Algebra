@@ -4,7 +4,7 @@ pragma solidity =0.8.20;
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
 contract MockPlugin is IAlgebraPlugin {
-    function defaultPluginConfig() external pure returns (uint8) {
+    function defaultPluginConfig() external pure returns (uint16) {
         return 0;
     }
 
@@ -23,14 +23,10 @@ contract MockPlugin is IAlgebraPlugin {
         int24,
         int128,
         bytes calldata
-    ) external pure returns (bytes4, uint24) {
-        return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
+    ) external pure returns (bytes4) {
+        return IAlgebraPlugin.beforeModifyPosition.selector;
     }
 
-    function handlePluginFee(uint256, uint256) external pure returns (bytes4) {
-        return IAlgebraPlugin.handlePluginFee.selector;
-    }
-    
     function afterModifyPosition(
         address,
         address,
@@ -44,8 +40,8 @@ contract MockPlugin is IAlgebraPlugin {
         return IAlgebraPlugin.afterModifyPosition.selector;
     }
 
-    function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external pure returns (bytes4, uint24, uint24) {
-        return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
+    function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external pure returns (uint256, bytes4, uint24) {
+        return (0, IAlgebraPlugin.beforeSwap.selector, 0);
     }
 
     function afterSwap(
@@ -56,6 +52,7 @@ contract MockPlugin is IAlgebraPlugin {
         uint160,
         int256,
         int256,
+        uint256,
         bytes calldata
     ) external pure returns (bytes4) {
         return IAlgebraPlugin.afterSwap.selector;
@@ -75,5 +72,28 @@ contract MockPlugin is IAlgebraPlugin {
         bytes calldata
     ) external pure returns (bytes4) {
         return IAlgebraPlugin.afterFlash.selector;
+    }
+
+    function afterSwapCalculation(
+        address,
+        address,
+        bool,
+        int256,
+        uint160,
+        int256,
+        int256,
+        bytes memory
+    ) external pure returns (bytes4, uint256, uint256) {
+        return (IAlgebraPlugin.afterSwapCalculation.selector, 0, 0);
+    }
+
+    function afterCross(
+        bool,
+        uint256,
+        uint256,
+        int24,
+        int128
+    ) external pure returns (bytes4) {
+        return IAlgebraPlugin.afterCross.selector;
     }
 }

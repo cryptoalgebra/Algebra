@@ -25,9 +25,6 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted if invalid amount is passed as amountRequired to swap function
   error invalidAmountRequired();
 
-  /// @notice Emitted if plugin fee param greater than fee/override fee
-  error incorrectPluginFee();
-
   /// @notice Emitted if the pool received fewer tokens than it should have
   error insufficientInputAmount();
 
@@ -61,11 +58,20 @@ interface IAlgebraPoolErrors {
   error dynamicFeeActive();
   /// @notice Emitted if an attempt is made by plugin to change the fee value, but dynamic fee is disabled
   error dynamicFeeDisabled();
+  /// @notice Emitted if plugin returns overrideFee that is >= 100% (FEE_DENOMINATOR)
+  error invalidOverrideFee();
   /// @notice Emitted if an attempt is made to change the plugin configuration, but the plugin is not connected
   error pluginIsNotConnected();
   /// @notice Emitted if a plugin returns invalid selector after hook call
   /// @param expectedSelector The expected selector
   error invalidHookResponse(bytes4 expectedSelector);
+
+  /// @notice Emitted if plugin returns non-zero amountInDecrease for exactOut swap
+  error invalidAmountInDecrease();
+  /// @notice Emitted if plugin returns invalid amountOutDecrease (exactOut or exceeds output amount)
+  error invalidAmountOutDecrease();
+  /// @notice Emitted if plugin returns non-zero amountInIncrease for exactIn swap
+  error invalidAmountInIncrease();
 
   // ####  LiquidityMath errors  ####
 

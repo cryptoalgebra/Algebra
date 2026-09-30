@@ -2,10 +2,10 @@ import { Wallet, Contract, ContractTransactionResponse } from 'ethers';
 import { TestERC20 } from '../../typechain';
 import { FeeAmount } from '../shared';
 
-export module HelperTypes {
+export namespace HelperTypes {
   export type CommandFunction<Input, Output> = (input: Input) => Promise<Output>;
 
-  export module CreateIncentive {
+  export namespace CreateIncentive {
     export type Args = {
       rewardToken: TestERC20;
       bonusRewardToken: TestERC20;
@@ -32,7 +32,7 @@ export module HelperTypes {
     export type Command = CommandFunction<Args, Result>;
   }
 
-  export module MintDepositFarm {
+  export namespace MintDepositFarm {
     export type Args = {
       lp: Wallet;
       tokensToFarm: [TestERC20, TestERC20];
@@ -50,7 +50,7 @@ export module HelperTypes {
     export type Command = CommandFunction<Args, Result>;
   }
 
-  export module Mint {
+  export namespace Mint {
     type Args = {
       lp: Wallet;
       tokens: [TestERC20, TestERC20];
@@ -68,7 +68,7 @@ export module HelperTypes {
     export type Command = CommandFunction<Args, Result>;
   }
 
-  export module Deposit {
+  export namespace Deposit {
     type Args = {
       lp: Wallet;
       tokenId: string;
@@ -77,7 +77,7 @@ export module HelperTypes {
     export type Command = CommandFunction<Args, Result>;
   }
 
-  export module exitFarmingCollectBurn {
+  export namespace exitFarmingCollectBurn {
     type Args = {
       lp: Wallet;
       tokenId: string;
@@ -85,13 +85,14 @@ export module HelperTypes {
     };
     export type Result = {
       balance: bigint;
+      bonusBalance: bigint;
       exitFarmingdAt: number;
     };
 
     export type Command = CommandFunction<Args, Result>;
   }
 
-  export module EndIncentive {
+  export namespace EndIncentive {
     type Args = {
       createIncentiveResult: CreateIncentive.Result;
     };
@@ -103,7 +104,7 @@ export module HelperTypes {
     export type Command = CommandFunction<Args, Result>;
   }
 
-  export module MakeTickGo {
+  export namespace MakeTickGo {
     type Args = {
       direction: 'up' | 'down';
       desiredValue?: number;
@@ -115,7 +116,7 @@ export module HelperTypes {
     export type Command = CommandFunction<Args, Result>;
   }
 
-  export module MakeSwapGasCheck {
+  export namespace MakeSwapGasCheck {
     type Args = {
       direction: 'up' | 'down';
       desiredValue?: number;
@@ -128,12 +129,22 @@ export module HelperTypes {
     export type Command = CommandFunction<Args, Result>;
   }
 
-  export module GetIncentiveId {
+  export namespace GetIncentiveId {
     type Args = CreateIncentive.Result;
 
     // Returns the incentiveId as bytes32
     type Result = string;
 
+    export type Command = CommandFunction<Args, Result>;
+  }
+  export namespace GetRewardRate {
+    export type Args = {
+      createIncentiveResult: CreateIncentive.Result;
+    };
+    export type Result = {
+      rewardRate0: bigint;
+      rewardRate1: bigint;
+    };
     export type Command = CommandFunction<Args, Result>;
   }
 }

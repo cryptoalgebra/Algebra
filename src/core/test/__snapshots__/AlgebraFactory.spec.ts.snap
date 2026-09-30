@@ -10,4 +10,4 @@ exports[`AlgebraFactory #createPool gas for second pool [ @skip-on-coverage ] 1`
 
 exports[`AlgebraFactory factory bytecode size  [ @skip-on-coverage ] 1`] = `10684`;
 
-exports[`AlgebraFactory pool bytecode size  [ @skip-on-coverage ] 1`] = `22586`;
+exports[`AlgebraFactory pool bytecode size  [ @skip-on-coverage ] 1`] = `21842`;

@@ -4,13 +4,17 @@ pragma solidity =0.8.20;
 import '../libraries/PriceMovementMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
+import '../libraries/Plugins.sol';
 import './AlgebraPoolBase.sol';
+import '../interfaces/plugin/IAlgebraPlugin.sol';
 
 /// @title Algebra swap calculation abstract contract
 /// @notice Contains _calculateSwap encapsulating internal logic of swaps
 abstract contract SwapCalculation is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
   using SafeCast for uint256;
+  using Plugins for uint16;
+  using Plugins for bytes4;
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
 
@@ -25,7 +29,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint24 fee; // The current fee value in hundredths of a bip, i.e. 1e-6
     int24 prevInitializedTick; // The previous initialized tick in linked list
     int24 nextInitializedTick; // The next initialized tick in linked list
-    uint24 pluginFee;
     bool feeTokenIsZero; // Whether the fee is collected in token0
     bool feeOnInput; // Whether the fee token is the input token of this swap
   }
@@ -42,13 +45,12 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
   struct FeesAmount {
     uint256 communityFeeAmount;
-    uint256 pluginFeeAmount;
     bool inToken0; // Whether the amounts above are in token0
+    uint256 totalSwapFeeAmount; // Total swap fee earned by LPs (before community fee deduction)
   }
 
   function _calculateSwap(
     uint24 overrideFee,
-    uint24 pluginFee,
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
@@ -57,7 +59,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
 
     SwapCalculationCache memory cache;
-    (cache.amountRequiredInitial, cache.exactInput, cache.pluginFee) = (amountRequired, amountRequired > 0, pluginFee);
+    (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
     // load from one storage slot
     (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick) = (liquidity, prevTickGlobal, nextTickGlobal);
@@ -66,13 +68,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.lastFee, globalState.communityFee);
     if (currentPrice == 0) revert notInitialized();
     if (overrideFee != 0) {
-      cache.fee = overrideFee + pluginFee;
-      if (cache.fee >= 1e6) revert incorrectPluginFee();
-    } else {
-      if (pluginFee != 0) {
-        cache.fee += pluginFee;
-        if (cache.fee >= 1e6) revert incorrectPluginFee();
-      }
+      cache.fee = overrideFee;
     }
 
     if (zeroToOne) {
@@ -119,19 +115,17 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           cache.amountCalculated = cache.amountCalculated.add(step.input.toInt256()); // increase calculated input amount
         }
 
+        uint256 stepFeeAmount = step.feeAmount; // save before community/plugin fee deduction
+
         if (cache.communityFee > 0) {
           uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
           step.feeAmount -= delta;
           fees.communityFeeAmount += delta;
         }
 
-        if (cache.pluginFee > 0 && cache.fee > 0) {
-          uint256 delta = FullMath.mulDiv(step.feeAmount, cache.pluginFee, cache.fee);
-          step.feeAmount -= delta;
-          fees.pluginFeeAmount += delta;
-        }
-
         if (currentLiquidity > 0) cache.totalFeeGrowthFeeToken += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
+
+        fees.totalSwapFeeAmount += stepFeeAmount;
 
         // min or max tick can not be crossed due to limitSqrtPrice check
         if (currentPrice == step.nextTickPrice) {
@@ -154,6 +148,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
             (liquidityDelta, , cache.nextInitializedTick) = ticks.cross(step.nextTick, feeGrowth0, feeGrowth1);
             (currentTick, cache.prevInitializedTick) = (step.nextTick, step.nextTick);
           }
+          _afterCross(zeroToOne, step.input, stepFeeAmount, step.nextTick, liquidityDelta);
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         } else if (currentPrice != step.stepSqrtPrice) {
           currentTick = TickMath.getTickAtSqrtRatio(currentPrice); // the price has changed but hasn't reached the target
@@ -174,6 +169,21 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       totalFeeGrowth0Token = cache.totalFeeGrowthFeeToken;
     } else {
       totalFeeGrowth1Token = cache.totalFeeGrowthFeeToken;
+    }
+  }
+
+  function _afterCross(
+    bool zeroToOne,
+    uint256 stepSwapAmount,
+    uint256 stepFeeAmount,
+    int24 tick,
+    int128 liquidityDelta
+  ) internal {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_CROSS_FLAG)) {
+      if (msg.sender == plugin) return;
+      IAlgebraPlugin(plugin).afterCross(zeroToOne, stepSwapAmount, stepFeeAmount, tick, liquidityDelta).shouldReturn(
+        IAlgebraPlugin.afterCross.selector
+      );
     }
   }
 }

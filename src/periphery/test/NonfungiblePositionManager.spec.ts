@@ -1684,4 +1684,796 @@ describe('NonfungiblePositionManager', () => {
       });
     });
   });
+
+  describe('#liquidity lock', () => {
+    const tokenId = 1;
+    const LOCK_PERIOD = 300;
+
+    beforeEach('create pool and position', async () => {
+      await nft.createAndInitializePoolIfNecessary(
+        tokens[0].getAddress(),
+        tokens[1].getAddress(),
+        ZERO_ADDRESS,
+        encodePriceSqrt(1, 1),
+        '0x'
+      );
+
+      await nft.setTime(1000);
+
+      await nft.mint({
+        token0: tokens[0].getAddress(),
+        token1: tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: wallet.address,
+        amount0Desired: 1000,
+        amount1Desired: 1000,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 10000,
+      });
+    });
+
+    describe('#setLiquidityLockPeriod', () => {
+      it('can be set by admin', async () => {
+        await expect(nft.setLiquidityLockPeriod(LOCK_PERIOD))
+          .to.emit(nft, 'LiquidityLockPeriodChanged')
+          .withArgs(0, LOCK_PERIOD);
+        expect(await nft.liquidityLockPeriod()).to.eq(LOCK_PERIOD);
+      });
+
+      it('cannot be set by non-admin', async () => {
+        await expect(nft.connect(other).setLiquidityLockPeriod(LOCK_PERIOD)).to.be.revertedWith('NA');
+      });
+
+      it('cannot exceed MAX_LIQUIDITY_LOCK_PERIOD (10 minutes)', async () => {
+        await expect(nft.setLiquidityLockPeriod(601)).to.be.revertedWith('LOCK_PERIOD_TOO_LONG');
+      });
+
+      it('can be set to exactly MAX_LIQUIDITY_LOCK_PERIOD', async () => {
+        await nft.setLiquidityLockPeriod(600);
+        expect(await nft.liquidityLockPeriod()).to.eq(600);
+      });
+
+      it('does nothing if lock setting is permanently disabled', async () => {
+        await nft.permanentlyDisableLiquidityLock();
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        expect(await nft.liquidityLockPeriod()).to.eq(0);
+      });
+
+      it('emits event with old and new values', async () => {
+        await nft.setLiquidityLockPeriod(100);
+        await expect(nft.setLiquidityLockPeriod(200))
+          .to.emit(nft, 'LiquidityLockPeriodChanged')
+          .withArgs(100, 200);
+      });
+    });
+
+    describe('#permanentlyDisableLiquidityLock', () => {
+      it('can be called by admin', async () => {
+        await expect(nft.permanentlyDisableLiquidityLock())
+          .to.emit(nft, 'LiquidityLockSettingDisabled')
+          .to.emit(nft, 'LiquidityLockPeriodChanged')
+          .withArgs(0, 0);
+        expect(await nft.liquidityLockSettingDisabled()).to.eq(true);
+        expect(await nft.liquidityLockPeriod()).to.eq(0);
+      });
+
+      it('cannot be called by non-admin', async () => {
+        await expect(nft.connect(other).permanentlyDisableLiquidityLock()).to.be.revertedWith('NA');
+      });
+
+      it('resets liquidityLockPeriod to 0', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await expect(nft.permanentlyDisableLiquidityLock())
+          .to.emit(nft, 'LiquidityLockPeriodChanged')
+          .withArgs(LOCK_PERIOD, 0);
+        expect(await nft.liquidityLockPeriod()).to.eq(0);
+      });
+
+      it('prevents setLiquidityLockPeriod from working after disable', async () => {
+        await nft.permanentlyDisableLiquidityLock();
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        expect(await nft.liquidityLockPeriod()).to.eq(0);
+      });
+    });
+
+    describe('#setWhitelistStatus', () => {
+      it('can whitelist an address', async () => {
+        await expect(nft.setWhitelistStatus(other.address, true))
+          .to.emit(nft, 'WhitelistStatusChanged')
+          .withArgs(other.address, true);
+        expect(await nft.isWhitelisted(other.address)).to.eq(true);
+      });
+
+      it('can remove from whitelist', async () => {
+        await nft.setWhitelistStatus(other.address, true);
+        await expect(nft.setWhitelistStatus(other.address, false))
+          .to.emit(nft, 'WhitelistStatusChanged')
+          .withArgs(other.address, false);
+        expect(await nft.isWhitelisted(other.address)).to.eq(false);
+      });
+
+      it('cannot be called by non-admin', async () => {
+        await expect(nft.connect(other).setWhitelistStatus(other.address, true)).to.be.revertedWithoutReason;
+      });
+    });
+
+    describe('#liquidityUnlockTime', () => {
+      it('returns 0 when no lock period set', async () => {
+        expect(await nft.liquidityUnlockTime(tokenId)).to.eq(0);
+      });
+
+      it('returns unlock time after mint with lock period', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(2000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        expect(await nft.liquidityUnlockTime(2)).to.eq(2000 + LOCK_PERIOD);
+      });
+
+      it('returns 0 when lock setting is disabled', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(2000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        await nft.permanentlyDisableLiquidityLock();
+        expect(await nft.liquidityUnlockTime(2)).to.eq(0);
+      });
+
+      it('returns 0 when lock period is set to 0', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(2000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        await nft.setLiquidityLockPeriod(0);
+        expect(await nft.liquidityUnlockTime(2)).to.eq(0);
+      });
+    });
+
+    describe('mint with lock', () => {
+      it('sets unlock time on mint when lock period > 0', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        expect(await nft.liquidityUnlockTime(2)).to.eq(5000 + LOCK_PERIOD);
+      });
+
+      it('emits LiquidityUnlockTimeUpdated on mint', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await expect(
+          nft.mint({
+            token0: tokens[0].getAddress(),
+            token1: tokens[1].getAddress(),
+            deployer: ZERO_ADDRESS,
+            tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+            tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+            recipient: wallet.address,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        )
+          .to.emit(nft, 'LiquidityUnlockTimeUpdated')
+          .withArgs(2, 5000 + LOCK_PERIOD);
+      });
+
+      it('does not set unlock time when whitelisted', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setWhitelistStatus(wallet.address, true);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // unlock time not set because whitelisted
+        expect(await nft.liquidityUnlockTime(2)).to.eq(0);
+      });
+
+      it('does not set unlock time when lock period is 0', async () => {
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        expect(await nft.liquidityUnlockTime(2)).to.eq(0);
+      });
+    });
+
+    describe('decreaseLiquidity with lock', () => {
+      it('blocks decrease when liquidity is locked', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // try to decrease before unlock — should fail
+        await nft.setTime(5100);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.be.revertedWith('LL');
+      });
+
+      it('allows decrease after lock period expires', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        await nft.setTime(5000 + LOCK_PERIOD);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+
+      it('allows decrease at exactly unlock time', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        await nft.setTime(5000 + LOCK_PERIOD);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+
+      it('whitelisted user can decrease even when locked', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setWhitelistStatus(wallet.address, true);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // time is before unlock but whitelisted
+        await nft.setTime(5001);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+
+      it('position minted without lock can be decreased freely', async () => {
+        // tokenId 1 was minted without lock period
+        await nft.setTime(1001);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 1,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+
+      it('setting liquidityLockPeriod to 0 retroactively unlocks positions', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // still locked
+        await nft.setTime(5001);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.be.revertedWith('LL');
+
+        // set period to 0 — retroactively unlocks
+        await nft.setLiquidityLockPeriod(0);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+
+      it('permanently disabling lock allows decrease of locked positions', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        await nft.setTime(5001);
+        await nft.permanentlyDisableLiquidityLock();
+
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+    });
+
+    describe('increaseLiquidity with lock', () => {
+      it('updates unlock time on increaseLiquidity', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        // mint with lock
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        expect(await nft.liquidityUnlockTime(2)).to.eq(5000 + LOCK_PERIOD);
+
+        // increase at a later time
+        await nft.setTime(5200);
+        await nft.increaseLiquidity({
+          tokenId: 2,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // unlock time should be extended
+        expect(await nft.liquidityUnlockTime(2)).to.eq(5200 + LOCK_PERIOD);
+      });
+
+      it('non-approved user cannot increaseLiquidity when lock is active', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        // mint a position owned by wallet
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // other is not approved or owner
+        await expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: 2,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.be.revertedWith('NA');
+      });
+
+      it('approved user can increaseLiquidity when lock is active', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // approve other
+        await nft.approve(other.address, 2);
+
+        await expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: 2,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+
+      it('whitelisted user can increaseLiquidity when lock is active', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setWhitelistStatus(other.address, true);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        await expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: 2,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+
+      it('anyone can increaseLiquidity when lock period is 0', async () => {
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // other is not owner, but lock period is 0 so no restriction
+        await expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: 2,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+    });
+
+    describe('collect while locked', () => {
+      it('allows collecting fees even when liquidity is locked', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // still locked
+        await nft.setTime(5001);
+        await expect(
+          nft.collect({
+            tokenId: 2,
+            recipient: wallet.address,
+            amount0Max: MaxUint128,
+            amount1Max: MaxUint128,
+          })
+        ).to.not.be.reverted;
+      });
+    });
+
+    describe('burn with lock', () => {
+      it('can burn an empty position that was previously locked', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // wait for unlock
+        await nft.setTime(5000 + LOCK_PERIOD);
+
+        // decrease all liquidity
+        const { liquidity } = await nft.positions(2);
+        await nft.decreaseLiquidity({
+          tokenId: 2,
+          liquidity: liquidity,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // collect
+        await nft.collect({
+          tokenId: 2,
+          recipient: wallet.address,
+          amount0Max: MaxUint128,
+          amount1Max: MaxUint128,
+        });
+
+        // burn
+        await expect(nft.burn(2)).to.not.be.reverted;
+      });
+    });
+
+    describe('lock interaction with increase and decrease', () => {
+      it('increaseLiquidity extends lock, preventing early decrease', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setTime(5000);
+
+        await nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        // original unlock at 5300
+        expect(await nft.liquidityUnlockTime(2)).to.eq(5000 + LOCK_PERIOD);
+
+        // increase at 5200, extending unlock to 5500
+        await nft.setTime(5200);
+        await nft.increaseLiquidity({
+          tokenId: 2,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+
+        expect(await nft.liquidityUnlockTime(2)).to.eq(5200 + LOCK_PERIOD);
+
+        // try at original unlock time 5300 — should fail now
+        await nft.setTime(5300);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.be.revertedWith('LL');
+
+        // succeed at new unlock time
+        await nft.setTime(5200 + LOCK_PERIOD);
+        await expect(
+          nft.decreaseLiquidity({
+            tokenId: 2,
+            liquidity: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 10000,
+          })
+        ).to.not.be.reverted;
+      });
+    });
+  });
 });
