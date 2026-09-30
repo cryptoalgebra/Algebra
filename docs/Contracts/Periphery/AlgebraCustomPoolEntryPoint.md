@@ -7,7 +7,7 @@ Algebra custom pool entry point
 
 Is used to create custom pools
 
-*Developer note: Version: Algebra Integral 1.2.2*
+*Developer note: Version: Algebra Integral 1.2.3*
 
 **Inherits:** [IAlgebraCustomPoolEntryPoint](interfaces/IAlgebraCustomPoolEntryPoint.md)
 ## Modifiers

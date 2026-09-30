@@ -3,7 +3,7 @@
 # SwapRouter
 
 
-Algebra Integral 1.2.2 Swap Router
+Algebra Integral 1.2.3 Swap Router
 
 Router for stateless execution of swaps against Algebra
 

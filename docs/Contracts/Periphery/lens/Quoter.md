@@ -3,7 +3,7 @@
 # Quoter
 
 
-Algebra Integral 1.2.2 Quoter
+Algebra Integral 1.2.3 Quoter
 
 Allows getting the expected amount out or amount in for a given swap without executing the swap
 

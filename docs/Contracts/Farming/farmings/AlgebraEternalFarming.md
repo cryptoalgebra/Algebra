@@ -3,7 +3,7 @@
 # AlgebraEternalFarming
 
 
-Algebra Integral 1.2.2  eternal (v2-like) farming
+Algebra Integral 1.2.3  eternal (v2-like) farming
 
 Manages rewards and virtual pools
 
@@ -59,6 +59,7 @@ struct Farm {
   uint128 liquidity;
   int24 tickLower;
   int24 tickUpper;
+  uint64 enteredTimestamp;
   uint256 innerRewardGrowth0;
   uint256 innerRewardGrowth1;
 }
@@ -150,6 +151,17 @@ uint256 numOfIncentives
 Returns amount of created incentives
 
 
+### defaultFarmingBuffer
+```solidity
+uint64 defaultFarmingBuffer
+```
+**Selector**: `0xe75089ca`
+
+The global default anti-JIT farming buffer, in seconds. Rewards earned less than this many
+seconds after a position&#x27;s vesting timestamp are forfeited to the protocol owner
+
+*Developer note: &#x60;0&#x60; disables forfeiture by default; a per-pool override can still apply, see &#x60;poolFarmingBuffer&#x60;*
+
 ### rewards
 ```solidity
 mapping(address => mapping(contract IERC20Minimal => uint256)) rewards
@@ -158,7 +170,27 @@ mapping(address => mapping(contract IERC20Minimal => uint256)) rewards
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
 
-*Developer note: rewards[owner][rewardToken] => uint256*
+*Developer note: rewards[owner][rewardToken] => uint256. Forfeited rewards accrue under the zero address key*
+
+### poolFarmingBuffer
+```solidity
+mapping(address => uint64) poolFarmingBuffer
+```
+**Selector**: `0x93a55620`
+
+Per-pool override for the anti-JIT farming buffer, 0 means &quot;use defaultFarmingBuffer&quot;
+
+*Developer note: pool => buffer override, in seconds, 0 means &quot;use defaultFarmingBuffer&quot;*
+
+### isBufferExempt
+```solidity
+mapping(address => bool) isBufferExempt
+```
+**Selector**: `0x4ad29dcb`
+
+Whether position owner is exempt from the anti-JIT farming buffer, e.g. a trusted ALM vault
+
+*Developer note: owner => exempt from the anti-JIT farming buffer, e.g. trusted ALM vaults*
 
 
 ## Functions
@@ -275,6 +307,55 @@ _Must_ only be used in emergency situations. Farmings may be unusable after acti
 | ---- | ---- | ----------- |
 | newStatus | bool | The new status of `isEmergencyWithdrawActivated`. |
 
+### setFarmingBuffer
+
+```solidity
+function setFarmingBuffer(address pool, uint64 buffer) external
+```
+**Selector**: `0xa7188716`
+
+Sets the anti-JIT farming buffer
+
+*Developer note: only farmings administrator. Capped at 7 days*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pool | address | The pool to set the buffer for, or zero address to set the global default |
+| buffer | uint64 | The new buffer, in seconds |
+
+### withdrawForfeitedRewards
+
+```solidity
+function withdrawForfeitedRewards(contract IERC20Minimal token, address to, uint256 amount) external
+```
+**Selector**: `0xb1f151c3`
+
+Withdraws forfeited rewards from the protocol-owned bucket (rewards(address(0), token))
+
+*Developer note: only incentive maker or factory owner*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| token | contract IERC20Minimal | The reward token to withdraw |
+| to | address | The recipient of the withdrawn tokens |
+| amount | uint256 | The amount to withdraw. Withdraws the entire bucket balance if set to 0 or greater than the balance |
+
+### setBufferExempt
+
+```solidity
+function setBufferExempt(address owner, bool exempt) external
+```
+**Selector**: `0x19adbe1c`
+
+Sets whether position owner is exempt from the anti-JIT farming buffer
+
+*Developer note: only incentive maker or factory owner*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The position owner to exempt |
+| exempt | bool | The new exemption status |
+
 ### addRewards
 
 ```solidity
@@ -308,9 +389,9 @@ Change reward rates for incentive
 ### enterFarming
 
 ```solidity
-function enterFarming(struct IncentiveKey key, uint256 tokenId) external
+function enterFarming(struct IncentiveKey key, uint256 tokenId, uint128 prevLiquidity, uint64 prevEnteredTimestamp) external
 ```
-**Selector**: `0x5739f0b9`
+**Selector**: `0x542caec2`
 
 enter farming for Algebra LP token
 
@@ -318,11 +399,13 @@ enter farming for Algebra LP token
 | ---- | ---- | ----------- |
 | key | struct IncentiveKey | The key of the incentive for which to enter farming |
 | tokenId | uint256 | The ID of the token to enter farming |
+| prevLiquidity | uint128 | The token's liquidity immediately before this call, or 0 on first entry |
+| prevEnteredTimestamp | uint64 | The token's vesting timestamp immediately before this call, or 0 on first entry |
 
 ### exitFarming
 
 ```solidity
-function exitFarming(struct IncentiveKey key, uint256 tokenId, address _owner) external
+function exitFarming(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward, bool forfeited, uint128 liquidity, uint64 enteredTimestamp)
 ```
 **Selector**: `0x36808b19`
 
@@ -333,6 +416,16 @@ exitFarmings for Algebra LP token
 | key | struct IncentiveKey | The key of the incentive for which to exit farming |
 | tokenId | uint256 | The ID of the token to exit farming |
 | _owner | address | Owner of the token |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| reward | uint256 | The amount of main token (token0) accrued for this farm |
+| bonusReward | uint256 | The amount of bonus token (token1) accrued for this farm |
+| forfeited | bool | True if the accrued reward was forfeited to the protocol-owned bucket instead of the owner |
+| liquidity | uint128 | The token's liquidity just before exit, for the caller to thread into a following `enterFarming` |
+| enteredTimestamp | uint64 | The token's vesting timestamp just before exit, for the caller to thread into a following `enterFarming` |
 
 ### claimReward
 
@@ -402,7 +495,7 @@ reward amounts can be outdated, actual amounts could be obtained via static call
 ### collectRewards
 
 ```solidity
-function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward)
+function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward, bool forfeited)
 ```
 **Selector**: `0x046ec166`
 
@@ -421,5 +514,6 @@ reward amounts should be updated before calling this method
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | reward | uint256 | The amount of main token (token0) collected |
-| bonusReward | uint256 |  |
+| bonusReward | uint256 | The amount of bonus token (token1) collected |
+| forfeited | bool | True if the collected reward was forfeited to the protocol-owned bucket instead of the owner |
 

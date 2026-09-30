@@ -3,7 +3,7 @@
 # NonfungiblePositionManager
 
 
-Algebra Integral 1.2.2 NFT positions
+Algebra Integral 1.2.3 NFT positions
 
 Wraps Algebra positions in the ERC721 non-fungible token interface
 

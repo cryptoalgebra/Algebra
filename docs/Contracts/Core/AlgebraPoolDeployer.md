@@ -7,7 +7,7 @@ Algebra pool deployer
 
 Is used by AlgebraFactory to deploy pools
 
-*Developer note: Version: Algebra Integral 1.2.2*
+*Developer note: Version: Algebra Integral 1.2.3*
 
 **Inherits:** [IAlgebraPoolDeployer](interfaces/IAlgebraPoolDeployer.md)
 

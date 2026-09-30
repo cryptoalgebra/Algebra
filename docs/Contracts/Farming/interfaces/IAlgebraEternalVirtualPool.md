@@ -7,7 +7,7 @@ Algebra eternal virtual pool interface
 
 Used to track active liquidity in farming and distribute rewards
 
-**Inherits:** [IAlgebraVirtualPool](../../Plugin/interfaces/IAlgebraVirtualPool.md)
+**Inherits:** IAlgebraVirtualPool
 
 ## Functions
 ### farmingAddress

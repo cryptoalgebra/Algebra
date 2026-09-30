@@ -3,7 +3,7 @@
 # TickLens
 
 
-Algebra Integral 1.2.2 Tick Lens contract
+Algebra Integral 1.2.3 Tick Lens contract
 
 
 

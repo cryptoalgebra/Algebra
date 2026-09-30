@@ -55,7 +55,10 @@ Emitted when a process of ownership renounce finished
 event Pool(address token0, address token1, address pool)
 ```
 
-Emitted when a pool is created
+Emitted when any pool is created, including custom pools
+
+*Developer note: Also emitted for custom pools, alongside CustomPool, so that indexers watching only
+this event still discover the pool*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -69,7 +72,7 @@ Emitted when a pool is created
 event CustomPool(address deployer, address token0, address token1, address pool)
 ```
 
-Emitted when a pool is created
+Emitted when a custom pool is created, in addition to Pool event
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

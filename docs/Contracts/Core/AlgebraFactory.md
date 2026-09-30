@@ -7,7 +7,7 @@ Algebra factory
 
 Is used to deploy pools and its plugins
 
-*Developer note: Version: Algebra Integral 1.2.2*
+*Developer note: Version: Algebra Integral 1.2.3*
 
 **Inherits:** [IAlgebraFactory](interfaces/IAlgebraFactory.md) [Ownable2Step](https://docs.openzeppelin.com/contracts/4.x/) [AccessControlEnumerable](https://docs.openzeppelin.com/contracts/4.x/) [ReentrancyGuard](https://docs.openzeppelin.com/contracts/4.x/)
 
