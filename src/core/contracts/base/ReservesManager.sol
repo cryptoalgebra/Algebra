@@ -114,49 +114,30 @@ abstract contract ReservesManager is AlgebraPoolBase {
     int256 deltaR0,
     int256 deltaR1
   ) private returns (int256, int256) {
-    (uint256 feeSent0, uint256 feeSent1) = _transferCommunityFees(feePending0, feePending1, communityVault);
+    address _communityVault = communityVault;
+    // there is nowhere to send the fees without a vault, so keep them pending instead of blocking the pool.
+    // the cast is safe: a pool without a vault cannot accrue new fees, `setCommunityVault` zeroes `communityFee`
+    if (_communityVault == address(0)) {
+      (communityFeePending0, communityFeePending1) = (uint104(feePending0), uint104(feePending1));
+      return (deltaR0, deltaR1);
+    }
+
+    (uint256 feeSent0, uint256 feeSent1) = _transferCommunityFees(feePending0, feePending1, _communityVault);
     (communityFeePending0, communityFeePending1) = (0, 0);
     lastFeeTransferTimestamp = _blockTimestamp();
     return (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
   }
 
-  /// @notice Transfers community fees with algebra fee split
-  /// @dev Splits the accumulated community fees between algebraFeeReceiver and communityVault.
-  /// If algebraFee >= communityFee, all community fees go to algebraFeeReceiver.
+  /// @notice Transfers the accumulated community fees to the vault and notifies it
   function _transferCommunityFees(uint256 feePending0, uint256 feePending1, address communityVaultAddr) private returns (uint256, uint256) {
-    uint256 algebraFeeAmount0;
-    uint256 algebraFeeAmount1;
-    address _algebraFeeReceiver;
+    if (feePending0 > 0) _transfer(token0, communityVaultAddr, feePending0);
+    if (feePending1 > 0) _transfer(token1, communityVaultAddr, feePending1);
 
-    uint16 _algebraFee = algebraFee;
-    if (_algebraFee > 0) {
-      uint16 _communityFee = globalState.communityFee;
-      if (_communityFee > 0) {
-        _algebraFeeReceiver = algebraFeeReceiver;
-        if (_algebraFeeReceiver != address(0)) {
-          if (_algebraFee >= _communityFee) {
-            algebraFeeAmount0 = feePending0;
-            algebraFeeAmount1 = feePending1;
-          } else {
-            if (feePending0 > 0) algebraFeeAmount0 = FullMath.mulDiv(feePending0, _algebraFee, _communityFee);
-            if (feePending1 > 0) algebraFeeAmount1 = FullMath.mulDiv(feePending1, _algebraFee, _communityFee);
-          }
-          if (algebraFeeAmount0 > 0) _transfer(token0, _algebraFeeReceiver, algebraFeeAmount0);
-          if (algebraFeeAmount1 > 0) _transfer(token1, _algebraFeeReceiver, algebraFeeAmount1);
-        }
-      }
-    }
+    emit CommunityFeeTransfer(communityVaultAddr, feePending0, feePending1);
 
-    uint256 communityVaultAmount0 = feePending0 - algebraFeeAmount0;
-    uint256 communityVaultAmount1 = feePending1 - algebraFeeAmount1;
-
-    if (communityVaultAmount0 > 0) _transfer(token0, communityVaultAddr, communityVaultAmount0);
-    if (communityVaultAmount1 > 0) _transfer(token1, communityVaultAddr, communityVaultAmount1);
-
-    emit CommunityFeeTransfer(communityVaultAddr, _algebraFeeReceiver, communityVaultAmount0, communityVaultAmount1, algebraFeeAmount0, algebraFeeAmount1);
-
-    if (communityVaultAmount0 | communityVaultAmount1 != 0) {
-      IAlgebraCommunityVaultFeeHandler(communityVaultAddr).handleCommunityFee(token0, token1, communityVaultAmount0, communityVaultAmount1);
+    // a vault without code must not be able to block the pool
+    if ((feePending0 | feePending1 != 0) && communityVaultAddr.code.length > 0) {
+      IAlgebraCommunityVaultFeeHandler(communityVaultAddr).handleCommunityFee(token0, token1, feePending0, feePending1);
     }
 
     return (feePending0, feePending1);

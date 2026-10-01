@@ -41,13 +41,12 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
     }
 
-    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee, uint16 _algebraFee) = _getDefaultConfiguration();
+    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = _getDefaultConfiguration();
 
     _setFee(_fee);
     _setTickSpacing(_tickSpacing);
     if (_communityFee != 0 && communityVault == address(0)) revert invalidNewCommunityFee(); // the pool should not accumulate a community fee without a vault
     _setCommunityFee(_communityFee);
-    _setAlgebraFee(_algebraFee);
 
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
       IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
@@ -130,15 +129,5 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
     if (!globalState.unlocked) revert locked();
     if (isDynamicFeeEnabled) revert dynamicFeeActive();
     _setFee(newFee);
-  }
-
-  function setAlgebraFee(uint16 newAlgebraFee) external override onlyUnlocked {
-    _checkIfFactory();
-    _setAlgebraFee(newAlgebraFee);
-  }
-
-  function setAlgebraFeeReceiver(address newAlgebraFeeReceiver) external override onlyUnlocked {
-    _checkIfFactory();
-    _setAlgebraFeeReceiver(newAlgebraFeeReceiver);
   }
 }

@@ -80,11 +80,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   address public override communityVault;
 
   /// @inheritdoc IAlgebraPoolState
-  address public override algebraFeeReceiver;
-  /// @inheritdoc IAlgebraPoolState
-  uint16 public override algebraFee;
-
-  /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
 
   /// @inheritdoc IAlgebraPoolState
@@ -158,7 +153,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   }
 
   /// @dev Gets the default settings for pool initialization. Can be overridden in tests
-  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16, uint16) {
+  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16) {
     return IAlgebraFactory(factory).defaultConfigurationForPool();
   }
 
@@ -256,15 +251,5 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   function _setPluginConfig(uint16 _pluginConfig) internal {
     globalState.pluginConfig = _pluginConfig;
     emit PluginConfig(_pluginConfig);
-  }
-
-  function _setAlgebraFee(uint16 _algebraFee) internal {
-    algebraFee = _algebraFee;
-    emit AlgebraFee(_algebraFee);
-  }
-
-  function _setAlgebraFeeReceiver(address _algebraFeeReceiver) internal {
-    algebraFeeReceiver = _algebraFeeReceiver;
-    emit AlgebraFeeReceiver(_algebraFeeReceiver);
   }
 }

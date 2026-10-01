@@ -41,19 +41,13 @@ async function main() {
   await setVaultTx.wait()
 
   // protocol fee settings
-  const algebraFeeRecipient = "0x6cbd743d9b97DA1855E64893D3226F8eDCa16e76" 
   const partnerAddress = "0xDeaD1F5aF792afc125812E875A891b038f888258" // owner address, must be changed
-  const defaultAlgebraFee = 15 // specified on factory, 1.5% of all fees by default(50% of community fee) 
   const defaultCommunityFee = 30 // 3% by default
 
-  // set deployer as algebraFeeManager first (since algebraFeeManager is address(0), owner can set it)
-  await (await factory.transferAlgebraFeeManagerRole(deployer.address)).wait()
 
   const setCommunityFeeTx = await factory.setDefaultCommunityFee(defaultCommunityFee)
   await setCommunityFeeTx.wait()
 
-  await (await factory.setDefaultAlgebraFee(defaultAlgebraFee)).wait()
-  await (await factory.setDefaultAlgebraFeeReceiver(algebraFeeRecipient)).wait()
 
   const changePartnerFeeReceiverTx = await vault.changeCommunityFeeReceiver(partnerAddress)
   await changePartnerFeeReceiverTx.wait()

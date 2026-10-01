@@ -570,12 +570,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16) external override { _delegateToExtension(); }
 
-  /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setAlgebraFee(uint16) external override { _delegateToExtension(); }
-
-  /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setAlgebraFeeReceiver(address) external override { _delegateToExtension(); }
-
   /// @dev using function to save bytecode
   function _checkIfPlugin() private view {
     if (msg.sender != plugin) revert notAllowed();
