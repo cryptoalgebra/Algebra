@@ -85,11 +85,10 @@ contract PoolMockEchidna is AlgebraPool {
     extension = address(0);
   }
 
-  function _getDefaultConfiguration() internal pure override returns (uint16 _communityFee, int24 _tickSpacing, uint16 _fee, uint16 _algebraFee) {
+  function _getDefaultConfiguration() internal pure override returns (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) {
     _communityFee = 0;
     _tickSpacing = 1;
     _fee = 100;
-    _algebraFee = 0;
   }
 
   // The main external calls that are used by the pool

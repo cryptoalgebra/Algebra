@@ -90,6 +90,12 @@ exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 second swap in block with no tick movement 1`] = `105114`;
 
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 with override fee on first swap in block moves tick, no initialized crossings, with transfer 1`] = `131598`;
+
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 with override fee on first swap in block with no tick movement, with transfer 1`] = `131546`;
+
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 with override fee on first swap in block with no tick movement, without transfer 1`] = `131546`;
+
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 with plugin fee on first swap in block moves tick, no initialized crossings, with transfer 1`] = `159289`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 with plugin fee on first swap in block with no tick movement, with transfer 1`] = `159237`;
