@@ -7,14 +7,25 @@ on:
   pull_request:
     branches:
       - integral-v1.3
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   Codespell:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Run CodeSpell
-        uses: codespell-project/actions-codespell@v2.0
+        uses: codespell-project/actions-codespell@e3258cca84ce02b0bb36a3d41f2c18f719a0cc1a # v2.4.3
         with:
           check_hidden: true
           check_filenames: true

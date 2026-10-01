@@ -7,20 +7,31 @@ on:
   pull_request:
     branches:
       - integral-v1.3
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   Autotests:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     defaults:
       run:
         working-directory: ./src/farming
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v7
         with:
-          node-version: 20
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - run: npm run bootstrap
