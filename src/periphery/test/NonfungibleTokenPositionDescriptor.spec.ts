@@ -5,11 +5,10 @@ import { expect } from './shared/expect';
 import { NonfungibleTokenPositionDescriptor, MockTimeNonfungiblePositionManager, TestERC20 } from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
-import { FeeAmount, TICK_SPACINGS, tokenAddresses } from './shared/constants';
+import { FeeAmount, TICK_SPACINGS, tokenAddresses, ZERO_ADDRESS } from './shared/constants';
 import { getMaxTick, getMinTick } from './shared/ticks';
 import { sortedTokens } from './shared/tokenSort';
 import { extractJSONFromURI } from './shared/extractJSONFromURI';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string | undefined };
 
@@ -21,7 +20,7 @@ describe('NonfungibleTokenPositionDescriptor', () => {
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     nft: MockTimeNonfungiblePositionManager;
   }> = async () => {
-    const { factory, nft, router, nftDescriptor } = await loadFixture(completeFixture);
+    const { nft, nftDescriptor } = await loadFixture(completeFixture);
     const tokenFactory = await ethers.getContractFactory('TestERC20');
     const tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress] = [
       (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress, // do not use maxu256 to avoid overflowing
@@ -61,54 +60,34 @@ describe('NonfungibleTokenPositionDescriptor', () => {
   });
 
   describe('#tokenRatioPriority', () => {
-    it('returns -100 for WNativeToken', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(wnative)).to.eq(-100);
-    });
-
-    it('returns 200 for USDC', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(tokenAddresses.USDC)).to.eq(300);
-    });
-
-    it('returns 100 for DAI', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(tokenAddresses.DAI)).to.eq(100);
-    });
-
-    it('returns  150 for USDT', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(tokenAddresses.USDT)).to.eq(200);
-    });
-
-    it('returns -200 for WETH', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(tokenAddresses.WETH)).to.eq(-200);
-    });
-
-    it('returns -250 for WBTC', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(tokenAddresses.WBTC)).to.eq(-300);
-    });
-
-    it('returns 0 for any non-ratioPriority token', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(tokens[0])).to.eq(0);
+    it('returns the priority of each known token and 0 for the rest', async () => {
+      const cases: [string, string, number][] = [
+        ['WNativeToken', await wnative.getAddress(), -100],
+        ['USDC', tokenAddresses.USDC, 300],
+        ['DAI', tokenAddresses.DAI, 100],
+        ['USDT', tokenAddresses.USDT, 200],
+        ['WETH', tokenAddresses.WETH, -200],
+        ['WBTC', tokenAddresses.WBTC, -300],
+        ['non-ratioPriority token', await tokens[0].getAddress(), 0],
+      ];
+      for (const [label, token, priority] of cases) {
+        expect(await nftPositionDescriptor.tokenRatioPriority(token), label).to.eq(priority);
+      }
     });
   });
 
   describe('#flipRatio', () => {
-    it('returns false if neither token has priority ordering', async () => {
-      expect(await nftPositionDescriptor.flipRatio(tokens[0], tokens[2])).to.eq(false);
-    });
-
-    it('returns true if both tokens are numerators but token0 has a higher priority ordering', async () => {
-      expect(await nftPositionDescriptor.flipRatio(tokenAddresses.USDC, tokenAddresses.DAI)).to.eq(true);
-    });
-
-    it('returns true if both tokens are denominators but token1 has lower priority ordering', async () => {
-      expect(await nftPositionDescriptor.flipRatio(await wnative.getAddress(), tokenAddresses.WBTC)).to.eq(true);
-    });
-
-    it('returns true if token0 is a numerator and token1 is a denominator', async () => {
-      expect(await nftPositionDescriptor.flipRatio(tokenAddresses.DAI, tokenAddresses.WBTC)).to.eq(true);
-    });
-
-    it('returns false if token1 is a numerator and token0 is a denominator', async () => {
-      expect(await nftPositionDescriptor.flipRatio(tokenAddresses.WBTC, tokenAddresses.DAI)).to.eq(false);
+    it('flips by the priority ordering of the two tokens', async () => {
+      const cases: [string, string, string, boolean][] = [
+        ['neither token has priority ordering', await tokens[0].getAddress(), await tokens[2].getAddress(), false],
+        ['both numerators, token0 has the higher priority', tokenAddresses.USDC, tokenAddresses.DAI, true],
+        ['both denominators, token1 has the lower priority', await wnative.getAddress(), tokenAddresses.WBTC, true],
+        ['token0 is a numerator, token1 a denominator', tokenAddresses.DAI, tokenAddresses.WBTC, true],
+        ['token1 is a numerator, token0 a denominator', tokenAddresses.WBTC, tokenAddresses.DAI, false],
+      ];
+      for (const [label, token0, token1, flipped] of cases) {
+        expect(await nftPositionDescriptor.flipRatio(token0, token1), label).to.eq(flipped);
+      }
     });
   });
 

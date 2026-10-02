@@ -1,7 +1,5 @@
 import Decimal from 'decimal.js';
-
-const TWO = 2n;
-const TEN = 10n;
+import { TEN } from './constants';
 const FIVE_SIG_FIGS_POW = new Decimal(10).pow(5);
 
 export function formatSqrtRatioX96(

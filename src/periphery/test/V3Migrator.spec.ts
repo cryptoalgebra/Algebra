@@ -1,6 +1,6 @@
 import { MaxUint256, Contract, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, reset } from '@nomicfoundation/hardhat-network-helpers';
 import {
   IUniswapV2Pair,
   IAlgebraFactory,
@@ -18,7 +18,7 @@ import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { sortedTokens } from './shared/tokenSort';
 import { getMaxTick, getMinTick } from './shared/ticks';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
+import { ZERO_ADDRESS } from './shared/constants';
 
 type TestERC20WithAddress = TestERC20 & { address: string | undefined };
 
@@ -69,6 +69,8 @@ describe('V3Migrator', () => {
   let pair: IUniswapV2Pair;
 
   before('create fixture loader', async () => {
+    // gas depends on deployed addresses, so start from a fresh chain regardless of earlier spec files
+    await reset();
     const wallets = await (ethers as any).getSigners();
     wallet = wallets[0];
   });
@@ -138,7 +140,7 @@ describe('V3Migrator', () => {
           deadline: 1,
           refundAsNative: false,
         })
-      ).to.be.reverted;
+      ).to.be.revertedWithoutReason();
     });
 
     it('works once v3 pool is initialized', async () => {

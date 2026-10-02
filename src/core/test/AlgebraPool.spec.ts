@@ -37,16 +37,12 @@ import {
   PriceMovementMathTest,
   IERC20Minimal,
 } from '../typechain';
-import { plugin } from '../typechain/contracts/interfaces';
-
-type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
 
 describe('AlgebraPool', () => {
   let wallet: Wallet, other: Wallet;
 
   let token0: TestERC20;
   let token1: TestERC20;
-  let token2: TestERC20;
 
   let factory: AlgebraFactory;
   let pool: MockTimeAlgebraPool;
@@ -70,49 +66,38 @@ describe('AlgebraPool', () => {
   let mint: MintFunction;
   let flash: FlashFunction;
 
-  let createPoolWrapped: ThenArg<ReturnType<typeof poolFixture>>['createPool'];
-
   let vaultAddress: string;
+
+  const poolCreatedFixture = async () => {
+    const fixture = await poolFixture();
+    return { ...fixture, pool: await fixture.createPool() };
+  };
 
   beforeEach('deploy fixture', async () => {
     [wallet, other] = await (ethers as any).getSigners();
     let vault;
-    let _createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool'];
+    ({ token0, token1, factory, vault, pool, swapTargetCallee: swapTarget } = await loadFixture(poolCreatedFixture));
+    vaultAddress = await vault.getAddress();
     ({
+      swapToLowerPrice,
+      swapToHigherPrice,
+      swapExact0For1,
+      swapExact0For1SupportingFee,
+      swap0ForExact1,
+      swapExact1For0,
+      swapExact1For0SupportingFee,
+      swap1ForExact0,
+      mint,
+      flash,
+    } = createPoolFunctions({
       token0,
       token1,
-      token2,
-      factory,
-      vault,
-      createPool: _createPool,
-      swapTargetCallee: swapTarget,
-    } = await loadFixture(poolFixture));
-    vaultAddress = await vault.getAddress();
-    createPoolWrapped = async () => {
-      const pool = await _createPool();
-      ({
-        swapToLowerPrice,
-        swapToHigherPrice,
-        swapExact0For1,
-        swapExact0For1SupportingFee,
-        swap0ForExact1,
-        swapExact1For0,
-        swapExact1For0SupportingFee,
-        swap1ForExact0,
-        mint,
-        flash,
-      } = createPoolFunctions({
-        token0,
-        token1,
-        swapTarget,
-        pool,
-      }));
-      minTick = getMinTick(60);
-      maxTick = getMaxTick(60);
-      tickSpacing = 60;
-      return pool;
-    };
-    pool = await createPoolWrapped();
+      swapTarget,
+      pool,
+    }));
+    minTick = getMinTick(60);
+    maxTick = getMaxTick(60);
+    tickSpacing = 60;
   });
 
   it('constructor initializes immutables', async () => {
@@ -137,13 +122,11 @@ describe('AlgebraPool', () => {
   describe('#initialize', () => {
     it('fails if already initialized', async () => {
       await pool.initialize(encodePriceSqrt(1, 1));
-      await expect(pool.initialize(encodePriceSqrt(1, 1))).to.be.reverted;
+      await expect(pool.initialize(encodePriceSqrt(1, 1))).to.be.revertedWithCustomError(pool, 'alreadyInitialized');
     });
-    it('fails if starting price is too low', async () => {
+    it('fails if starting price is out of range', async () => {
       await expect(pool.initialize(1)).to.be.revertedWithCustomError(pool, 'priceOutOfRange');
       await expect(pool.initialize(MIN_SQRT_RATIO - 1n)).to.be.revertedWithCustomError(pool, 'priceOutOfRange');
-    });
-    it('fails if starting price is too high', async () => {
       await expect(pool.initialize(MAX_SQRT_RATIO)).to.be.revertedWithCustomError(pool, 'priceOutOfRange');
       await expect(pool.initialize(2n ** 160n - 1n)).to.be.revertedWithCustomError(pool, 'priceOutOfRange');
     });
@@ -160,18 +143,13 @@ describe('AlgebraPool', () => {
       await pool.initialize(MAX_SQRT_RATIO - 1n);
       expect((await pool.globalState()).tick).to.eq(getMaxTick(1) - 1);
     });
-    it('sets initial variables', async () => {
+    it('sets initial variables and emits an Initialize event with the input tick', async () => {
       const initPrice = encodePriceSqrt(1, 2);
-      await pool.initialize(initPrice);
+      await expect(pool.initialize(initPrice)).to.emit(pool, 'Initialize').withArgs(initPrice, -6932);
 
-      const { price } = await pool.globalState();
-      expect(price).to.eq(price);
-      //expect(timepointIndex).to.eq(0) TODO check plugin
-      expect((await pool.globalState()).tick).to.eq(-6932);
-    });
-    it('emits a Initialized event with the input tick', async () => {
-      const price = encodePriceSqrt(1, 2);
-      await expect(pool.initialize(price)).to.emit(pool, 'Initialize').withArgs(price, -6932);
+      const { price, tick } = await pool.globalState();
+      expect(price).to.eq(initPrice);
+      expect(tick).to.eq(-6932);
     });
     it('emits configuration events', async () => {
       const price = encodePriceSqrt(1, 2);
@@ -231,7 +209,7 @@ describe('AlgebraPool', () => {
             await token1.approve(payer, 2n ** 256n - 1n);
           });
 
-          it('fails if token0 paid 0', async () => {
+          it('fails if either token is paid 0', async () => {
             await expect(
               payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
@@ -239,9 +217,6 @@ describe('AlgebraPool', () => {
               pool,
               'zeroLiquidityActual'
             );
-          });
-
-          it('fails if token1 paid 0', async () => {
             await expect(
               payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
@@ -258,7 +233,7 @@ describe('AlgebraPool', () => {
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
           });
 
-          it('fails if token0 hardly underpaid', async () => {
+          it('fails if either token is hardly underpaid', async () => {
             await expect(
               payer.mint(
                 pool,
@@ -270,9 +245,7 @@ describe('AlgebraPool', () => {
                 expandTo18Decimals(100)
               )
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
-          });
 
-          it('fails if token1 hardly underpaid', async () => {
             await swapToHigherPrice(encodePriceSqrt(10, 1), wallet.address);
             await expect(
               payer.mint(
@@ -288,8 +261,13 @@ describe('AlgebraPool', () => {
           });
         });
 
-        it('fails if bottomTick greater than topTick', async () => {
+        it('fails if ticks are inverted or out of range', async () => {
           await expect(mint(wallet.address, 1, 0, 1)).to.be.revertedWithCustomError(pool, 'topTickLowerOrEqBottomTick');
+          await expect(mint(wallet.address, -887273, 0, 1)).to.be.revertedWithCustomError(
+            pool,
+            'bottomTickLowerThanMIN'
+          );
+          await expect(mint(wallet.address, 0, 887273, 1)).to.be.revertedWithCustomError(pool, 'topTickAboveMAX');
         });
         it('fails if invalid tickspacing', async () => {
           await expect(mint(wallet.address, tickSpacing - 1, tickSpacing * 2 - 1, 1)).to.be.revertedWithCustomError(
@@ -305,15 +283,7 @@ describe('AlgebraPool', () => {
             'tickIsNotSpaced'
           );
         });
-        it('fails if bottomTick less than min tick', async () => {
-          await expect(mint(wallet.address, -887273, 0, 1)).to.be.revertedWithCustomError(
-            pool,
-            'bottomTickLowerThanMIN'
-          );
-        });
-        it('fails if topTick greater than max tick', async () => {
-          await expect(mint(wallet.address, 0, 887273, 1)).to.be.revertedWithCustomError(pool, 'topTickAboveMAX');
-        });
+
         it('fails if amount exceeds the max', async () => {
           const maxLiquidityGross = await pool.maxLiquidityPerTick();
           await expect(
@@ -324,11 +294,15 @@ describe('AlgebraPool', () => {
         });
 
         it('fails if amount exceeds the max uint128', async () => {
-          await expect(mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, MaxUint128)).to.be.reverted;
+          await expect(
+            mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, MaxUint128)
+          ).to.be.revertedWithoutReason();
         });
 
         it('fails if amount exceeds the 2**127', async () => {
-          await expect(mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 2n ** 127n)).to.be.reverted;
+          await expect(
+            mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 2n ** 127n)
+          ).to.be.revertedWithoutReason();
         });
 
         it('fails if total amount at tick exceeds the max', async () => {
@@ -442,7 +416,6 @@ describe('AlgebraPool', () => {
 
         describe('underpayment', () => {
           let payer: TestAlgebraSwapPay;
-          // TODO improve tests, check liquiditys
           beforeEach(async () => {
             const factory = await ethers.getContractFactory('TestAlgebraSwapPay');
             payer = (await factory.deploy()) as any as TestAlgebraSwapPay;
@@ -450,34 +423,44 @@ describe('AlgebraPool', () => {
             await token1.approve(payer, 2n ** 256n - 1n);
           });
 
+          // asks for 1000000 liquidity: only what was paid for is minted and the rest of the payment comes back
+          const mintUnderpaid = async (
+            pay0: number,
+            pay1: number,
+            liquidity: number,
+            amount0: number,
+            amount1: number
+          ) => {
+            const [bottomTick, topTick] = [minTick + tickSpacing, maxTick - tickSpacing];
+            const [balance0, balance1] = [
+              await token0.balanceOf(wallet.address),
+              await token1.balanceOf(wallet.address),
+            ];
+            await expect(payer.mint(pool, wallet.address, bottomTick, topTick, 1000000, pay0, pay1))
+              .to.emit(pool, 'Mint')
+              .withArgs(await payer.getAddress(), wallet.address, bottomTick, topTick, liquidity, amount0, amount1);
+            expect(balance0 - (await token0.balanceOf(wallet.address))).to.eq(amount0);
+            expect(balance1 - (await token1.balanceOf(wallet.address))).to.eq(amount1);
+          };
+
           it('handle underpayment in both tokens', async () => {
-            await expect(
-              payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 100, 100)
-            ).to.not.be.reverted;
+            await mintUnderpaid(100, 100, 31, 99, 10);
           });
 
           it('handle underpayment in both tokens, token0 less', async () => {
-            await expect(
-              payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 50, 100)
-            ).to.not.be.reverted;
+            await mintUnderpaid(50, 100, 15, 48, 5);
           });
 
           it('handle underpayment in both tokens, token1 less', async () => {
-            await expect(
-              payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 100, 50)
-            ).to.not.be.reverted;
+            await mintUnderpaid(100, 50, 31, 99, 10);
           });
 
           it('handle underpayment in token0', async () => {
-            await expect(
-              payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 100, 100000000)
-            ).to.not.be.reverted;
+            await mintUnderpaid(100, 100000000, 31, 99, 10);
           });
 
           it('handle underpayment in token1', async () => {
-            await expect(
-              payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 100000000, 100)
-            ).to.not.be.reverted;
+            await mintUnderpaid(100000000, 100, 316, 1000, 100);
           });
         });
 
@@ -930,7 +913,6 @@ describe('AlgebraPool', () => {
 
   describe('miscellaneous mint tests', () => {
     beforeEach('initialize at zero tick', async () => {
-      pool = await createPoolWrapped();
       await initializeAtZeroTick(pool);
     });
 
@@ -1276,9 +1258,19 @@ describe('AlgebraPool', () => {
           await mint(wallet.address, minTick, maxTick, 3161);
         });
 
-        it('fails if required negative amount', async () => {
+        it('fails if required amount is negative or int256 min', async () => {
           await expect(
             pool.swapWithPaymentInAdvance(other.address, other.address, true, '-1', 0, '0x')
+          ).to.be.revertedWithCustomError(pool, 'invalidAmountRequired');
+          await expect(
+            pool.swapWithPaymentInAdvance(
+              other.address,
+              other.address,
+              true,
+              '-57896044618658097711785492504343953926634992332820282019728792003956564819968',
+              0,
+              '0x'
+            )
           ).to.be.revertedWithCustomError(pool, 'invalidAmountRequired');
         });
 
@@ -1290,11 +1282,13 @@ describe('AlgebraPool', () => {
         });
 
         it('fails if required uint128 max amount', async () => {
-          await expect(swapExact0For1SupportingFee(2n ** 128n - 1n, other.address)).to.be.reverted;
+          await expect(swapExact0For1SupportingFee(2n ** 128n - 1n, other.address)).to.be.revertedWithoutReason();
         });
 
         it('fails if required int256 max amount', async () => {
-          await expect(swapExact0For1SupportingFee(2n ** 255n - 1n, other.address)).to.be.reverted;
+          await expect(swapExact0For1SupportingFee(2n ** 255n - 1n, other.address)).to.be.revertedWith(
+            'underflow balance sender'
+          );
         });
 
         it('fails if required min256 amount', async () => {
@@ -1324,7 +1318,6 @@ describe('AlgebraPool', () => {
 
   describe('#collect', () => {
     beforeEach(async () => {
-      pool = await createPoolWrapped();
       await pool.initialize(encodePriceSqrt(1, 1));
     });
 
@@ -1670,7 +1663,6 @@ describe('AlgebraPool', () => {
     const liquidityAmount = expandTo18Decimals(1000);
 
     beforeEach(async () => {
-      pool = await createPoolWrapped();
       await pool.initialize(encodePriceSqrt(1, 1));
       await mint(wallet.address, minTick, maxTick, liquidityAmount);
     });
@@ -1685,11 +1677,11 @@ describe('AlgebraPool', () => {
     });
 
     it('cannot be changed out of bounds', async () => {
-      await expect(pool.setCommunityFee(1001)).to.be.reverted;
+      await expect(pool.setCommunityFee(1001)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
     });
 
     it('cannot be changed by addresses that are not owner', async () => {
-      await expect(pool.connect(other).setCommunityFee(170)).to.be.reverted;
+      await expect(pool.connect(other).setCommunityFee(170)).to.be.revertedWithCustomError(pool, 'notAllowed');
     });
 
     async function swapAndGetFeesOwed({
@@ -1720,9 +1712,6 @@ describe('AlgebraPool', () => {
         MaxUint128,
         MaxUint128
       );
-
-      expect(fees0, 'fees owed in token0 are greater than 0').to.be.gte(0);
-      expect(fees1, 'fees owed in token1 are greater than 0').to.be.gte(0);
 
       return { token0Fees: fees0, token1Fees: fees1 };
     }
@@ -2024,16 +2013,13 @@ describe('AlgebraPool', () => {
   });
 
   describe('#tickSpacing', () => {
-    beforeEach('deploy pool', async () => {
-      pool = await createPoolWrapped();
-    });
     describe('post initialize', () => {
       beforeEach('initialize pool', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
       });
       it('mint can only be called for multiples of 60', async () => {
-        await expect(mint(wallet.address, -61, 0, 1)).to.be.reverted;
-        await expect(mint(wallet.address, 0, 6, 1)).to.be.reverted;
+        await expect(mint(wallet.address, -61, 0, 1)).to.be.revertedWithCustomError(pool, 'tickIsNotSpaced');
+        await expect(mint(wallet.address, 0, 6, 1)).to.be.revertedWithCustomError(pool, 'tickIsNotSpaced');
       });
       it('mint can be called with multiples of 60', async () => {
         await mint(wallet.address, 60, 120, 1);
@@ -2042,7 +2028,7 @@ describe('AlgebraPool', () => {
       it('mint after tickSpacing increase', async () => {
         await mint(wallet.address, 60, 120, 1);
         await pool.setTickSpacing(200);
-        await mint(wallet.address, -2400, -1800, 1);
+        await mint(wallet.address, -2200, -1600, 1);
       });
       it('mint after tickSpacing decrease', async () => {
         await mint(wallet.address, 60, 120, 1);
@@ -2084,7 +2070,6 @@ describe('AlgebraPool', () => {
   });
 
   it('tick transition cannot run twice if zero for one swap ends at fractional price just below tick', async () => {
-    pool = await createPoolWrapped();
     const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as any as TickMathTest;
     const PriceMovementMath = (await (
       await ethers.getContractFactory('PriceMovementMathTest')
@@ -2179,9 +2164,9 @@ describe('AlgebraPool', () => {
 
   describe('#flash', () => {
     it('fails if not initialized', async () => {
-      await expect(flash(100, 200, other.address)).to.be.reverted;
-      await expect(flash(100, 0, other.address)).to.be.reverted;
-      await expect(flash(0, 200, other.address)).to.be.reverted;
+      await expect(flash(100, 200, other.address)).to.be.revertedWithCustomError(pool, 'transferFailed');
+      await expect(flash(100, 0, other.address)).to.be.revertedWithCustomError(pool, 'transferFailed');
+      await expect(flash(0, 200, other.address)).to.be.revertedWithCustomError(pool, 'transferFailed');
     });
     it('fails if no liquidity and reserves', async () => {
       await pool.initialize(encodePriceSqrt(1, 1));
@@ -2250,7 +2235,7 @@ describe('AlgebraPool', () => {
             .withArgs(await swapTarget.getAddress(), other.address, 1001, 2001, 1, 1);
         });
 
-        it('emits an event', async () => {
+        it('emits an event with the fee rounded up for 1 wei loans', async () => {
           await expect(flash(1, 1, other.address))
             .to.emit(pool, 'Flash')
             .withArgs(await swapTarget.getAddress(), other.address, 1, 1, 1, 1);
@@ -2296,8 +2281,14 @@ describe('AlgebraPool', () => {
           await expect(flash(0, 0, other.address)).to.not.emit(token0, 'Transfer').to.not.emit(token1, 'Transfer');
         });
         it('fails if flash amount is greater than token balance', async () => {
-          await expect(flash(balanceToken0 + 1n, balanceToken1, other.address)).to.be.reverted;
-          await expect(flash(balanceToken0, balanceToken1 + 1n, other.address)).to.be.reverted;
+          await expect(flash(balanceToken0 + 1n, balanceToken1, other.address)).to.be.revertedWithCustomError(
+            pool,
+            'transferFailed'
+          );
+          await expect(flash(balanceToken0, balanceToken1 + 1n, other.address)).to.be.revertedWithCustomError(
+            pool,
+            'transferFailed'
+          );
         });
         it('calls the flash callback on the sender with correct fee amounts', async () => {
           await expect(flash(1001, 2002, other.address)).to.emit(swapTarget, 'FlashCallback').withArgs(1, 1);
@@ -2346,13 +2337,20 @@ describe('AlgebraPool', () => {
             ((expandTo18Decimals(1) + 1n) * 2n ** 128n) / expandTo18Decimals(2)
           );
         });
-        it('fails if original balance not returned in either token', async () => {
-          await expect(flash(1000, 0, other.address, 999, 0)).to.be.reverted;
-          await expect(flash(0, 1000, other.address, 0, 999)).to.be.reverted;
-        });
-        it('fails if underpays either token', async () => {
-          await expect(flash(1000, 0, other.address, 1000, 0)).to.be.reverted;
-          await expect(flash(0, 1000, other.address, 0, 1000)).to.be.reverted;
+        it('fails if the fee or the original balance is not returned in either token', async () => {
+          for (const [label, paid] of [
+            ['balance not returned', 999],
+            ['fee not paid', 1000],
+          ] as [string, number][]) {
+            await expect(flash(1000, 0, other.address, paid, 0), label).to.be.revertedWithCustomError(
+              pool,
+              'flashInsufficientPaid0'
+            );
+            await expect(flash(0, 1000, other.address, 0, paid), label).to.be.revertedWithCustomError(
+              pool,
+              'flashInsufficientPaid1'
+            );
+          }
         });
         it('allows donating token0', async () => {
           await expect(flash(0, 0, ZeroAddress, 567, 0))
@@ -2387,12 +2385,6 @@ describe('AlgebraPool', () => {
       describe('fee on', () => {
         beforeEach('turn community fee on', async () => {
           await pool.setCommunityFee(170);
-        });
-
-        it('emits an event', async () => {
-          await expect(flash(1001, 2001, other.address))
-            .to.emit(pool, 'Flash')
-            .withArgs(await swapTarget.getAddress(), other.address, 1001, 2001, 1, 1);
         });
 
         it('increases the fee growth by the expected amount', async () => {
@@ -3164,47 +3156,22 @@ describe('AlgebraPool', () => {
       });
 
       it('can only be called by factory owner', async () => {
-        await expect(pool.connect(other).setCommunityFee(200)).to.be.reverted;
+        await expect(pool.connect(other).setCommunityFee(200)).to.be.revertedWithCustomError(pool, 'notAllowed');
       });
-      it('fails if fee is gt 100%', async () => {
-        await expect(pool.setCommunityFee(1004)).to.be.reverted;
+
+      it('sets and changes community fee, emitting an event each time', async () => {
+        for (const fee of [1000, 250, 140, 100]) {
+          await expect(pool.setCommunityFee(fee)).to.emit(pool, 'CommunityFee').withArgs(fee);
+          expect((await pool.globalState()).communityFee).to.eq(fee);
+        }
       });
-      it('succeeds for fee 100%', async () => {
-        await pool.setCommunityFee(1000);
-        expect((await pool.globalState()).communityFee).to.eq(1000);
-      });
-      it('succeeds for fee 25%', async () => {
+      it('can turn off community fee and emits an event', async () => {
         await pool.setCommunityFee(250);
-      });
-      it('succeeds for fee of 10%', async () => {
-        await pool.setCommunityFee(100);
-      });
-      it('sets community fee', async () => {
-        await pool.setCommunityFee(140);
-        expect((await pool.globalState()).communityFee).to.eq(140);
-      });
-      it('can change community fee', async () => {
-        await pool.setCommunityFee(140);
-        await pool.setCommunityFee(200);
-        expect((await pool.globalState()).communityFee).to.eq(200);
-      });
-      it('can turn off community fee', async () => {
-        await pool.setCommunityFee(250);
-        await pool.setCommunityFee(0);
+        await expect(pool.setCommunityFee(0)).to.emit(pool, 'CommunityFee').withArgs(0);
         expect((await pool.globalState()).communityFee).to.eq(0);
       });
-      it('emits an event when turned on', async () => {
-        await expect(pool.setCommunityFee(140)).to.be.emit(pool, 'CommunityFee').withArgs(140);
-      });
-      it('emits an event when turned off', async () => {
-        await pool.setCommunityFee(140);
-        await expect(pool.setCommunityFee(0)).to.be.emit(pool, 'CommunityFee').withArgs(0);
-      });
-      it('emits an event when changed', async () => {
-        await pool.setCommunityFee(250);
-        await expect(pool.setCommunityFee(170)).to.be.emit(pool, 'CommunityFee').withArgs(170);
-      });
-      it('fails if unchanged', async () => {
+      it('fails if fee is gt 100% or unchanged', async () => {
+        await expect(pool.setCommunityFee(1004)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
         await pool.setCommunityFee(200);
         await expect(pool.setCommunityFee(200)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
       });
@@ -3216,10 +3183,13 @@ describe('AlgebraPool', () => {
       });
 
       it('can only be called by factory owner', async () => {
-        await expect(pool.connect(other).setCommunityVault(other.address)).to.be.reverted;
+        await expect(pool.connect(other).setCommunityVault(other.address)).to.be.revertedWithCustomError(
+          pool,
+          'notAllowed'
+        );
       });
-      it('sets community vault', async () => {
-        await pool.setCommunityVault(other.address);
+      it('sets community vault and emits an event', async () => {
+        await expect(pool.setCommunityVault(other.address)).to.emit(pool, 'CommunityVault').withArgs(other.address);
         expect(await pool.communityVault()).to.eq(other.address);
       });
       it('can change community vault', async () => {
@@ -3227,8 +3197,8 @@ describe('AlgebraPool', () => {
         await pool.setCommunityVault(wallet.address);
         expect(await pool.communityVault()).to.eq(wallet.address);
       });
-      it('can set zero address with zero community fee', async () => {
-        await pool.setCommunityVault(ZeroAddress);
+      it('can set zero address with zero community fee and emits an event', async () => {
+        await expect(pool.setCommunityVault(ZeroAddress)).to.emit(pool, 'CommunityVault').withArgs(ZeroAddress);
         expect(await pool.communityVault()).to.eq(ZeroAddress);
       });
       it('can set zero address with nonzero community fee', async () => {
@@ -3237,16 +3207,11 @@ describe('AlgebraPool', () => {
         expect(await pool.communityVault()).to.eq(ZeroAddress);
         expect((await pool.globalState()).communityFee).to.eq(0);
       });
-      it('emits an event when changed', async () => {
-        await expect(pool.setCommunityVault(other.address)).to.be.emit(pool, 'CommunityVault').withArgs(other.address);
+      it('can be set to the same vault again', async () => {
+        await pool.setCommunityVault(other.address);
+        await expect(pool.setCommunityVault(other.address)).to.emit(pool, 'CommunityVault').withArgs(other.address);
+        expect(await pool.communityVault()).to.eq(other.address);
       });
-      it('emits an event when set to zero', async () => {
-        await expect(pool.setCommunityVault(ZeroAddress)).to.be.emit(pool, 'CommunityVault').withArgs(ZeroAddress);
-      });
-      //it('fails if unchanged', async () => {
-      //  await pool.setCommunityVault(other.address);
-      //  await expect(pool.setCommunityVault(other.address)).to.be.revertedWithCustomError(pool, 'InvalidVault');
-      //});
     });
 
     describe('#setTickSpacing', () => {
@@ -3259,21 +3224,18 @@ describe('AlgebraPool', () => {
         expect(await pool.tickSpacing()).to.eq(100);
       });
       it('setTickspacing can be called only by owner', async () => {
-        await expect(pool.connect(other).setTickSpacing(100)).to.be.reverted;
+        await expect(pool.connect(other).setTickSpacing(100)).to.be.revertedWithCustomError(pool, 'notAllowed');
       });
       it('can set max tickspacing', async () => {
         await expect(pool.setTickSpacing(500)).to.not.be.reverted;
       });
-      it('cannot setTickSpacing as min int24', async () => {
-        await expect(pool.setTickSpacing(-8388608)).to.be.revertedWithCustomError(pool, 'invalidNewTickSpacing');
-      });
-      it('cannot setTickSpacing gt 500 & lt 1', async () => {
-        await expect(pool.setTickSpacing(600)).to.be.revertedWithCustomError(pool, 'invalidNewTickSpacing');
-        await expect(pool.setTickSpacing(-20)).to.be.revertedWithCustomError(pool, 'invalidNewTickSpacing');
-        await expect(pool.setTickSpacing(0)).to.be.revertedWithCustomError(pool, 'invalidNewTickSpacing');
-      });
-      it('cannot set same value', async () => {
-        await expect(pool.setTickSpacing(60)).to.be.revertedWithCustomError(pool, 'invalidNewTickSpacing');
+      it('cannot setTickSpacing gt 500, lt 1, min int24 or the current value', async () => {
+        for (const spacing of [600, -20, 0, -8388608, 60]) {
+          await expect(pool.setTickSpacing(spacing), `spacing ${spacing}`).to.be.revertedWithCustomError(
+            pool,
+            'invalidNewTickSpacing'
+          );
+        }
       });
     });
 
@@ -3734,10 +3696,11 @@ describe('AlgebraPool', () => {
         await pool.initialize(encodePriceSqrt(1, 1));
       });
       it('can only be called by factory owner or administrator', async () => {
-        await expect(pool.connect(other).setPlugin(other.address)).to.be.reverted;
+        await expect(pool.connect(other).setPlugin(other.address)).to.be.revertedWithCustomError(pool, 'notAllowed');
       });
-      it('emits an event when changed', async () => {
-        await expect(pool.setPlugin(other.address)).to.be.emit(pool, 'Plugin').withArgs(other.address);
+      it('sets the plugin and emits an event', async () => {
+        await expect(pool.setPlugin(other.address)).to.emit(pool, 'Plugin').withArgs(other.address);
+        expect(await pool.plugin()).to.eq(other.address);
       });
     });
 
@@ -3746,7 +3709,9 @@ describe('AlgebraPool', () => {
         await pool.initialize(encodePriceSqrt(1, 1));
       });
       it('cannot be called by usual user', async () => {
-        await expect(pool.connect(other).setPluginConfig(1)).to.be.reverted;
+        // with no plugin the call stops at pluginIsNotConnected before the access check
+        await pool.setPlugin(wallet.address);
+        await expect(pool.connect(other).setPluginConfig(1)).to.be.revertedWithCustomError(pool, 'notAllowed');
       });
       it('can be called by plugin', async () => {
         await pool.setPlugin(other.address);
@@ -3755,9 +3720,10 @@ describe('AlgebraPool', () => {
       it('reverts if admin sets non-zero pluginConfig in pool with zero plugin', async () => {
         await expect(pool.setPluginConfig(63)).to.be.revertedWithCustomError(pool, 'pluginIsNotConnected');
       });
-      it('emits an event when changed', async () => {
+      it('sets the config and emits an event', async () => {
         await pool.setPlugin(other.address);
-        await expect(pool.setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1);
+        await expect(pool.setPluginConfig(1)).to.emit(pool, 'PluginConfig').withArgs(1);
+        expect((await pool.globalState()).pluginConfig).to.eq(1);
       });
     });
 
@@ -3787,7 +3753,7 @@ describe('AlgebraPool', () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await pool.setPluginConfig(128);
-        await expect(pool.connect(other).setFee(20000)).to.be.reverted;
+        await expect(pool.connect(other).setFee(20000)).to.be.revertedWithCustomError(pool, 'notAllowed');
       });
 
       it('if dynamic fee is on, owner can not set fee in pool', async () => {
@@ -4151,7 +4117,6 @@ describe('AlgebraPool', () => {
 
   describe('swap underpayment tests', () => {
     let underpay: TestAlgebraSwapPay;
-    let poolAddress: string;
     beforeEach('deploy swap test', async () => {
       const underpayFactory = await ethers.getContractFactory('TestAlgebraSwapPay');
       underpay = (await underpayFactory.deploy()) as any as TestAlgebraSwapPay;
@@ -4159,7 +4124,6 @@ describe('AlgebraPool', () => {
       await token1.approve(underpay, MaxUint256);
       await pool.initialize(encodePriceSqrt(1, 1));
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
-      poolAddress = await pool.getAddress();
     });
     it('swap 0 tokens', async () => {
       await expect(
@@ -4167,80 +4131,61 @@ describe('AlgebraPool', () => {
       ).to.be.revertedWithCustomError(pool, 'zeroAmountRequired');
     });
 
-    it('underpay zero for one and exact in', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 1, 0)
-      ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+    it('zero for one: underpaying or paying in the wrong token reverts', async () => {
+      for (const [label, amount, pay0, pay1] of [
+        ['exact in, underpaid', 1000, 1, 0],
+        ['exact in, wrong token', 1000, 0, 2000],
+        ['exact out, underpaid', -1000, 1, 0],
+        ['exact out, wrong token', -1000, 0, 2000],
+      ] as [string, number, number, number][]) {
+        await expect(
+          underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, amount, pay0, pay1),
+          label
+        ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+      }
     });
-    it('underpay hardly zero for one and exact in supporting fee on transfer', async () => {
+    it('paying nothing reverts in both directions, supporting fee on transfer', async () => {
       await expect(
         underpay.swapSupportingFee(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 0, 0)
       ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('underpay zero for one and exact in supporting fee on transfer', async () => {
-      await expect(underpay.swapSupportingFee(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 900, 0)).to.be.not
-        .reverted;
-    });
-    it('pay in the wrong token zero for one and exact in', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 0, 2000)
-      ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('overpay zero for one and exact in', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 2000, 0)
-      ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('underpay zero for one and exact out', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, -1000, 1, 0)
-      ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('pay in the wrong token zero for one and exact out', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, -1000, 0, 2000)
-      ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('overpay zero for one and exact out', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, -1000, 2000, 0)
-      ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('underpay one for zero and exact in', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, 1000, 0, 1)
-      ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('underpay hardly one for zero and exact in supporting fee on transfer', async () => {
       await expect(
         underpay.swapSupportingFee(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, 1000, 0, 0)
       ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
     });
-    it('underpay one for zero and exact in supporting fee on transfer', async () => {
+    it('a partial payment is accepted in both directions, supporting fee on transfer', async () => {
+      await expect(underpay.swapSupportingFee(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 900, 0)).to.be.not
+        .reverted;
       await expect(underpay.swapSupportingFee(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, 1000, 0, 990)).to.be.not
         .reverted;
     });
-    it('pay in the wrong token one for zero and exact in', async () => {
+
+    it('zero for one: overpaying is accepted, exact in and exact out', async () => {
       await expect(
-        underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, 1000, 2000, 0)
-      ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 2000, 0)
+      ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+      await expect(
+        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, -1000, 2000, 0)
+      ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
     });
-    it('overpay one for zero and exact in', async () => {
+
+    it('one for zero: underpaying or paying in the wrong token reverts', async () => {
+      for (const [label, amount, pay0, pay1] of [
+        ['exact in, underpaid', 1000, 0, 1],
+        ['exact in, wrong token', 1000, 2000, 0],
+        ['exact out, underpaid', -1000, 0, 1],
+        ['exact out, wrong token', -1000, 2000, 0],
+      ] as [string, number, number, number][]) {
+        await expect(
+          underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, amount, pay0, pay1),
+          label
+        ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+      }
+    });
+
+    it('one for zero: overpaying is accepted, exact in and exact out', async () => {
       await expect(
         underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, 1000, 0, 2000)
       ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('underpay one for zero and exact out', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, -1000, 0, 1)
-      ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('pay in the wrong token one for zero and exact out', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, -1000, 2000, 0)
-      ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-    });
-    it('overpay one for zero and exact out', async () => {
       await expect(
         underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, -1000, 0, 2000)
       ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');

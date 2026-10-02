@@ -1,14 +1,11 @@
 import { Wallet, getCreateAddress, ZeroAddress } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { AlgebraFactory, AlgebraPoolDeployer, AlgebraCommunityVault, TestERC20 } from '../typechain';
+import { AlgebraFactory, AlgebraCommunityVault, TestERC20 } from '../typechain';
 import { expect } from './shared/expect';
 
 describe('AlgebraCommunityVault', () => {
   let wallet: Wallet, other: Wallet, third: Wallet;
-
-  let factory: AlgebraFactory;
-  let poolDeployer: AlgebraPoolDeployer;
   let vault: AlgebraCommunityVault;
 
   let token0: TestERC20;
@@ -28,7 +25,7 @@ describe('AlgebraCommunityVault', () => {
     const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-    poolDeployer = (await poolDeployerFactory.deploy(_factory, await _factory.poolExtension())) as any as AlgebraPoolDeployer;
+    await poolDeployerFactory.deploy(_factory, await _factory.poolExtension());
 
     const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
     vault = (await vaultFactory.deploy(_factory)) as any as AlgebraCommunityVault;
@@ -50,7 +47,7 @@ describe('AlgebraCommunityVault', () => {
   });
 
   beforeEach('add tokens to vault', async () => {
-    factory = await loadFixture(fixture);
+    await loadFixture(fixture);
     await token0.transfer(vault, AMOUNT);
     await token1.transfer(vault, AMOUNT);
   });
@@ -112,7 +109,7 @@ describe('AlgebraCommunityVault', () => {
               amount: AMOUNT,
             },
           ])
-        ).to.be.reverted;
+        ).to.be.revertedWith('only withdrawer');
       });
 
       it('cannot withdrawTokens without communityFeeReceiver', async () => {
@@ -134,13 +131,11 @@ describe('AlgebraCommunityVault', () => {
       expect(await vault.communityFeeReceiver()).to.be.eq(other.address);
     });
 
-    it('can not change communityFeeReceiver to zero address', async () => {
-      await expect(vault.changeCommunityFeeReceiver(ZeroAddress)).to.be.reverted;
-    });
-
-    it('can not change communityFeeReceiver to same address', async () => {
+    it('can not change communityFeeReceiver to the zero or the same address', async () => {
+      // the receiver starts at zero, where both checks reject the same call, so one is set first
       await vault.changeCommunityFeeReceiver(other.address);
-      await expect(vault.changeCommunityFeeReceiver(other.address)).to.be.reverted;
+      await expect(vault.changeCommunityFeeReceiver(ZeroAddress)).to.be.revertedWithoutReason();
+      await expect(vault.changeCommunityFeeReceiver(other.address)).to.be.revertedWithoutReason();
     });
 
     it('only administrator can change communityFeeReceiver', async () => {

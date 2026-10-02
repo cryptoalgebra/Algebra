@@ -1,9 +1,9 @@
 import { MaxUint256, Contract, ContractTransactionResponse, Wallet, ZeroAddress } from 'ethers';
 import { ethers } from 'hardhat';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, reset } from '@nomicfoundation/hardhat-network-helpers';
 import { IWNativeToken, MockTimeNonfungiblePositionManager, MockTimeSwapRouter, TestERC20 } from '../typechain';
 import completeFixture from './shared/completeFixture';
-import { FeeAmount, TICK_SPACINGS } from './shared/constants';
+import { FeeAmount, TICK_SPACINGS, ZERO_ADDRESS } from './shared/constants';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
@@ -11,7 +11,6 @@ import { expect } from './shared/expect';
 import { encodePath } from './shared/path';
 import { getMaxTick, getMinTick } from './shared/ticks';
 import { computePoolAddress, computeCustomPoolAddress } from './shared/computePoolAddress';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string };
 
@@ -108,6 +107,8 @@ describe('SwapRouter', function () {
   }
 
   before('create fixture loader', async () => {
+    // gas depends on deployed addresses, so start from a fresh chain regardless of earlier spec files
+    await reset();
     [wallet, trader] = await (ethers as any).getSigners();
   });
 
@@ -794,8 +795,6 @@ describe('SwapRouter', function () {
         });
 
         it('gas cost [ @skip-on-coverage ]', async () => {
-          const pool = await factory.poolByPair(tokens[1].address, tokens[0].address);
-
           await snapshotGasCost(  
             exactOutput(
               path

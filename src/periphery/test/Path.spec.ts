@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { FeeAmount } from './shared/constants';
+import { ZERO_ADDRESS, PLUGIN_DEPLOYER_ADDRESS } from './shared/constants';
 
 import { expect } from './shared/expect';
 
@@ -8,7 +8,6 @@ import { PathTest } from '../typechain';
 import { decodePath, encodePath } from './shared/path';
 
 import snapshotGasCost from './shared/snapshotGasCost';
-import { ZERO_ADDRESS, PLUGIN_DEPLOYER_ADDRESS } from './CallbackValidation.spec';
 
 describe('Path', () => {
   let path: PathTest;
@@ -20,7 +19,6 @@ describe('Path', () => {
     PLUGIN_DEPLOYER_ADDRESS,
     '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
   ];
-  let fees = [FeeAmount.MEDIUM, FeeAmount.MEDIUM];
 
   const pathTestFixture = async () => {
     const pathTestFactory = await ethers.getContractFactory('PathTest');
@@ -48,6 +46,9 @@ describe('Path', () => {
     const encodedPath = encodePath(tokenAddresses);
     const [decodedTokens] = decodePath(encodedPath);
     expect(decodedTokens).to.deep.eq(tokenAddresses);
+  });
+
+  describe('truncated paths', () => {
   });
 
   describe('#hasMultiplePools / #decodeFirstPool / #skipToken / #getFirstPool', () => {

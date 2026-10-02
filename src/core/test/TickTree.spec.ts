@@ -162,19 +162,20 @@ describe('TickTree', () => {
       await initTicks([-70000, -20000, -10000, -300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000]);
     });
 
-    it('returns tick to right if at initialized tick', async () => expectNextTickToBe(65636, 65646, true));
+    it('returns tick to right if at initialized tick', async () => {
+      await expectNextTickToBe(65636, 65646, true);
+      await expectNextTickToBe(-10000, -300, true);
+    });
 
-    it('returns tick to right if at initialized tick', async () => expectNextTickToBe(-10000, -300, true));
+    it('returns the tick directly to the right', async () => {
+      await expectNextTickToBe(77 * 60, 65636, true);
+      await expectNextTickToBe(200, 300, true);
+    });
 
-    it('returns the tick directly to the right', async () => expectNextTickToBe(77 * 60, 65636, true));
-
-    it('returns the tick directly to the right', async () => await expectNextTickToBe(200, 300, true));
-
-    it('returns the next words initialized tick if on the right boundary', async () =>
-      expectNextTickToBe(-200, -100, true));
-
-    it('returns the next words initialized tick if on the right boundary', async () =>
-      expectNextTickToBe(100, 200, true));
+    it('returns the next words initialized tick if on the right boundary', async () => {
+      await expectNextTickToBe(-200, -100, true);
+      await expectNextTickToBe(100, 200, true);
+    });
 
     it('returns the next initialized tick from the next word', async () => expectNextTickToBe(300, 65636, true));
 
@@ -182,19 +183,12 @@ describe('TickTree', () => {
 
     it('skips entire word', async () => expectNextTickToBe(150000, 800000, true));
 
-    it('skips half word', async () => expectNextTickToBe(65636, 65646, true));
-
-    it('skips half word', async () => expectNextTickToBe(-70000, -20000, true));
-
-    it('skips half word', async () => expectNextTickToBe(-20000, -10000, true));
-
-    it('skips half word', async () => expectNextTickToBe(-10000, -300, true));
-
-    it('skips half word', async () => expectNextTickToBe(-300, -200, true));
-
-    it('skips half word', async () => expectNextTickToBe(-200, -100, true));
-
-    it('skips half word', async () => expectNextTickToBe(-100, 100, true));
+    it('skips half word', async () => {
+      await expectNextTickToBe(-70000, -20000, true);
+      await expectNextTickToBe(-20000, -10000, true);
+      await expectNextTickToBe(-300, -200, true);
+      await expectNextTickToBe(-100, 100, true);
+    });
   });
 
   describe('#nextTick gas  [ @skip-on-coverage ]', () => {

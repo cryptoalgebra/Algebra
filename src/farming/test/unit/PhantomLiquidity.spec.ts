@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { Wallet } from 'ethers';
+import { ContractTransactionResponse, Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { AlgebraEternalFarming } from '../../typechain';
@@ -13,8 +13,7 @@ import { ContractParams } from '../../types/contractParams';
 
 /**
  * Covers the anti-JIT farming buffer / phantom-liquidity mitigation: the liquidity-weighted
- * vesting timestamp blend, the buffer/forfeiture bucket, and the dodge/shell/griefing scenarios
- * from src/farming/phantom-liquidity-design.md.
+ * vesting timestamp blend, the buffer/forfeiture bucket, and the dodge/shell/griefing scenarios.
  */
 describe('unit/PhantomLiquidity', () => {
   let actors: ActorFixture;
@@ -84,6 +83,12 @@ describe('unit/PhantomLiquidity', () => {
     return (prevTs * prevLiquidity + now * (newLiquidity - prevLiquidity)) / newLiquidity;
   };
 
+  const eventArgs = async (tx: Promise<ContractTransactionResponse>, name: string) => {
+    const farming = await context.eternalFarming.getAddress();
+    const log = (await (await tx).wait())!.logs.find((l) => l.address === farming && context.eternalFarming.interface.parseLog(l)?.name === name);
+    return context.eternalFarming.interface.parseLog(log!)!.args;
+  };
+
   describe('#antiJitBuffer', () => {
     let farmIncentiveKey: ContractParams.IncentiveKey;
     let incentiveId: string;
@@ -104,13 +109,15 @@ describe('unit/PhantomLiquidity', () => {
 
       await Time.setAndMine((await blockTimestamp()) + BUFFER + 10);
 
-      await expect(context.farmingCenter.connect(lpUser0).collectRewards(farmIncentiveKey, mintResult.tokenId))
+      const collect = context.farmingCenter.connect(lpUser0).collectRewards(farmIncentiveKey, mintResult.tokenId);
+      await expect(collect)
         .to.emit(context.eternalFarming, 'RewardsCollected')
         .withArgs(mintResult.tokenId, incentiveId, (r: bigint) => r > 0n, (br: bigint) => br > 0n)
         .and.to.not.emit(context.eternalFarming, 'RewardsForfeited');
+      const { rewardAmount, bonusRewardAmount } = await eventArgs(collect, 'RewardsCollected');
 
-      expect(await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)).to.be.gt(0);
-      expect(await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)).to.be.gt(0);
+      expect(await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)).to.eq(rewardAmount);
+      expect(await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)).to.eq(bonusRewardAmount);
       expect(await context.eternalFarming.rewards(ZERO_ADDRESS, context.rewardToken)).to.eq(0);
       expect(await context.eternalFarming.rewards(ZERO_ADDRESS, context.bonusRewardToken)).to.eq(0);
     });
@@ -126,15 +133,17 @@ describe('unit/PhantomLiquidity', () => {
 
       await Time.setAndMine((await blockTimestamp()) + BUFFER / 2);
 
-      await expect(context.farmingCenter.connect(lpUser0).collectRewards(farmIncentiveKey, mintResult.tokenId))
+      const collect = context.farmingCenter.connect(lpUser0).collectRewards(farmIncentiveKey, mintResult.tokenId);
+      await expect(collect)
         .to.emit(context.eternalFarming, 'RewardsForfeited')
         .withArgs(mintResult.tokenId, incentiveId, lpUser0.address, (r: bigint) => r > 0n, (br: bigint) => br > 0n)
         .and.to.not.emit(context.eternalFarming, 'RewardsCollected');
+      const { reward, bonusReward } = await eventArgs(collect, 'RewardsForfeited');
 
       expect(await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)).to.eq(0);
       expect(await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)).to.eq(0);
-      expect(await context.eternalFarming.rewards(ZERO_ADDRESS, context.rewardToken)).to.be.gt(0);
-      expect(await context.eternalFarming.rewards(ZERO_ADDRESS, context.bonusRewardToken)).to.be.gt(0);
+      expect(await context.eternalFarming.rewards(ZERO_ADDRESS, context.rewardToken)).to.eq(reward);
+      expect(await context.eternalFarming.rewards(ZERO_ADDRESS, context.bonusRewardToken)).to.eq(bonusReward);
     });
 
     it('a small top-up on an already-vested position stays safe', async () => {
@@ -397,7 +406,7 @@ describe('unit/PhantomLiquidity', () => {
       const farm = await context.eternalFarming.farms(tokenId, incentiveId);
       const expectedTs = blendedTimestamp(shellFarm.enteredTimestamp, prevLiquidity, topUpTimestamp, currentLiquidity);
       // the vesting timestamp got pulled to exactly the liquidity-weighted blend, not just "close to now"
-      expect(Number(farm.enteredTimestamp)).to.be.closeTo(Number(expectedTs), 1);
+      expect(farm.enteredTimestamp).to.eq(expectedTs);
     });
 
     it('repeated doubling converges the vesting timestamp toward "now" regardless of chunking', async () => {
@@ -452,7 +461,7 @@ describe('unit/PhantomLiquidity', () => {
         expectedTs = blendedTimestamp(expectedTs, prevLiquidity, BigInt(t), currentLiquidity);
 
         const farm = await context.eternalFarming.farms(tokenId, incentiveId);
-        expect(Number(farm.enteredTimestamp)).to.be.closeTo(Number(expectedTs), 1);
+        expect(farm.enteredTimestamp).to.eq(expectedTs);
 
         prevLiquidity = currentLiquidity;
       }
@@ -460,7 +469,7 @@ describe('unit/PhantomLiquidity', () => {
       // after ~10 doublings, the origin (200s before the first doubling) should be all but forgotten -
       // check against the exact blend tracked through the loop, not a loose closeTo(t, STEP) that would
       // hide the same off-by-several-seconds bug the in-loop checks above are tight enough to catch
-      expect(Number((await context.eternalFarming.farms(tokenId, incentiveId)).enteredTimestamp)).to.be.closeTo(Number(expectedTs), 1);
+      expect((await context.eternalFarming.farms(tokenId, incentiveId)).enteredTimestamp).to.eq(expectedTs);
     });
   });
 
@@ -490,8 +499,9 @@ describe('unit/PhantomLiquidity', () => {
     });
 
     it('withdrawForfeitedRewards only incentive maker', async () => {
-      await expect(context.eternalFarming.connect(lpUser0).withdrawForfeitedRewards(context.rewardToken, lpUser0.address, 0)).to.be
-        .revertedWithoutReason;
+      await expect(
+        context.eternalFarming.connect(lpUser0).withdrawForfeitedRewards(context.rewardToken, lpUser0.address, 0)
+      ).to.be.revertedWithoutReason();
     });
 
     it('withdrawForfeitedRewards transfers the bucket and emits an event', async () => {
@@ -508,9 +518,13 @@ describe('unit/PhantomLiquidity', () => {
 
     it('withdrawForfeitedRewards caps an excessive request at the bucket balance', async () => {
       const bucket = await context.eternalFarming.rewards(ZERO_ADDRESS, context.rewardToken);
+      const balanceBefore = await context.rewardToken.balanceOf(admin.address);
 
-      await context.eternalFarming.connect(admin).withdrawForfeitedRewards(context.rewardToken, admin.address, bucket * 100n);
+      await expect(context.eternalFarming.connect(admin).withdrawForfeitedRewards(context.rewardToken, admin.address, bucket * 100n))
+        .to.emit(context.eternalFarming, 'ForfeitedRewardsWithdrawn')
+        .withArgs(await context.rewardToken.getAddress(), admin.address, bucket);
 
+      expect(await context.rewardToken.balanceOf(admin.address)).to.eq(balanceBefore + bucket);
       expect(await context.eternalFarming.rewards(ZERO_ADDRESS, context.rewardToken)).to.eq(0);
     });
 
@@ -537,7 +551,7 @@ describe('unit/PhantomLiquidity', () => {
 
   describe('#setFarmingBuffer', () => {
     it('only administrator', async () => {
-      await expect(context.eternalFarming.connect(lpUser0).setFarmingBuffer(ZERO_ADDRESS, 100)).to.be.revertedWithoutReason;
+      await expect(context.eternalFarming.connect(lpUser0).setFarmingBuffer(ZERO_ADDRESS, 100)).to.be.revertedWithoutReason();
     });
 
     it('sets the global default when pool is the zero address', async () => {
@@ -545,29 +559,24 @@ describe('unit/PhantomLiquidity', () => {
       expect(await context.eternalFarming.defaultFarmingBuffer()).to.eq(500);
     });
 
-    it('sets a per-pool override independently of the default', async () => {
+    it('sets a per-pool override independently of the default and emits PoolFarmingBuffer', async () => {
       await context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 500);
-      await context.eternalFarming.connect(admin).setFarmingBuffer(context.pool01, 2_000);
+      await expect(context.eternalFarming.connect(admin).setFarmingBuffer(context.pool01, 2_000))
+        .to.emit(context.eternalFarming, 'PoolFarmingBuffer')
+        .withArgs(context.pool01, 2_000);
 
       expect(await context.eternalFarming.defaultFarmingBuffer()).to.eq(500);
       expect(await context.eternalFarming.poolFarmingBuffer(context.pool01)).to.eq(2_000);
     });
 
-    it('reverts if the buffer exceeds 7 days', async () => {
+    it('accepts exactly 7 days and rejects one second more', async () => {
+      await expect(context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 7 * 86_400)).to.not.be.reverted;
       await expect(context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 7 * 86_400 + 1)).to.be.revertedWithCustomError(
         context.eternalFarming as AlgebraEternalFarming,
         'farmingBufferTooLong'
       );
     });
 
-    it('accepts exactly 7 days', async () => {
-      await expect(context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 7 * 86_400)).to.not.be.reverted;
-    });
-
-    it('emits PoolFarmingBuffer', async () => {
-      await expect(context.eternalFarming.connect(admin).setFarmingBuffer(context.pool01, 42)).to.emit(context.eternalFarming, 'PoolFarmingBuffer')
-        .withArgs(context.pool01, 42);
-    });
   });
 
   describe('#bufferChangedMidFlight', () => {
@@ -655,18 +664,14 @@ describe('unit/PhantomLiquidity', () => {
     });
 
     it('only incentive maker', async () => {
-      await expect(context.eternalFarming.connect(lpUser0).setBufferExempt(lpUser0.address, true)).to.be.revertedWithoutReason;
+      await expect(context.eternalFarming.connect(lpUser0).setBufferExempt(lpUser0.address, true)).to.be.revertedWithoutReason();
     });
 
-    it('factory owner can set it too', async () => {
-      await expect(context.eternalFarming.connect(admin).setBufferExempt(lpUser0.address, true)).to.not.be.reverted;
-      expect(await context.eternalFarming.isBufferExempt(lpUser0.address)).to.be.true;
-    });
-
-    it('emits BufferExemptionChanged', async () => {
+    it('factory owner can set it too, emitting BufferExemptionChanged', async () => {
       await expect(context.eternalFarming.connect(admin).setBufferExempt(lpUser0.address, true))
         .to.emit(context.eternalFarming, 'BufferExemptionChanged')
         .withArgs(lpUser0.address, true);
+      expect(await context.eternalFarming.isBufferExempt(lpUser0.address)).to.be.true;
     });
 
     it('an exempt owner is never forfeited, even collecting right after entering', async () => {

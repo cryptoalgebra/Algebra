@@ -27,7 +27,9 @@ describe('PoolAddress', () => {
 
   describe('#computeAddress', () => {
     it('all arguments equal zero', async () => {
-      await expect(poolAddress.computeAddress(ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, 0)).to.be.reverted;
+      await expect(
+        poolAddress.computeAddress(ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, 0)
+      ).to.be.revertedWith('Invalid order of tokens');
     });
 
     it('matches example from core repo', async () => {
@@ -51,7 +53,7 @@ describe('PoolAddress', () => {
           ZeroAddress,
           3000
         )
-      ).to.be.reverted;
+      ).to.be.revertedWith('Invalid order of tokens');
     });
 
     it('gas cost [ @skip-on-coverage ]', async () => {

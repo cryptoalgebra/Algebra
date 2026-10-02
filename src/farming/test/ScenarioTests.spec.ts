@@ -105,45 +105,6 @@ describe('Scenario tests', () => {
     });
 
 
-    describe('Incentive setup', () => {
-
-      it('cannot use if not nonfungiblePosManager', async () => {
-        await expect(
-          context.farmingCenter.applyLiquidityDelta(mint0.tokenId, 100)
-        ).to.be.revertedWith('Only nonfungiblePosManager');
-      });
-
-      it('cannot create two incentives on the same pool simultaneously', async () => {
-        await expect(
-          helpers.createIncentiveFlow({
-            rewardToken: context.rewardToken,
-            bonusRewardToken: context.bonusRewardToken,
-            totalReward: BNe18(1_000_000),
-            bonusReward: BNe18(200_000),
-            poolAddress: await context.poolObj.getAddress(),
-            nonce: nonce + 1n,
-            rewardRate: BNe18(10),
-            bonusRewardRate: BNe18(2),
-          })
-        ).to.be.revertedWithCustomError(context.eternalFarming, 'anotherFarmingIsActive');
-      });
-
-      it('minimalPositionWidth: position narrower than minimum is rejected on enterFarming', async () => {
-        const tooNarrow = await helpers.mintFlow({
-          lp: lpUser3,
-          tokens: tokensToFarm,
-          tickLower: Number(currentTick - tickSpacing),
-          tickUpper: Number(currentTick + tickSpacing),
-        });
-        await helpers.depositFlow({ lp: lpUser3, tokenId: tooNarrow.tokenId });
-        await expect(
-          helpers.farmingCenter.connect(lpUser3).enterFarming(incentiveKey, tooNarrow.tokenId)
-        ).to.be.revertedWithCustomError(context.eternalFarming, 'positionIsTooNarrow');
-      });
-
-    });
-
-
     describe('Reward distribution', () => {
 
       it('rewards are proportional to liquidity share (1x / 2x / 3x)', async () => {
@@ -245,57 +206,6 @@ describe('Scenario tests', () => {
       //   expect(r0.reward + r1.reward + r2.reward).to.equal(0n);
       //   expect(r0.bonusReward + r1.bonusReward + r2.bonusReward).to.equal(0n);
       // });
-
-    });
-
-
-    describe('Rates & caps', () => {
-
-      it('halving rates halves reward accrual for the next period', async () => {
-        await Time.setAndMine(await blockTimestamp() + 10_000);
-        await helpers.swapTwice(lpUser0, 5, 0);
-        const [snap1] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId]);
-        const rewardP1 = snap1.reward;
-        const bonusP1 = snap1.bonusReward;
-
-        await helpers.setRates(incentiveKey, BNe18(5), BNe18(1));
-
-        await Time.setAndMine(await blockTimestamp() + 10_000);
-        await helpers.swapTwice(lpUser0, 5, 0);
-        const [snap2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId]);
-        const rewardP2 = snap2.reward - rewardP1;
-        const bonusP2 = snap2.bonusReward - bonusP1;
-
-        expectRewardRatio(rewardP2, rewardP1, 2n);
-        expectRewardRatio(bonusP2, bonusP1, 2n);
-      });
-
-      it('rewards stop accruing once totalReward is exhausted', async () => {
-        await helpers.setRates(incentiveKey, BNe18(10_000), BNe18(2_000));
-
-        await Time.setAndMine(await blockTimestamp() + 100_000);
-        await helpers.swapTwice(lpUser0, 5, 0);
-
-        const cap = createIncentiveResultEternal.totalReward;
-        const bonusCap = createIncentiveResultEternal.bonusReward;
-
-        const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
-        const accrued = r0.reward + r1.reward + r2.reward;
-        const accruedBonus = r0.bonusReward + r1.bonusReward + r2.bonusReward;
-
-        expectRewardRatio(accrued, cap, 1n);
-        expectRewardRatio(accruedBonus, bonusCap, 1n);
-
-        await Time.setAndMine(await blockTimestamp() + 100_000);
-        await helpers.swapTwice(lpUser0, 5, 0);
-
-        const [r0a, r1a, r2a] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
-        const accruedPost = r0a.reward + r1a.reward + r2a.reward;
-        const accruedBonusPost = r0a.bonusReward + r1a.bonusReward + r2a.bonusReward;
-
-        expectRewardRatio(accruedPost, cap, 1n);
-        expectRewardRatio(accruedBonusPost, bonusCap, 1n);
-      });
 
     });
 

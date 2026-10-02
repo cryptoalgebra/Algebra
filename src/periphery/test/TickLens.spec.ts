@@ -3,13 +3,12 @@ import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeNonfungiblePositionManager, TestERC20, TickLensTest } from '../typechain';
 import completeFixture from './shared/completeFixture';
-import { FeeAmount, TICK_SPACINGS } from './shared/constants';
+import { FeeAmount, TICK_SPACINGS, ZERO_ADDRESS } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { expect } from './shared/expect';
 import { getMaxTick, getMinTick } from './shared/ticks';
 import { computePoolAddress } from './shared/computePoolAddress';
 import snapshotGasCost from './shared/snapshotGasCost';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string };
 

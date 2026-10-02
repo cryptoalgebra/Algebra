@@ -9,7 +9,7 @@ import {
   TestERC20,
   IAlgebraFactory,
 } from '../typechain';
-import { FeeAmount, MaxUint128, TICK_SPACINGS } from './shared/constants';
+import { FeeAmount, MaxUint128, TICK_SPACINGS, ZERO_ADDRESS } from './shared/constants';
 import { getMaxTick, getMinTick } from './shared/ticks';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
@@ -18,7 +18,6 @@ import completeFixture from './shared/completeFixture';
 import snapshotGasCost from './shared/snapshotGasCost';
 
 import { expect } from './shared/expect';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 describe('PositionValue', async () => {
   let wallets: any;
@@ -72,7 +71,6 @@ describe('PositionValue', async () => {
   });
 
   describe('#total', () => {
-    let tokenId: number;
     let sqrtRatioX96: bigint;
 
     beforeEach(async () => {
@@ -126,7 +124,7 @@ describe('PositionValue', async () => {
       expect(total[1]).to.equal(principal[1] + fees[1]);
     });
 
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(positionValue.totalGas(nft, 1, sqrtRatioX96));
     });
   });
@@ -179,7 +177,7 @@ describe('PositionValue', async () => {
       expect(principal.amount1).to.equal('99999999999999999999999');
     });
 
-    it('returns the correct values when range is below current price', async () => {
+    it('returns the correct values when range is above current price', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
@@ -239,7 +237,7 @@ describe('PositionValue', async () => {
       expect(principal.amount1).to.equal('99999999999999999999999');
     });
 
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
@@ -365,7 +363,7 @@ describe('PositionValue', async () => {
         expect(feeAmounts[1]).to.equal(feesFromCollect[1]);
       });
 
-      it('gas', async () => {
+      it('gas [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(positionValue.feesGas(nft, tokenId));
       });
     });
@@ -421,7 +419,7 @@ describe('PositionValue', async () => {
         expect(feeAmounts[1]).to.equal(feesFromCollect[1]);
       });
 
-      it('gas', async () => {
+      it('gas [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(positionValue.feesGas(nft, tokenId));
       });
     });
@@ -477,7 +475,7 @@ describe('PositionValue', async () => {
         expect(feeAmounts[1]).to.equal(feesFromCollect[1]);
       });
 
-      it('gas', async () => {
+      it('gas [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(positionValue.feesGas(nft, tokenId));
       });
     });

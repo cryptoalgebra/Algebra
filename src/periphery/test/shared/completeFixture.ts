@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { v3RouterFixture } from './externalFixtures';
 import { MaxUint256 } from 'ethers';
-import { tokenAddresses, tokenRatioSortOrder } from './constants';
+import { tokenAddresses, tokenRatioSortOrder, ZERO_ADDRESS } from './constants';
 import {
   IWNativeToken,
   MockTimeNonfungiblePositionManager,
@@ -13,7 +13,6 @@ import {
   AlgebraCustomPoolEntryPoint,
   CustomPoolDeployerTest,
 } from '../../typechain';
-import { ZERO_ADDRESS } from '../CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address_: string | undefined };
 
@@ -57,7 +56,6 @@ const completeFixture: () => Promise<{
 }> = async () => {
   const { wnative, factory, router } = await v3RouterFixture();
   const tokenFactory = await ethers.getContractFactory('TestERC20');
-  const factoryOwner = await factory.owner();
   const tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress] = [
     (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress, // do not use maxu256 to avoid overflowing
     (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress,

@@ -2,26 +2,21 @@ import { Wallet, ContractTransactionResponse, MaxUint256, ZeroAddress } from 'et
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import {
-  AlgebraCustomPoolEntryPoint,
   CustomPoolDeployerTest,
   IAlgebraFactory,
-  IAlgebraPool,
   IWNativeToken,
-  MockPluginFactory,
   MockTimeNonfungiblePositionManager,
   MockTimeSwapRouter,
-  PoolAddressTest,
   Quoter,
   TestERC20,
 } from '../typechain';
 import completeFixture from './shared/completeFixture';
-import { MaxUint128 } from './shared/constants';
+import { MaxUint128, ZERO_ADDRESS } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { expect } from './shared/expect';
 import { encodePath } from './shared/path';
 import { createPool } from './shared/quoter';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string };
 
@@ -83,7 +78,7 @@ describe('Quoter', () => {
   describe('quotes', () => {
     const subFixture = async () => {
       const { tokens, customPoolDeployer, path, nft, quoter, router, wnative, factory } = await swapRouterFixture();
-      const pool0 = await createPool(nft, wallet, await tokens[0].getAddress(), await tokens[1].getAddress(), ZERO_ADDRESS);
+      await createPool(nft, wallet, await tokens[0].getAddress(), await tokens[1].getAddress(), ZERO_ADDRESS);
 
       await customPoolDeployer.createCustomPool(customPoolDeployer, wallet.address, await tokens[1].getAddress(), await tokens[2].getAddress(), '0x');
       await createPool(nft, wallet, await tokens[1].getAddress(), await tokens[2].getAddress(), await customPoolDeployer.getAddress());
@@ -106,7 +101,7 @@ describe('Quoter', () => {
         expect(fees[0]).to.eq(500);
       });
 
-      it('0 -> 1 changes fee', async () => {
+      it('0 -> 1 keeps the fee and quotes nothing once the range is drained', async () => {
         async function exactInput(
           tokens: string[],
           amountIn: number = 3,
@@ -140,6 +135,7 @@ describe('Quoter', () => {
           expandTo18Decimals(300000)
         );
 
+        expect(amountOut).to.eq(999999);
         expect(fees[0]).to.eq(500);
 
         await exactInput([tokens[0].address, ZERO_ADDRESS, tokens[1].address], 300000);
@@ -153,6 +149,8 @@ describe('Quoter', () => {
           expandTo18Decimals(300000)
         );
 
+        // the swap above pushed the price out of the only position, so the same quote now yields nothing
+        expect(amountOut2).to.eq(0);
         expect(fees2[0]).to.eq(500);
       });
 
@@ -174,6 +172,7 @@ describe('Quoter', () => {
 
         expect(amountOut).to.eq(1);
         expect(fees[0]).to.eq(500);
+        expect(fees[1]).to.eq(500);
       });
 
       it('2 -> 1 -> 0', async () => {
@@ -184,6 +183,7 @@ describe('Quoter', () => {
 
         expect(amountOut).to.eq(1);
         expect(fees[0]).to.eq(500);
+        expect(fees[1]).to.eq(500);
       });
     });
 
@@ -257,13 +257,11 @@ describe('Quoter', () => {
       });
 
       it('0 -> 1 -> 2', async () => {
-        const { amountIn, fees } = await quoter.quoteExactOutput.staticCall(
-          encodePath(path),
-          1
-        );
+        const { amountIn, fees } = await quoter.quoteExactOutput.staticCall(encodePath(path.slice().reverse()), 1);
 
         expect(amountIn).to.eq(5);
         expect(fees[0]).to.eq(500);
+        expect(fees[1]).to.eq(500);
       });
 
       it('2 -> 1 -> 0', async () => {
@@ -274,6 +272,7 @@ describe('Quoter', () => {
 
         expect(amountIn).to.eq(5);
         expect(fees[0]).to.eq(500);
+        expect(fees[1]).to.eq(500);
       });
     });
 

@@ -9,12 +9,10 @@ import {
 
 import { abi as FACTORY_V2_ABI, bytecode as FACTORY_V2_BYTECODE } from '@uniswap/v2-core/build/UniswapV2Factory.json';
 import { ethers } from 'hardhat';
-import { AlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '../../typechain';
+import { IWNativeToken, MockTimeSwapRouter } from '../../typechain';
 
 import WNativeToken from '../contracts/WNativeToken.json';
 import { getCreateAddress, ZeroAddress } from 'ethers';
-
-export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a';
 
 const wnativeFixture: () => Promise<{ wnative: IWNativeToken }> = async () => {
   const wnativeFactory = await ethers.getContractFactory(WNativeToken.abi, WNativeToken.bytecode);
@@ -42,7 +40,7 @@ const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
   const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as any as IAlgebraFactory;
 
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE);
-  const poolDeployer = await poolDeployerFactory.deploy(_factory, await _factory.poolExtension());
+  await poolDeployerFactory.deploy(_factory, await _factory.poolExtension());
 
   return _factory;
 };
