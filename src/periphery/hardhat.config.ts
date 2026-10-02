@@ -3,7 +3,8 @@ import 'hardhat-output-validator';
 import 'hardhat-contract-sizer';
 import 'solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
-import { task } from 'hardhat/config';
+import { subtask, task } from 'hardhat/config';
+import { TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE } from 'hardhat/builtin-tasks/task-names';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
@@ -75,6 +76,24 @@ task('expand-abi', 'adds pool custom errors to abi', async (taskArgs, hre) => {
 
   await hre.artifacts.saveArtifactAndDebugFile(routerArtifact);
   await hre.artifacts.saveArtifactAndDebugFile(positionManagerArtifact);
+});
+
+// Under coverage QuoterV2 is not instrumented (.solcover.js) and needs the optimizer, or it hits stack too deep.
+// A separate config object gives it its own compilation job, so other files stay unoptimized.
+subtask(TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE).setAction(async (args: any, hre: any, runSuper) => {
+  const job = await runSuper(args);
+  if (
+    hre.__SOLIDITY_COVERAGE_RUNNING &&
+    typeof job === 'object' &&
+    args.file.sourceName === 'contracts/lens/QuoterV2.sol'
+  ) {
+    const { settings } = job.solidityConfig;
+    job.solidityConfig = {
+      ...job.solidityConfig,
+      settings: { ...settings, optimizer: { enabled: true, runs: settings.optimizer.runs } },
+    };
+  }
+  return job;
 });
 
 export default {

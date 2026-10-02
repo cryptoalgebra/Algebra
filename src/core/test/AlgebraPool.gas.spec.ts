@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, reset } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeAlgebraPool, AlgebraPool, MockPoolPlugin } from '../typechain';
 import { expect } from './shared/expect';
 
@@ -25,6 +25,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let wallet: Wallet, other: Wallet;
 
   before('create fixture loader', async () => {
+    // gas depends on deployed addresses, so start from a fresh chain regardless of earlier spec files
+    await reset();
     [wallet, other] = await (ethers as any).getSigners();
   });
 
@@ -87,15 +89,12 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       let swapExact0For1: SwapFunction;
       let swapExact1For0: SwapFunction;
       let swapToHigherPrice: SwapToPriceFunction;
-      let swapToLowerPrice: SwapToPriceFunction;
       let poolPlugin: MockPoolPlugin;
       let pool: MockTimeAlgebraPool;
       let mint: MintFunction;
 
       beforeEach('load the fixture', async () => {
-        ({ swapExact0For1, swapExact1For0, pool, mint, swapToHigherPrice, swapToLowerPrice } = await loadFixture(
-          gasTestFixture
-        ));
+        ({ swapExact0For1, swapExact1For0, pool, mint, swapToHigherPrice } = await loadFixture(gasTestFixture));
       });
 
       describe('#swapExact1For0', () => {

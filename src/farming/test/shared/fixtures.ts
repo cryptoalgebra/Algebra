@@ -32,8 +32,6 @@ type WNativeTokenFixture = { wnative: IWNativeToken };
 
 type TestERC20WithAddress = TestERC20 & { address: string };
 
-export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a';
-
 export const wnativeFixture: () => Promise<WNativeTokenFixture> = async () => {
   const wnativeFactory = await ethers.getContractFactory(WNativeToken.abi, WNativeToken.bytecode);
   const wnative = (await wnativeFactory.deploy()) as any as IWNativeToken;

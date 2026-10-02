@@ -8,6 +8,7 @@ contract AssertSwapEchidnaTest is PoolMockEchidna {
     if (amount0 < 0 || amount1 < 0) {
       assert(amount0 > 0 || amount1 > 0);
     }
+    assert(!(amount0 > 0 && amount1 > 0)); // only one side pays
     if (data.length > 0) {
       MintData memory mintData = abi.decode(data, (MintData));
       balance0 += mintData.pay0;

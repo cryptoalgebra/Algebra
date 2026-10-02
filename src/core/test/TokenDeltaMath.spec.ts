@@ -14,19 +14,22 @@ describe('TokenDeltaMath', () => {
   });
 
   describe('#getNewPriceAfterInput', () => {
-    it('fails if price is zero', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterInput(0, 0, expandTo18Decimals(1) / 10n, false)).to.be.reverted;
-    });
-
-    it('fails if liquidity is zero', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterInput(1, 0, expandTo18Decimals(1) / 10n, true)).to.be.reverted;
+    it('fails if price or liquidity is zero', async () => {
+      await expect(
+        sqrtPriceMath.getNewPriceAfterInput(0, 0, expandTo18Decimals(1) / 10n, false)
+      ).to.be.revertedWithoutReason();
+      await expect(
+        sqrtPriceMath.getNewPriceAfterInput(1, 0, expandTo18Decimals(1) / 10n, true)
+      ).to.be.revertedWithoutReason();
     });
 
     it('fails if input amount overflows the price', async () => {
       const price = 2n ** 160n - 1n;
       const liquidity = 1024;
       const amountIn = 1024;
-      await expect(sqrtPriceMath.getNewPriceAfterInput(price, liquidity, amountIn, false)).to.be.reverted;
+      await expect(
+        sqrtPriceMath.getNewPriceAfterInput(price, liquidity, amountIn, false)
+      ).to.be.revertedWithoutReason();
     });
 
     it('any input amount cannot underflow the price', async () => {
@@ -36,13 +39,9 @@ describe('TokenDeltaMath', () => {
       expect(await sqrtPriceMath.getNewPriceAfterInput(price, liquidity, amountIn, true)).to.eq(1);
     });
 
-    it('returns input price if amount in is zero and zeroToOne = true', async () => {
+    it('returns input price if amount in is zero, in both directions', async () => {
       const price = encodePriceSqrt(1, 1);
       expect(await sqrtPriceMath.getNewPriceAfterInput(price, expandTo18Decimals(1) / 10n, 0, true)).to.eq(price);
-    });
-
-    it('returns input price if amount in is zero and zeroToOne = false', async () => {
-      const price = encodePriceSqrt(1, 1);
       expect(await sqrtPriceMath.getNewPriceAfterInput(price, expandTo18Decimals(1) / 10n, 0, false)).to.eq(price);
     });
 
@@ -116,40 +115,30 @@ describe('TokenDeltaMath', () => {
   });
 
   describe('#getNewPriceAfterOutput', () => {
-    it('fails if price is zero', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(0, 0, expandTo18Decimals(1)/ 10n, false)).to.be.reverted;
+    it('fails if price or liquidity is zero', async () => {
+      await expect(
+        sqrtPriceMath.getNewPriceAfterOutput(0, 0, expandTo18Decimals(1) / 10n, false)
+      ).to.be.revertedWithoutReason();
+      await expect(
+        sqrtPriceMath.getNewPriceAfterOutput(1, 0, expandTo18Decimals(1) / 10n, true)
+      ).to.be.revertedWithoutReason();
     });
 
-    it('fails if liquidity is zero', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(1, 0, expandTo18Decimals(1)/ 10n, true)).to.be.reverted;
-    });
-
-    it('fails if output amount is exactly the virtual reserves of token0', async () => {
+    it('fails if output amount is at or above the virtual reserves of either token', async () => {
       const price = '20282409603651670423947251286016';
       const liquidity = 1024;
-      const amountOut = 4;
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(price, liquidity, amountOut, false)).to.be.reverted;
-    });
-
-    it('fails if output amount is greater than virtual reserves of token0', async () => {
-      const price = '20282409603651670423947251286016';
-      const liquidity = 1024;
-      const amountOut = 5;
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(price, liquidity, amountOut, false)).to.be.reverted;
-    });
-
-    it('fails if output amount is greater than virtual reserves of token1', async () => {
-      const price = '20282409603651670423947251286016';
-      const liquidity = 1024;
-      const amountOut = 262145;
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(price, liquidity, amountOut, true)).to.be.reverted;
-    });
-
-    it('fails if output amount is exactly the virtual reserves of token1', async () => {
-      const price = '20282409603651670423947251286016';
-      const liquidity = 1024;
-      const amountOut = 262144;
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(price, liquidity, amountOut, true)).to.be.reverted;
+      // token0 reserve is 4, token1 reserve is 262144
+      for (const [amountOut, zeroToOne] of [
+        [4, false],
+        [5, false],
+        [262144, true],
+        [262145, true],
+      ] as [number, boolean][]) {
+        await expect(
+          sqrtPriceMath.getNewPriceAfterOutput(price, liquidity, amountOut, zeroToOne),
+          `amountOut ${amountOut}`
+        ).to.be.revertedWithoutReason();
+      }
     });
 
     it('succeeds if output amount is just less than the virtual reserves of token1', async () => {
@@ -160,25 +149,13 @@ describe('TokenDeltaMath', () => {
       expect(sqrtQ).to.eq('77371252455336267181195264');
     });
 
-    it('puzzling echidna test', async () => {
-      const price = '20282409603651670423947251286016';
-      const liquidity = 1024;
-      const amountOut = 4;
-
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(price, liquidity, amountOut, false)).to.be.reverted;
-    });
-
-    it('returns input price if amount in is zero and zeroToOne = true', async () => {
+    it('returns input price if amount in is zero, in both directions', async () => {
       const price = encodePriceSqrt(1, 1);
       expect(await sqrtPriceMath.getNewPriceAfterOutput(price, expandTo18Decimals(1)/ 10n, 0, true)).to.eq(price);
-    });
-
-    it('returns input price if amount in is zero and zeroToOne = false', async () => {
-      const price = encodePriceSqrt(1, 1);
       expect(await sqrtPriceMath.getNewPriceAfterOutput(price, expandTo18Decimals(1)/ 10n, 0, false)).to.eq(price);
     });
 
-    it('output amount of 0.1 token1', async () => {
+    it('output amount of 0.1 token0', async () => {
       const sqrtQ = await sqrtPriceMath.getNewPriceAfterOutput(
         encodePriceSqrt(1, 1),
         expandTo18Decimals(1),
@@ -198,14 +175,13 @@ describe('TokenDeltaMath', () => {
       expect(sqrtQ).to.eq('71305346262837903834189555302');
     });
 
-    it('reverts if amountOut is impossible in zero for one direction', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(encodePriceSqrt(1, 1), 1, MaxUint256, true)).to.be
-        .reverted;
-    });
-
-    it('reverts if amountOut is impossible in one for zero direction', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(encodePriceSqrt(1, 1), 1, MaxUint256, false)).to.be
-        .reverted;
+    it('reverts if amountOut is impossible in either direction', async () => {
+      await expect(
+        sqrtPriceMath.getNewPriceAfterOutput(encodePriceSqrt(1, 1), 1, MaxUint256, true)
+      ).to.be.revertedWithoutReason();
+      await expect(
+        sqrtPriceMath.getNewPriceAfterOutput(encodePriceSqrt(1, 1), 1, MaxUint256, false)
+      ).to.be.revertedWithoutReason();
     });
 
     it('zeroToOne = true gas  [ @skip-on-coverage ]', async () => {
@@ -233,8 +209,10 @@ describe('TokenDeltaMath', () => {
 
   describe('#getToken0Delta', () => {
     it('fails if prices are incorrect', async () => {
-      await expect(sqrtPriceMath.getToken0Delta(encodePriceSqrt(2, 1), encodePriceSqrt(1, 1), 0, true)).to.be.reverted;
-      await expect(sqrtPriceMath.getToken0Delta(0, encodePriceSqrt(2, 1), 0, true)).to.be.reverted;
+      await expect(
+        sqrtPriceMath.getToken0Delta(encodePriceSqrt(2, 1), encodePriceSqrt(1, 1), 0, true)
+      ).to.be.revertedWithoutReason();
+      await expect(sqrtPriceMath.getToken0Delta(0, encodePriceSqrt(2, 1), 0, true)).to.be.revertedWithoutReason();
     });
     it('returns 0 if liquidity is 0', async () => {
       const amount0 = await sqrtPriceMath.getToken0Delta(encodePriceSqrt(1, 1), encodePriceSqrt(2, 1), 0, true);
@@ -242,12 +220,17 @@ describe('TokenDeltaMath', () => {
       expect(amount0).to.eq(0);
     });
     it('returns 0 if prices are equal', async () => {
-      const amount0 = await sqrtPriceMath.getToken0Delta(encodePriceSqrt(1, 1), encodePriceSqrt(1, 1), 0, true);
+      const amount0 = await sqrtPriceMath.getToken0Delta(
+        encodePriceSqrt(1, 1),
+        encodePriceSqrt(1, 1),
+        expandTo18Decimals(1),
+        true
+      );
 
       expect(amount0).to.eq(0);
     });
 
-    it('returns 0.1 amount1 for price of 1 to 1.21', async () => {
+    it('returns 0.0909 amount0 for price of 1 to 1.21', async () => {
       const amount0 = await sqrtPriceMath.getToken0Delta(
         encodePriceSqrt(1, 1),
         encodePriceSqrt(121, 100),
@@ -307,7 +290,9 @@ describe('TokenDeltaMath', () => {
 
   describe('#getToken1Delta', () => {
     it('fails if prices are incorrect', async () => {
-      await expect(sqrtPriceMath.getToken1Delta(encodePriceSqrt(2, 1), encodePriceSqrt(1, 1), 0, true)).to.be.reverted;
+      await expect(
+        sqrtPriceMath.getToken1Delta(encodePriceSqrt(2, 1), encodePriceSqrt(1, 1), 0, true)
+      ).to.be.revertedWithoutReason();
     });
     it('returns 0 if liquidity is 0', async () => {
       const amount1 = await sqrtPriceMath.getToken1Delta(encodePriceSqrt(1, 1), encodePriceSqrt(2, 1), 0, true);
@@ -315,7 +300,12 @@ describe('TokenDeltaMath', () => {
       expect(amount1).to.eq(0);
     });
     it('returns 0 if prices are equal', async () => {
-      const amount1 = await sqrtPriceMath.getToken0Delta(encodePriceSqrt(1, 1), encodePriceSqrt(1, 1), 0, true);
+      const amount1 = await sqrtPriceMath.getToken1Delta(
+        encodePriceSqrt(1, 1),
+        encodePriceSqrt(1, 1),
+        expandTo18Decimals(1),
+        true
+      );
 
       expect(amount1).to.eq(0);
     });
@@ -339,9 +329,9 @@ describe('TokenDeltaMath', () => {
       expect(amount1RoundedDown).to.eq(amount1 - 1n);
     });
 
-    it(`gas cost for amount0 where roundUp = true  [ @skip-on-coverage ]`, async () => {
+    it(`gas cost for amount1 where roundUp = true  [ @skip-on-coverage ]`, async () => {
       await snapshotGasCost(
-        sqrtPriceMath.getGasCostOfGetToken0Delta(
+        sqrtPriceMath.getGasCostOfGetToken1Delta(
           encodePriceSqrt(100, 121),
           encodePriceSqrt(1, 1),
           expandTo18Decimals(1),
@@ -350,9 +340,9 @@ describe('TokenDeltaMath', () => {
       );
     });
 
-    it(`gas cost for amount0 where roundUp = false  [ @skip-on-coverage ]`, async () => {
+    it(`gas cost for amount1 where roundUp = false  [ @skip-on-coverage ]`, async () => {
       await snapshotGasCost(
-        sqrtPriceMath.getGasCostOfGetToken0Delta(
+        sqrtPriceMath.getGasCostOfGetToken1Delta(
           encodePriceSqrt(100, 121),
           encodePriceSqrt(1, 1),
           expandTo18Decimals(1),

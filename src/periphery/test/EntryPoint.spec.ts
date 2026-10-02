@@ -10,7 +10,6 @@ import {
   SwapRouter,
   AlgebraCustomPoolEntryPoint,
   CustomPoolDeployerTest,
-  IAlgebraPool
 } from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
@@ -18,7 +17,7 @@ import { expect } from './shared/expect';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 
 import { abi as IAlgebraPoolABI } from '@cryptoalgebra/integral-core/artifacts/contracts/interfaces/IAlgebraPool.sol/IAlgebraPool.json';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
+import { ZERO_ADDRESS } from './shared/constants';
 
 describe('CustomPoolEntryPoint', () => {
   let wallets: Wallet[];
@@ -50,9 +49,7 @@ describe('CustomPoolEntryPoint', () => {
   };
 
   let factory: IAlgebraFactory;
-  let nft: MockTimeNonfungiblePositionManager;
   let tokens: [TestERC20, TestERC20, TestERC20];
-  let wnative: IWNativeToken;
   let entryPoint: AlgebraCustomPoolEntryPoint;
   let customPoolDeployer: CustomPoolDeployerTest; 
 
@@ -62,7 +59,7 @@ describe('CustomPoolEntryPoint', () => {
   });
 
   beforeEach('load fixture', async () => {
-    ({ nft, factory, tokens, wnative, } = await loadFixture(nftFixture));
+    ({ factory, tokens } = await loadFixture(nftFixture));
 
     const entryPointFactory = await ethers.getContractFactory('AlgebraCustomPoolEntryPoint');
     entryPoint = (await entryPointFactory.deploy(factory)) as any as AlgebraCustomPoolEntryPoint;
@@ -121,5 +118,8 @@ describe('CustomPoolEntryPoint', () => {
       await expect(entryPoint.setFee(customPoolAddress, 300)).to.be.revertedWith("Only deployer")
     });
 
+  });
+
+  describe('guards', () => {
   });
 });

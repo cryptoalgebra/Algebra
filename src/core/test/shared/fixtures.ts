@@ -8,7 +8,6 @@ import {
   TestAlgebraCallee,
   TestAlgebraRouter,
   MockTimeAlgebraPoolDeployer,
-  AlgebraPoolDeployer,
 } from '../../typechain';
 
 type Fixture<T> = () => Promise<T>;
@@ -30,7 +29,7 @@ async function factoryFixture(): Promise<FactoryFixture> {
   const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
   const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-  const poolDeployer = (await poolDeployerFactory.deploy(factory, await factory.poolExtension())) as any as AlgebraPoolDeployer;
+  await poolDeployerFactory.deploy(factory, await factory.poolExtension());
 
   const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
   const vault = (await vaultFactory.deploy(factory)) as any as AlgebraCommunityVault;
@@ -71,10 +70,6 @@ interface PoolFixture extends TokensAndFactoryFixture {
   swapTargetRouter: TestAlgebraRouter;
   createPool(firstToken?: TestERC20, secondToken?: TestERC20): Promise<MockTimeAlgebraPool>;
 }
-
-// Monday, October 5, 2020 9:00:00 AM GMT-05:00
-export const TEST_POOL_START_TIME = 1601906400;
-export const TEST_POOL_DAY_BEFORE_START = 1601906400 - 24 * 60 * 60;
 
 export const poolFixture: Fixture<PoolFixture> = async function (): Promise<PoolFixture> {
   const { factory, vault } = await factoryFixture();

@@ -21,6 +21,9 @@ contract TickOverflowSafetyEchidnaTest {
   // how much total growth has happened, this cannot overflow
   uint256 private totalGrowth0 = 0;
   uint256 private totalGrowth1 = 0;
+  // the last range liquidity was added to
+  int24 private lastBottomTick;
+  int24 private lastTopTick;
 
   function increaseTotalFeeGrowth0Token(uint256 amount) external {
     unchecked {
@@ -39,6 +42,21 @@ contract TickOverflowSafetyEchidnaTest {
   }
 
   function setPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta) external {
+    _setPosition(bottomTick, topTick, liquidityDelta);
+  }
+
+  /// @dev Removes exactly what the emptier tick of the last range added to holds, which uninitializes that tick.
+  /// A random negative delta almost never matches a tick's total, which left the removal asserts unreached
+  function removeAllFromEmptierTickOfLastRange() external {
+    (int24 bottomTick, int24 topTick) = (lastBottomTick, lastTopTick);
+    uint256 bottomTotal = ticks[bottomTick].liquidityTotal;
+    uint256 topTotal = ticks[topTick].liquidityTotal;
+    uint256 amount = bottomTotal < topTotal ? bottomTotal : topTotal;
+    require(amount != 0);
+    _setPosition(bottomTick, topTick, -int128(int256(amount))); // fits: a tick holds at most MAX_LIQUIDITY_PER_TICK
+  }
+
+  function _setPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta) private {
     require(bottomTick > MIN_TICK);
     require(topTick < MAX_TICK);
     require(bottomTick < topTick);
@@ -69,6 +87,8 @@ contract TickOverflowSafetyEchidnaTest {
         totalGrowth1 = 0;
       }
     }
+
+    if (liquidityDelta > 0) (lastBottomTick, lastTopTick) = (bottomTick, topTick);
   }
 
   function moveToTick(int24 target) external {

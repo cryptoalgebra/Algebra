@@ -110,7 +110,7 @@ describe('AlgebraPoolRouter', () => {
 
       const method = ForExact0 ? swapForExact0Multi : swapForExact1Multi;
 
-      const [pool0Address, pool1Address, inputTokenAddress] = [
+      const [pool0Address, pool1Address] = [
         await pool0.getAddress(),
         await pool1.getAddress(),
         await inputToken.getAddress()

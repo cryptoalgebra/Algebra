@@ -4,16 +4,14 @@ import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from './shared/expect';
 import { TestERC20Metadata, NFTDescriptorTest } from '../typechain';
-import { FeeAmount, TICK_SPACINGS } from './shared/constants';
+import { FeeAmount, TEN, TICK_SPACINGS } from './shared/constants';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { formatSqrtRatioX96 } from './shared/formatSqrtRatioX96';
 import { getMaxTick, getMinTick } from './shared/ticks';
-import { randomBytes } from 'crypto';
 import { extractJSONFromURI } from './shared/extractJSONFromURI';
 import fs from 'fs';
 import isSvg from 'is-svg';
 
-const TEN = 10n;
 const LOWEST_SQRT_RATIO = 4310618292;
 const HIGHEST_SQRT_RATIO = 33849n * TEN ** 34n;
 
@@ -38,7 +36,7 @@ describe('NFTDescriptor', () => {
       },
     });
     const nftDescriptor = (await NFTDescriptorFactory.deploy()) as any as NFTDescriptorTest;
-    const TestERC20Metadata = tokenFactory.deploy(MaxUint256 / 2n, 'Test ERC20', 'TEST1');
+    tokenFactory.deploy(MaxUint256 / 2n, 'Test ERC20', 'TEST1');
     const tokens: [
       TestERC20MetadataWithAddress,
       TestERC20MetadataWithAddress,
@@ -86,7 +84,6 @@ describe('NFTDescriptor', () => {
     let tickUpper: number;
     let tickCurrent: number;
     let tickSpacing: number;
-    let fee: number;
     let poolAddress: string;
 
     beforeEach(async () => {
@@ -102,7 +99,6 @@ describe('NFTDescriptor', () => {
       tickUpper = getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
       tickCurrent = 0;
       tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
-      fee = 3000;
       poolAddress = `0x${'b'.repeat(40)}`;
     });
 
@@ -148,7 +144,6 @@ describe('NFTDescriptor', () => {
       tickLower = -10;
       tickUpper = 10;
       tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
-      fee = 3000;
 
       const json = extractJSONFromURI(
         await nftDescriptor.constructTokenURI({
@@ -343,7 +338,6 @@ describe('NFTDescriptor', () => {
       tickLower = 0;
       tickUpper = 1000;
       tickSpacing = TICK_SPACINGS[FeeAmount.LOW];
-      fee = FeeAmount.LOW;
       quoteTokenAddress = '0xabcdeabcdefabcdefabcdefabcdefabcdefabcdf';
       baseTokenAddress = '0x1234567890123456789123456789012345678901';
       quoteTokenSymbol = 'UNI';
@@ -464,28 +458,17 @@ describe('NFTDescriptor', () => {
     });
 
     describe('when token ratio is flipped', () => {
-      it('returns the inverse of default ratio for medium sized numbers', async () => {
+      it('returns the inverse of default ratio for medium, large and small numbers', async () => {
         const tickSpacing = TICK_SPACINGS[FeeAmount.HIGH];
-        expect(await nftDescriptor.tickToDecimalString(10, tickSpacing, 18, 18, false)).to.eq('1.0010');
-        expect(await nftDescriptor.tickToDecimalString(10, tickSpacing, 18, 18, true)).to.eq('0.99900');
-      });
-
-      it('returns the inverse of default ratio for large numbers', async () => {
-        const tickSpacing = TICK_SPACINGS[FeeAmount.HIGH];
-        expect(await nftDescriptor.tickToDecimalString(487272, tickSpacing, 18, 18, false)).to.eq(
-          '1448400000000000000000'
-        );
-        expect(await nftDescriptor.tickToDecimalString(487272, tickSpacing, 18, 18, true)).to.eq(
-          '0.00000000000000000000069041'
-        );
-      });
-
-      it('returns the inverse of default ratio for small numbers', async () => {
-        const tickSpacing = TICK_SPACINGS[FeeAmount.HIGH];
-        expect(await nftDescriptor.tickToDecimalString(-387272, tickSpacing, 18, 18, false)).to.eq(
-          '0.000000000000000015200'
-        );
-        expect(await nftDescriptor.tickToDecimalString(-387272, tickSpacing, 18, 18, true)).to.eq('65791000000000000');
+        const cases: [string, number, string, string][] = [
+          ['medium', 10, '1.0010', '0.99900'],
+          ['large', 487272, '1448400000000000000000', '0.00000000000000000000069041'],
+          ['small', -387272, '0.000000000000000015200', '65791000000000000'],
+        ];
+        for (const [label, tick, direct, flipped] of cases) {
+          expect(await nftDescriptor.tickToDecimalString(tick, tickSpacing, 18, 18, false), label).to.eq(direct);
+          expect(await nftDescriptor.tickToDecimalString(tick, tickSpacing, 18, 18, true), label).to.eq(flipped);
+        }
       });
 
       it('returns the correct string with differing token decimals', async () => {
@@ -525,40 +508,21 @@ describe('NFTDescriptor', () => {
         expect(await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18)).to.eq('1766200000');
       });
 
-      it('exactly 5 sigfig whole number', async () => {
-        const ratio = encodePriceSqrt(42026, 1);
-        expect(await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18)).to.eq('42026');
-      });
-
-      it('when the decimal is at index 4', async () => {
-        const ratio = encodePriceSqrt(12087, 10);
-        expect(await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18)).to.eq('1208.7');
-      });
-
-      it('when the decimal is at index 3', async () => {
-        const ratio = encodePriceSqrt(12087, 100);
-        expect(await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18)).to.eq('120.87');
-      });
-
-      it('when the decimal is at index 2', async () => {
-        const ratio = encodePriceSqrt(12087, 1000);
-        expect(await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18)).to.eq('12.087');
-      });
-
-      it('when the decimal is at index 1', async () => {
-        const ratio = encodePriceSqrt(12345, 10000);
-        const bla = await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18);
-        expect(await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18)).to.eq('1.2345');
-      });
-
-      it('when sigfigs have trailing 0s after the decimal', async () => {
-        const ratio = encodePriceSqrt(1, 1);
-        expect(await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18)).to.eq('1.0000');
-      });
-
-      it('when there are exactly 5 numbers after the decimal', async () => {
-        const ratio = encodePriceSqrt(12345, 100000);
-        expect(await nftDescriptor.fixedPointToDecimalString(ratio, 18, 18)).to.eq('0.12345');
+      it('whole numbers and each position of the decimal point', async () => {
+        const cases: [string, number, number, string][] = [
+          ['exactly 5 sigfig whole number', 42026, 1, '42026'],
+          ['decimal at index 4', 12087, 10, '1208.7'],
+          ['decimal at index 3', 12087, 100, '120.87'],
+          ['decimal at index 2', 12087, 1000, '12.087'],
+          ['decimal at index 1', 12345, 10000, '1.2345'],
+          ['trailing 0s after the decimal', 1, 1, '1.0000'],
+          ['exactly 5 numbers after the decimal', 12345, 100000, '0.12345'],
+        ];
+        for (const [label, amount1, amount0, expected] of cases) {
+          expect(await nftDescriptor.fixedPointToDecimalString(encodePriceSqrt(amount1, amount0), 18, 18), label).to.eq(
+            expected
+          );
+        }
       });
 
       it('very small numbers', async () => {
@@ -605,7 +569,7 @@ describe('NFTDescriptor', () => {
           );
         });
 
-        // TODO: provide compatibility token prices that breach minimum price due to token decimal differences
+        // skipped: the contract reverts, the price adjusted for decimals is below 2^-128 and its square rounds to 0
         it.skip('returns the correct string when the decimal difference brings ratio below the minimum', async () => {
           const lowRatio = encodePriceSqrt(88498, 10 ** 35);
           expect(await nftDescriptor.fixedPointToDecimalString(lowRatio, 10, 20)).to.eq(
@@ -614,24 +578,30 @@ describe('NFTDescriptor', () => {
         });
 
         it('does not account for higher token1 precision if difference is more than 18', async () => {
-          expect(await nftDescriptor.fixedPointToDecimalString(encodePriceSqrt(1, 1), 24, 5)).to.eq('1.0000');
+          expect(await nftDescriptor.fixedPointToDecimalString(encodePriceSqrt(1, 1), 5, 24)).to.eq('1.0000');
         });
       });
 
       it('some fuzz', async () => {
-        const random = (min: number, max: number): number => {
-          return Math.floor(min + ((Math.random() * 100) % (max + 1 - min)));
+        // seeded, so a failing draw can be replayed
+        let state = 0x6d2b79f5;
+        const next = () => {
+          state = (state * 1103515245 + 12345) & 0x7fffffff;
+          return state / 0x80000000;
         };
+        const random = (min: number, max: number): number => Math.floor(min + next() * (max + 1 - min));
+        const randomRatioBytes = (length: number) =>
+          Buffer.from(Array.from({ length }, () => Math.floor(next() * 256)));
 
         const inputs: [bigint, number, number][] = [];
         let i = 0;
         while (i <= 20) {
-          const ratio = BigInt(`0x${randomBytes(random(7, 20)).toString('hex')}`);
+          const ratio = BigInt(`0x${randomRatioBytes(random(7, 20)).toString('hex')}`);
           const decimals0 = random(3, 21);
           const decimals1 = random(3, 21);
           const decimalDiff = BigInt(Math.abs(decimals0 - decimals1));
 
-          // TODO: Address edgecase out of bounds prices due to decimal differences
+          // fixedPointToDecimalString reverts when the decimal difference pushes the price out of these bounds
           if (ratio / TEN ** decimalDiff > LOWEST_SQRT_RATIO && ratio * TEN ** decimalDiff < HIGHEST_SQRT_RATIO) {
             inputs.push([ratio, decimals0, decimals1]);
             i++;
@@ -651,68 +621,28 @@ describe('NFTDescriptor', () => {
   });
 
   describe('#feeToPercentString', () => {
-    it('returns the correct fee for 0', async () => {
-      expect(await nftDescriptor.feeToPercentString(0)).to.eq('0%');
-    });
-
-    it('returns the correct fee for 1', async () => {
-      expect(await nftDescriptor.feeToPercentString(1)).to.eq('0.0001%');
-    });
-
-    it('returns the correct fee for 30', async () => {
-      expect(await nftDescriptor.feeToPercentString(30)).to.eq('0.003%');
-    });
-
-    it('returns the correct fee for 33', async () => {
-      expect(await nftDescriptor.feeToPercentString(33)).to.eq('0.0033%');
-    });
-
-    it('returns the correct fee for 500', async () => {
-      expect(await nftDescriptor.feeToPercentString(500)).to.eq('0.05%');
-    });
-
-    it('returns the correct fee for 2500', async () => {
-      expect(await nftDescriptor.feeToPercentString(2500)).to.eq('0.25%');
-    });
-
-    it('returns the correct fee for 3000', async () => {
-      expect(await nftDescriptor.feeToPercentString(3000)).to.eq('0.3%');
-    });
-
-    it('returns the correct fee for 10000', async () => {
-      expect(await nftDescriptor.feeToPercentString(10000)).to.eq('1%');
-    });
-
-    it('returns the correct fee for 17000', async () => {
-      expect(await nftDescriptor.feeToPercentString(17000)).to.eq('1.7%');
-    });
-
-    it('returns the correct fee for 100000', async () => {
-      expect(await nftDescriptor.feeToPercentString(100000)).to.eq('10%');
-    });
-
-    it('returns the correct fee for 150000', async () => {
-      expect(await nftDescriptor.feeToPercentString(150000)).to.eq('15%');
-    });
-
-    it('returns the correct fee for 102000', async () => {
-      expect(await nftDescriptor.feeToPercentString(102000)).to.eq('10.2%');
-    });
-
-    it('returns the correct fee for 10000000', async () => {
-      expect(await nftDescriptor.feeToPercentString(1000000)).to.eq('100%');
-    });
-
-    it('returns the correct fee for 1005000', async () => {
-      expect(await nftDescriptor.feeToPercentString(1005000)).to.eq('100.5%');
-    });
-
-    it('returns the correct fee for 10000000', async () => {
-      expect(await nftDescriptor.feeToPercentString(10000000)).to.eq('1000%');
-    });
-
-    it('returns the correct fee for 12300000', async () => {
-      expect(await nftDescriptor.feeToPercentString(12300000)).to.eq('1230%');
+    it('returns the correct fee', async () => {
+      const cases: [number, string][] = [
+        [0, '0%'],
+        [1, '0.0001%'],
+        [30, '0.003%'],
+        [33, '0.0033%'],
+        [500, '0.05%'],
+        [2500, '0.25%'],
+        [3000, '0.3%'],
+        [10000, '1%'],
+        [17000, '1.7%'],
+        [100000, '10%'],
+        [150000, '15%'],
+        [102000, '10.2%'],
+        [1000000, '100%'],
+        [1005000, '100.5%'],
+        [10000000, '1000%'],
+        [12300000, '1230%'],
+      ];
+      for (const [fee, expected] of cases) {
+        expect(await nftDescriptor.feeToPercentString(fee), `fee ${fee}`).to.eq(expected);
+      }
     });
   });
 
@@ -721,76 +651,33 @@ describe('NFTDescriptor', () => {
       return `${tokenAddress.slice(startIndex, startIndex + 6).toLowerCase()}`;
     }
 
-    it('returns the correct hash for the first 3 bytes of the token address', async () => {
+    it('returns the correct hash for the first and the last 3 bytes of the address', async () => {
       expect(await nftDescriptor.tokenToColorHex(tokens[0].address, 136)).to.eq(tokenToColorHex(tokens[0].address, 2));
       expect(await nftDescriptor.tokenToColorHex(tokens[1].address, 136)).to.eq(tokenToColorHex(tokens[1].address, 2));
-    });
-
-    it('returns the correct hash for the last 3 bytes of the address', async () => {
       expect(await nftDescriptor.tokenToColorHex(tokens[0].address, 0)).to.eq(tokenToColorHex(tokens[0].address, 36));
       expect(await nftDescriptor.tokenToColorHex(tokens[1].address, 0)).to.eq(tokenToColorHex(tokens[1].address, 36));
     });
   });
 
   describe('#rangeLocation', () => {
-    it('returns the correct coordinates when range midpoint under -125_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(-887_272, -887_100);
-      expect(coords[0]).to.eq('8');
-      expect(coords[1]).to.eq('7');
-    });
-
-    it('returns the correct coordinates when range midpoint is between -125_000 and -75_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(-100_000, -90_000);
-      expect(coords[0]).to.eq('8');
-      expect(coords[1]).to.eq('10.5');
-    });
-
-    it('returns the correct coordinates when range midpoint is between -75_000 and -25_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(-50_000, -20_000);
-      expect(coords[0]).to.eq('8');
-      expect(coords[1]).to.eq('14.25');
-    });
-
-    it('returns the correct coordinates when range midpoint is between -25_000 and -5_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(-10_000, -5_000);
-      expect(coords[0]).to.eq('10');
-      expect(coords[1]).to.eq('18');
-    });
-
-    it('returns the correct coordinates when range midpoint is between -5_000 and 0', async () => {
-      const coords = await nftDescriptor.rangeLocation(-5_000, -4_000);
-      expect(coords[0]).to.eq('11');
-      expect(coords[1]).to.eq('21');
-    });
-
-    it('returns the correct coordinates when range midpoint is between 0 and 5_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(4_000, 5_000);
-      expect(coords[0]).to.eq('13');
-      expect(coords[1]).to.eq('23');
-    });
-
-    it('returns the correct coordinates when range midpoint is between 5_000 and 25_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(10_000, 15_000);
-      expect(coords[0]).to.eq('15');
-      expect(coords[1]).to.eq('25');
-    });
-
-    it('returns the correct coordinates when range midpoint is between 25_000 and 75_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(25_000, 50_000);
-      expect(coords[0]).to.eq('18');
-      expect(coords[1]).to.eq('26');
-    });
-
-    it('returns the correct coordinates when range midpoint is between 75_000 and 125_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(100_000, 125_000);
-      expect(coords[0]).to.eq('21');
-      expect(coords[1]).to.eq('27');
-    });
-
-    it('returns the correct coordinates when range midpoint is above 125_000', async () => {
-      const coords = await nftDescriptor.rangeLocation(200_000, 100_000);
-      expect(coords[0]).to.eq('24');
-      expect(coords[1]).to.eq('27');
+    it('returns the correct coordinates for each range midpoint bucket', async () => {
+      const cases: [string, number, number, string, string][] = [
+        ['under -125_000', -887_272, -887_100, '8', '7'],
+        ['-125_000 to -75_000', -100_000, -90_000, '8', '10.5'],
+        ['-75_000 to -25_000', -50_000, -20_000, '8', '14.25'],
+        ['-25_000 to -5_000', -10_000, -5_000, '10', '18'],
+        ['-5_000 to 0', -5_000, -4_000, '11', '21'],
+        ['0 to 5_000', 4_000, 5_000, '13', '23'],
+        ['5_000 to 25_000', 10_000, 15_000, '15', '25'],
+        ['25_000 to 75_000', 25_000, 50_000, '18', '26'],
+        ['75_000 to 125_000', 100_000, 125_000, '21', '27'],
+        ['above 125_000', 200_000, 100_000, '24', '27'],
+      ];
+      for (const [label, tickLower, tickUpper, x, y] of cases) {
+        const coords = await nftDescriptor.rangeLocation(tickLower, tickUpper);
+        expect(coords[0], label).to.eq(x);
+        expect(coords[1], label).to.eq(y);
+      }
     });
 
     it('math does not overflow on max value', async () => {
@@ -813,7 +700,6 @@ describe('NFTDescriptor', () => {
     let tickUpper: number;
     let tickCurrent: number;
     let tickSpacing: number;
-    let fee: number;
     let poolAddress: string;
 
     beforeEach(async () => {
@@ -825,7 +711,6 @@ describe('NFTDescriptor', () => {
       tickLower = -1000;
       tickUpper = 2000;
       tickCurrent = 40;
-      fee = 500;
       baseTokenDecimals = Number(await tokens[0].decimals());
       quoteTokenDecimals = Number(await tokens[1].decimals());
       flipRatio = false;
@@ -872,14 +757,34 @@ describe('NFTDescriptor', () => {
       });
       expect(isSvg(svg)).to.eq(true);
     });
+
+    it('fades the curve by where the current tick is relative to the range', async () => {
+      const svgAt = (current: number) =>
+        nftDescriptor.generateSVGImage({
+          tokenId,
+          baseTokenAddress,
+          quoteTokenAddress,
+          baseTokenSymbol,
+          quoteTokenSymbol,
+          baseTokenDecimals,
+          quoteTokenDecimals,
+          flipRatio,
+          tickLower,
+          tickUpper,
+          tickCurrent: current,
+          tickSpacing,
+          poolAddress,
+        });
+
+      expect(await svgAt(tickUpper + 1)).to.contain('mask="url(#fade-up)"');
+      expect(await svgAt(tickLower - 1)).to.contain('mask="url(#fade-down)"');
+      expect(await svgAt(tickCurrent)).to.contain('mask="url(#none)"');
+    });
   });
 
   describe('#isRare', () => {
-    it('returns true sometimes', async () => {
+    it('depends on the token id', async () => {
       expect(await nftDescriptor.isRare(1, `0x${'b'.repeat(40)}`)).to.eq(true);
-    });
-
-    it('returns false sometimes', async () => {
       expect(await nftDescriptor.isRare(2, `0x${'b'.repeat(40)}`)).to.eq(false);
     });
   });

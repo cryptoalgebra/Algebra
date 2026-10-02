@@ -1,4 +1,8 @@
 export const MaxUint128 = 2n ** 128n - 1n;
+export const TEN = 10n;
+
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+export const PLUGIN_DEPLOYER_ADDRESS = '0x4d55ce59980Fb4e5C4C1c450F478587e9F52a18B';
 
 export enum FeeAmount {
   ONE = 100,

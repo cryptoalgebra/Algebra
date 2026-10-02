@@ -134,7 +134,7 @@ describe('LiquidityAmounts', async () => {
     });
   });
 
-  describe('#getLiquidityForAmount1', () => {
+  describe('#getAmount1ForLiquidity', () => {
     it('gas [ @skip-on-coverage ]', async () => {
       const sqrtPriceAX96 = encodePriceSqrt(100, 110);
       const sqrtPriceBX96 = encodePriceSqrt(110, 100);

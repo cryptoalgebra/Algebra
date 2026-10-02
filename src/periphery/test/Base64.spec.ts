@@ -2,7 +2,17 @@ import { ethers } from 'hardhat';
 import { base64Encode } from './shared/base64';
 import { expect } from './shared/expect';
 import { Base64Test } from '../typechain';
-import { randomBytes } from 'crypto';
+// a seeded generator, so a failing fuzz run can be replayed
+const seededBytes = (() => {
+  let state = 0x1f2e3d4c;
+  return (length: number) =>
+    Buffer.from(
+      Array.from({ length }, () => {
+        state = (state * 1103515245 + 12345) & 0x7fffffff;
+        return (state >>> 7) & 0xff;
+      })
+    );
+})();
 import snapshotGasCost from './shared/snapshotGasCost';
 
 function stringToHex(str: string): string {
@@ -64,7 +74,7 @@ describe('Base64', () => {
     it('tiny fuzzing', async () => {
       const inputs = [];
       for (let i = 0; i < 100; i++) {
-        inputs.push(randomBytes(Math.random() * 100));
+        inputs.push(seededBytes(i));
       }
 
       const promises = inputs.map((input) => {

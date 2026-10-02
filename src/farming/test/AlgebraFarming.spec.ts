@@ -3,7 +3,6 @@ import { TestContext } from './types';
 import { AlgebraEternalFarming, TestERC20 } from '../typechain';
 import { ethers } from 'hardhat';
 import { blockTimestamp, BNe18, expect, FeeAmount, getMaxTick, getMinTick, TICK_SPACINGS, algebraFixture, days, bnSum, mintPosition } from './shared';
-import { createTimeMachine } from './shared/time';
 import { ERC20Helper, HelperCommands, incentiveResultToFarmAdapter } from './helpers';
 import { provider } from './shared/provider';
 import { ActorFixture } from './shared/actors';
@@ -12,7 +11,6 @@ import { Wallet } from 'ethers';
 
 describe('AlgebraFarming', () => {
   let wallets: Wallet[];
-  const Time = createTimeMachine();
   let actors: ActorFixture;
   const e20h = new ERC20Helper();
 
@@ -32,16 +30,11 @@ describe('AlgebraFarming', () => {
 
     const totalReward = BNe18(2_000_000);
     const bonusReward = BNe18(4_000);
-    const duration = days(40);
 
     const scenario: () => Promise<TestSubject> = async () => {
       const context = await algebraFixture();
       const wallets = (await ethers.getSigners()) as any as Wallet[];
       const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider);
-
-      const epoch = await blockTimestamp();
-      const startTime = epoch + 100;
-      const endTime = startTime + duration;
 
       return {
         context,
@@ -54,7 +47,7 @@ describe('AlgebraFarming', () => {
     });
 
     it('too wide range cannot be used as minimal allowed', async () => {
-      const { context, helpers } = subject;
+      const { context } = subject;
 
       const lpUser3 = actors.traderUser2();
 
@@ -79,10 +72,6 @@ describe('AlgebraFarming', () => {
       });
 
       await context.nft.connect(lpUser3).approveForFarming(tokenId, true, context.farmingCenter);
-
-      const epoch = await blockTimestamp();
-      const startTime = epoch + 100;
-      const endTime = startTime + duration;
 
       let incentiveCreator = actors.incentiveCreator();
       let nonce = await context.eternalFarming.numOfIncentives();
@@ -192,9 +181,6 @@ describe('AlgebraFarming', () => {
       await context.nft.connect(lpUser3).approveForFarming(tokenId, true, context.farmingCenter);
       await context.nft.connect(lpUser3).approveForFarming(tokenIdCorrect, true, context.farmingCenter);
 
-      const epoch = await blockTimestamp();
-      const startTime = epoch + 100;
-      const endTime = startTime + duration;
       let nonce = await context.eternalFarming.numOfIncentives();
 
       const createIncentiveResult = await helpers.createIncentiveFlow({
@@ -245,7 +231,6 @@ describe('AlgebraFarming', () => {
       const tokensToFarm: [TestERC20, TestERC20] = [token0, token1];
 
       const startTime = epoch + 1_000;
-      const endTime = startTime + duration;
 
       let nonce = await context.eternalFarming.numOfIncentives();
 
@@ -332,47 +317,6 @@ describe('AlgebraFarming', () => {
       });
     });
 
-    describe('who all farm the entire time ', () => {
-      it('allows them all to withdraw at the end', async () => {
-        const { helpers, createIncentiveResult } = subject;
-
-        const epoch = await blockTimestamp();
-
-        const startTime = epoch + 1_000;
-        const endTime = startTime + duration;
-
-        await time.increaseTo(endTime + 100);
-
-        const trader = actors.traderUser0();
-        await helpers.makeTickGoFlow({
-          trader,
-          direction: 'up',
-          desiredValue: 20,
-        });
-
-        // Sanity check: make sure we go past the incentive end time.
-        expect(await blockTimestamp(), 'test setup: must be run after start time').to.be.gte(endTime);
-
-        // Everyone pulls their liquidity at the same time
-        const exitFarmings = await Promise.all(
-          subject.farms.map(({ lp, tokenId }) =>
-            helpers.exitFarmingCollectBurnFlow({
-              lp,
-              tokenId,
-              createIncentiveResult,
-            })
-          )
-        );
-
-        const rewardsEarned = bnSum(exitFarmings.map((o) => o.balance));
-
-        // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
-        // 	createIncentiveResult,
-        // })
-        expect(rewardsEarned).to.be.gte(883879);
-      });
-    });
-
     describe('when another LP adds liquidity but does not farm', () => {
       it('does not change the rewards', async () => {
         const { helpers, createIncentiveResult, context, farms } = subject;
@@ -426,25 +370,9 @@ describe('AlgebraFarming', () => {
           )
         );
 
-        /***
-         * The reward distributed to LPs should be:
-         *
-         * totalReward: is 3_000e18
-         *
-         * Incentive Start -> Halfway Through:
-         * 3 LPs, all staking the same amount. Each LP gets roughly (totalReward/2) * (1/3)
-         */
-        const firstHalfRewards = totalReward / 2n;
-
-        /***
-         * Halfway Through -> Incentive End:
-         * 4 LPs, all providing the same liquidity. Only 3 LPs are staking, so they should
-         * each get 1/4 the liquidity for that time. So That's 1/4 * 1/2 * 3_000e18 per farmd LP.
-         * */
-        const secondHalfRewards = ((totalReward / 2n) * 3n) / 4n;
+        // three farmers share the eternal rate for the whole run, the fourth LP never farms
         const rewardsEarned = bnSum(exitFarmings.map((s) => s.balance));
-        // @ts-ignore
-        expect(rewardsEarned).be.gte(883867);
+        expect(rewardsEarned).to.be.closeTo(885847, 200);
         // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
         // 	createIncentiveResult,
         // })

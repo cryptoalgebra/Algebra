@@ -3,14 +3,13 @@ import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { CustomPoolDeployerTest, IAlgebraFactory, MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
 import completeFixture from './shared/completeFixture';
-import { MaxUint128 } from './shared/constants';
+import { MaxUint128, ZERO_ADDRESS } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { expect } from './shared/expect';
 import { encodePath } from './shared/path';
 import { createPool, createPoolWithMultiplePositions, createPoolWithZeroTickInitialized } from './shared/quoter';
 import snapshotGasCost from './shared/snapshotGasCost';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string };
 
