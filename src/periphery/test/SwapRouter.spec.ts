@@ -1163,5 +1163,121 @@ describe('SwapRouter', function () {
         expect(endBalance - startBalance == 1n).to.be.eq(true);
       });
     });
+
+    it('exactOutputSingle without a price limit reverts when the pool cannot deliver the full amount', async () => {
+      const [token0, token1] = [tokens[0].address, tokens[2].address].sort((a, b) =>
+        a.toLowerCase() < b.toLowerCase() ? -1 : 1
+      );
+      await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
+      // liquidity only around the current price: past it the price runs to the limit for free
+      await nft.mint({
+        token0,
+        token1,
+        deployer: ZERO_ADDRESS,
+        tickLower: -TICK_SPACINGS[FeeAmount.MEDIUM],
+        tickUpper: TICK_SPACINGS[FeeAmount.MEDIUM],
+        recipient: wallet.address,
+        amount0Desired: 1000,
+        amount1Desired: 1000,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 1,
+      });
+
+      await expect(
+        router.connect(trader).exactOutputSingle({
+          tokenIn: tokens[0].address,
+          tokenOut: tokens[2].address,
+          deployer: ZERO_ADDRESS,
+          recipient: trader.address,
+          deadline: 1,
+          amountOut: 10_000,
+          amountInMaximum: MaxUint256,
+          limitSqrtPrice: 0,
+        })
+      ).to.be.revertedWith('Not received full amountOut');
+    });
+  });
+
+  describe('#payments', () => {
+    const feeRecipient = '0xfEE0000000000000000000000000000000000000';
+
+    it('sweepToken sends the whole router balance to the recipient', async () => {
+      await tokens[0].transfer(router, 10);
+      await expect(router.sweepToken(tokens[0].address, 10, trader.address)).to.changeTokenBalances(
+        tokens[0],
+        [router, trader],
+        [-10, 10]
+      );
+    });
+
+    it('sweepToken reverts below the minimum', async () => {
+      await expect(router.sweepToken(tokens[0].address, 1, trader.address)).to.be.revertedWith('Insufficient token');
+    });
+
+    it('sweepToken with nothing to sweep does not transfer', async () => {
+      await expect(router.sweepToken(tokens[0].address, 0, trader.address)).to.not.emit(tokens[0], 'Transfer');
+    });
+
+    it('unwrapWNativeToken reverts below the minimum', async () => {
+      await expect(router.unwrapWNativeToken(1, trader.address)).to.be.revertedWith('Insufficient WNativeToken');
+    });
+
+    it('unwrapWNativeToken reverts when the recipient rejects native tokens', async () => {
+      await wnative.deposit({ value: 10 });
+      await wnative.transfer(router, 10);
+      // an ERC20 contract has no receive function
+      await expect(router.unwrapWNativeToken(10, tokens[0].address)).to.be.revertedWith('STE');
+      await router.sweepToken(wnative, 10, wallet.address);
+    });
+
+    it('rejects native tokens not sent by WNativeToken', async () => {
+      await expect(wallet.sendTransaction({ to: router, value: 1 })).to.be.revertedWith('Not WNativeToken');
+    });
+
+    it('*WithFee reject a zero fee and a fee above 1%', async () => {
+      for (const feeBips of [0, 101]) {
+        await expect(
+          router.sweepTokenWithFee(tokens[0].address, 0, trader.address, feeBips, feeRecipient)
+        ).to.be.revertedWithoutReason();
+        await expect(
+          router.unwrapWNativeTokenWithFee(0, trader.address, feeBips, feeRecipient)
+        ).to.be.revertedWithoutReason();
+      }
+    });
+
+    it('*WithFee revert below the minimum', async () => {
+      await expect(
+        router.sweepTokenWithFee(tokens[0].address, 1, trader.address, 100, feeRecipient)
+      ).to.be.revertedWith('Insufficient token');
+      await expect(router.unwrapWNativeTokenWithFee(1, trader.address, 100, feeRecipient)).to.be.revertedWith(
+        'Insufficient WNativeToken'
+      );
+    });
+
+    it('*WithFee with nothing to sweep do not transfer', async () => {
+      await expect(router.sweepTokenWithFee(tokens[0].address, 0, trader.address, 100, feeRecipient)).to.not.emit(
+        tokens[0],
+        'Transfer'
+      );
+      await expect(router.unwrapWNativeTokenWithFee(0, trader.address, 100, feeRecipient)).to.not.emit(
+        wnative,
+        'Withdrawal'
+      );
+    });
+
+    it('*WithFee skip a fee that rounds down to zero', async () => {
+      await tokens[0].transfer(router, 99);
+      await expect(
+        router.sweepTokenWithFee(tokens[0].address, 99, trader.address, 100, feeRecipient)
+      ).to.changeTokenBalances(tokens[0], [trader, feeRecipient], [99, 0]);
+
+      await wnative.deposit({ value: 99 });
+      await wnative.transfer(router, 99);
+      await expect(router.unwrapWNativeTokenWithFee(99, trader.address, 100, feeRecipient)).to.changeEtherBalances(
+        [trader, feeRecipient],
+        [99, 0]
+      );
+    });
   });
 });

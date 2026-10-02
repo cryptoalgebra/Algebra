@@ -132,6 +132,14 @@ describe('AlgebraFactory', () => {
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
     });
 
+    it('cannot reenter from default plugin factory', async () => {
+      const reentrant = await (await ethers.getContractFactory('MockReentrantPluginFactory')).deploy();
+      await factory.setDefaultPluginFactory(reentrant);
+      await expect(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x')).to.be.revertedWith(
+        'ReentrancyGuard: reentrant call'
+      );
+    });
+
     it('succeeds if tokens are passed in reverse', async () => {
       await createAndCheckPool([TEST_ADDRESSES[1], TEST_ADDRESSES[0]]);
     });

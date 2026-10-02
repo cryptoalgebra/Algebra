@@ -140,5 +140,55 @@ describe('NonfungibleTokenPositionDescriptor', () => {
       expect(metadata.name).to.match(/TEST\/TEST/);
       expect(metadata.description).to.match(/TEST-TEST/);
     });
+
+    it('uses token0 as the quote token when its ratio priority is higher', async () => {
+      const [token0, token1] = await sortedTokens(tokens[2], tokens[1]);
+      const library = await (await ethers.getContractFactory('NFTDescriptor')).deploy();
+      const descriptorFactory = await ethers.getContractFactory('NonfungibleTokenPositionDescriptor', {
+        libraries: { NFTDescriptor: await library.getAddress() },
+      });
+      const descriptor = (await descriptorFactory.deploy(wnative, 'MATIC', [
+        { tokenAddress: await token0.getAddress(), tokenRatioSortOrder: 300 },
+      ])) as any as NonfungibleTokenPositionDescriptor;
+
+      await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
+      await tokens[1].approve(nft, 100);
+      await tokens[2].approve(nft, 100);
+      await nft.mint({
+        token0: token0,
+        token1: token1,
+        deployer: ZERO_ADDRESS,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: wallets[0].address,
+        amount0Desired: 100,
+        amount1Desired: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 1,
+      });
+
+      const metadata = extractJSONFromURI(await descriptor.tokenURI(nft, 1));
+      const [address0, address1] = [
+        (await token0.getAddress()).toLowerCase(),
+        (await token1.getAddress()).toLowerCase(),
+      ];
+      expect(metadata.description).to.contain(`\nTEST Address: ${address0}\nTEST Address: ${address1}`);
+    });
+  });
+
+  it('can be deployed without token ratio priorities', async () => {
+    const library = await (await ethers.getContractFactory('NFTDescriptor')).deploy();
+    const descriptorFactory = await ethers.getContractFactory('NonfungibleTokenPositionDescriptor', {
+      libraries: { NFTDescriptor: await library.getAddress() },
+    });
+    const descriptor = (await descriptorFactory.deploy(
+      wnative,
+      'MATIC',
+      []
+    )) as any as NonfungibleTokenPositionDescriptor;
+
+    expect(await descriptor.tokenRatioPriority(wnative)).to.eq(-100);
+    expect(await descriptor.tokenRatioPriority(tokens[0])).to.eq(0);
   });
 });
