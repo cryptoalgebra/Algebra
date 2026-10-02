@@ -98,6 +98,10 @@ describe('V3Migrator', () => {
     expect(balanceNative).to.be.eq(0);
   });
 
+  it('rejects native tokens not sent by WNativeToken', async () => {
+    await expect(wallet.sendTransaction({ to: migrator, value: 1 })).to.be.revertedWith('Not WNativeToken');
+  });
+
   describe('#migrate', () => {
     let tokenLower: boolean;
 
@@ -384,6 +388,74 @@ describe('V3Migrator', () => {
         expect(tokenBalanceAfter - tokenBalanceBefore).to.be.eq(4500);
         expect(await wnative.balanceOf(poolAddress)).to.be.eq(8999);
       }
+    });
+
+    it('fails if the percentage is zero or above 100', async () => {
+      await pair.approve(migrator, expectedLiquidity);
+      const params = {
+        pair: await pair.getAddress(),
+        liquidityToMigrate: expectedLiquidity,
+        token0: tokenLower ? await token.getAddress() : await wnative.getAddress(),
+        token1: tokenLower ? await wnative.getAddress() : await token.getAddress(),
+        deployer: ZERO_ADDRESS,
+        tickLower: getMinTick(60),
+        tickUpper: getMaxTick(60),
+        amount0Min: 0,
+        amount1Min: 0,
+        recipient: wallet.address,
+        deadline: 1,
+        refundAsNative: false,
+      };
+
+      await expect(migrator.migrate({ ...params, percentageToMigrate: 0 })).to.be.revertedWith('Percentage too small');
+      await expect(migrator.migrate({ ...params, percentageToMigrate: 101 })).to.be.revertedWith(
+        'Percentage too large'
+      );
+    });
+
+    it('refunds native tokens when WNativeToken is token0', async () => {
+      // the fixture token sorts below WNativeToken, so deploy one that sorts above it
+      const tokenFactory = await ethers.getContractFactory('TestERC20');
+      const wnativeAddress = (await wnative.getAddress()).toLowerCase();
+      let higher = await tokenFactory.deploy(MaxUint256 / 2n);
+      for (let i = 0; i < 20 && (await higher.getAddress()).toLowerCase() < wnativeAddress; i++) {
+        higher = await tokenFactory.deploy(MaxUint256 / 2n);
+      }
+      expect((await higher.getAddress()).toLowerCase() > wnativeAddress).to.be.true;
+
+      await factoryV2.createPair(higher, wnative);
+      const higherPair = new ethers.Contract(
+        await factoryV2.getPair(higher, wnative),
+        PAIR_V2_ABI,
+        wallet
+      ) as any as IUniswapV2Pair;
+      await higher.transfer(higherPair, 10000);
+      await wnative.deposit({ value: 10000 });
+      await wnative.transfer(higherPair, 10000);
+      await higherPair.mint(wallet.address);
+
+      // at price 2 only half of the WNativeToken fits into the position
+      await migrator.createAndInitializePoolIfNecessary(wnative, higher, ZERO_ADDRESS, encodePriceSqrt(2, 1), '0x');
+      await higherPair.approve(migrator, expectedLiquidity);
+
+      await expect(
+        migrator.migrate({
+          pair: higherPair,
+          liquidityToMigrate: expectedLiquidity,
+          percentageToMigrate: 100,
+          token0: wnative,
+          token1: higher,
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(60),
+          tickUpper: getMaxTick(60),
+          amount0Min: 0,
+          amount1Min: 0,
+          recipient: wallet.address,
+          deadline: 1,
+          refundAsNative: true,
+        })
+      ).to.changeEtherBalance(wallet, 4500);
+      expect(await higher.balanceOf(migrator)).to.eq(0);
     });
 
     it('gas [ @skip-on-coverage ]', async () => {

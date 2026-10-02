@@ -231,6 +231,18 @@ describe('TickLens', () => {
       expect(max.liquidityGross).to.be.eq(0);
     });
 
+    it('works downwards from max', async () => {
+      const ticks = (await tickLens.getNextActiveTicks(poolAddress, getMaxTick(1), 256, false)).map((t) =>
+        Number(t.tick)
+      );
+      expect(ticks).to.deep.eq([
+        getMaxTick(1),
+        getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        getMinTick(1),
+      ]);
+    });
+
     it('reverts on invalid tick', async () => {
       await expect(tickLens.getNextActiveTicks(poolAddress, getMinTick(1) + 1, 256, true)).to.be.revertedWith(
         'Invalid startingTick'
@@ -314,6 +326,30 @@ describe('TickLens', () => {
       expect(top0.tick).to.be.eq(300);
       expect(top0.liquidityNet).to.be.eq(liquidity);
       expect(top0.liquidityGross).to.be.eq(liquidity);
+    });
+
+    it('moves to the next root node when the target leaf has nothing above it', async () => {
+      // 20000 shares a root node with 300-360 but lies above it
+      const liquidity = await mint(300, 360, 2);
+
+      const [low, top] = await tickLens.getClosestActiveTicks(poolAddress, 20000);
+
+      expect(low.tick).to.be.eq(360);
+      expect(low.liquidityNet).to.be.eq(-liquidity);
+      expect(top.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(top.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+    });
+
+    it('returns MAX_TICK above the highest active tick', async () => {
+      const [low, top] = await tickLens.getClosestActiveTicks(
+        poolAddress,
+        getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) + 1
+      );
+
+      expect(low.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(low.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+      expect(top.tick).to.be.eq(getMaxTick(1));
+      expect(top.liquidityGross).to.be.eq(0);
     });
 
     it('works for high ticks', async () => {

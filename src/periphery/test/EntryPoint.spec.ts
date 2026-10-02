@@ -121,5 +121,18 @@ describe('CustomPoolEntryPoint', () => {
   });
 
   describe('guards', () => {
+    it('cannot be deployed with a zero factory', async () => {
+      const entryPointFactory = await ethers.getContractFactory('AlgebraCustomPoolEntryPoint');
+      await expect(entryPointFactory.deploy(ZERO_ADDRESS)).to.be.revertedWithoutReason();
+    });
+
+    it('pool creation hooks can only be called by the factory', async () => {
+      await expect(
+        entryPoint.beforeCreatePoolHook(ZERO_ADDRESS, wallet.address, customPoolDeployer, tokens[0], tokens[1], '0x')
+      ).to.be.revertedWith('Only factory');
+      await expect(entryPoint.afterCreatePoolHook(ZERO_ADDRESS, ZERO_ADDRESS, customPoolDeployer)).to.be.revertedWith(
+        'Only factory'
+      );
+    });
   });
 });

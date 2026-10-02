@@ -202,6 +202,29 @@ describe('Quoter', () => {
         expect(fee).to.eq(500);
       });
 
+      it('reverts on a swap entirely within a zero-liquidity region', async () => {
+        const { liquidity } = await nft.positions(1);
+        await nft.decreaseLiquidity({ tokenId: 1, amount0Min: 0, amount1Min: 0, liquidity, deadline: 2 });
+
+        await expect(
+          quoter.quoteExactInputSingle.staticCall(tokens[0].address, tokens[1].address, ZERO_ADDRESS, 100, 0)
+        ).to.be.revertedWith('Zero liquidity swap');
+      });
+
+      it('reports an unexpected error when the pool reverts without data', async () => {
+        const pool = await ethers.getContractAt(
+          'IAlgebraPool',
+          await factory.poolByPair(tokens[0].address, tokens[1].address)
+        );
+        const plugin = await (await ethers.getContractFactory('MockSilentRevertPlugin')).deploy();
+        await pool.setPlugin(plugin);
+        await pool.setPluginConfig(1); // before swap hook
+
+        await expect(
+          quoter.quoteExactInputSingle.staticCall(tokens[0].address, tokens[1].address, ZERO_ADDRESS, 100, 0)
+        ).to.be.revertedWith('Unexpected error');
+      });
+
       it('1 -> 0, bubbles custom error', async () => {
         const pool = await ethers.getContractAt(
           'IAlgebraPool',
@@ -277,6 +300,31 @@ describe('Quoter', () => {
     });
 
     describe('#quoteExactOutputSingle', () => {
+      it('without a price limit reverts when the pool cannot deliver the full amount', async () => {
+        const [token0, token1] = [tokens[0].address, tokens[2].address].sort((a, b) =>
+          a.toLowerCase() < b.toLowerCase() ? -1 : 1
+        );
+        await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
+        // liquidity only around the current price: past it the price runs to the limit for free
+        await nft.mint({
+          token0,
+          token1,
+          deployer: ZERO_ADDRESS,
+          tickLower: -60,
+          tickUpper: 60,
+          recipient: wallet.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 1,
+        });
+
+        await expect(
+          quoter.quoteExactOutputSingle.staticCall(tokens[0].address, tokens[2].address, ZERO_ADDRESS, 10_000, 0)
+        ).to.be.revertedWith('Not received full amountOut');
+      });
+
       it('0 -> 1', async () => {
         const { amountIn, fee } = await quoter.quoteExactOutputSingle.staticCall(
           tokens[0].address,

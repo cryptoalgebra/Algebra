@@ -94,6 +94,38 @@ describe('unit/EternalFarms', () => {
     expect(deactivated).to.be.true;
   };
 
+  const fullRange: [number, number] = [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])];
+
+  const mintAndFarm = async (key: ContractParams.IncentiveKey, [tickLower, tickUpper]: [number, number]) => {
+    await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
+    const _tokenId = await mintPosition(context.nft.connect(lpUser0), {
+      token0: await context.token0.getAddress(),
+      token1: await context.token1.getAddress(),
+      fee: FeeAmount.MEDIUM,
+      tickLower,
+      tickUpper,
+      recipient: lpUser0.address,
+      amount0Desired: amountDesired,
+      amount1Desired: amountDesired,
+      amount0Min: 0,
+      amount1Min: 0,
+      deadline: (await blockTimestamp()) + 1000,
+    });
+    await context.nft.connect(lpUser0).approveForFarming(_tokenId, true, context.farmingCenter);
+    await context.farmingCenter.connect(lpUser0).enterFarming(key, _tokenId);
+    return { tokenId: _tokenId, enteredAt: await blockTimestamp() };
+  };
+
+  // collects in a block at `at` and returns what that call credited to lpUser0
+  const collectAt = async (key: ContractParams.IncentiveKey, _tokenId: string, at: number) => {
+    const balances = () => Promise.all([key.rewardToken, key.bonusRewardToken].map((t) => context.eternalFarming.rewards(lpUser0.address, t)));
+    const before = await balances();
+    await Time.set(at);
+    await context.farmingCenter.connect(lpUser0).collectRewards(key, _tokenId);
+    const after = await balances();
+    return [after[0] - before[0], after[1] - before[1]];
+  };
+
   before(async () => {
     // gas depends on deployed addresses, so start from a fresh chain regardless of earlier spec files
     await reset();
@@ -535,6 +567,26 @@ describe('unit/EternalFarms', () => {
         'anotherFarmingIsActive'
       );
     });
+
+    it('accepts the same token as reward and bonus reward', async () => {
+      const token = context.rewardToken;
+      await token.transfer(incentiveCreator.address, 1500n);
+      await token.connect(incentiveCreator).approve(context.eternalFarming, 1500n);
+      const key = { pool: context.pool01, rewardToken: await token.getAddress(), bonusRewardToken: await token.getAddress(), nonce: localNonce };
+      await context.eternalFarming
+        .connect(incentiveCreator)
+        .createEternalFarming(
+          key,
+          { reward: 1000n, bonusReward: 500n, rewardRate: 10n, bonusRewardRate: 5n, minimalPositionWidth: 0 },
+          await context.poolObj.connect(incentiveCreator).plugin()
+        );
+
+      const { tokenId: _tokenId, enteredAt } = await mintAndFarm(key, fullRange);
+      await Time.set(enteredAt + 20);
+      await context.farmingCenter.connect(lpUser0).collectRewards(key, _tokenId);
+      // both streams are credited to the one balance of the shared token
+      expect(await context.eternalFarming.rewards(lpUser0.address, token)).to.be.within(15n * 20n - 2n, 15n * 20n);
+    });
   });
 
   describe('#enterFarming', () => {
@@ -929,6 +981,20 @@ describe('unit/EternalFarms', () => {
         .withArgs(0, 0, anyValue);
       expect(await virtualPool.rewardReserves()).to.deep.eq([reserve0, reserve1]);
     });
+
+    it('keeps rewards accrued before the decrease claimable', async () => {
+      await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 10, 1);
+      const { tokenId: _tokenId, enteredAt } = await mintAndFarm(incentiveKey, fullRange);
+
+      await Time.set(enteredAt + 100);
+      await context.eternalFarming.connect(factoryOwner).decreaseRewardsAmount(incentiveKey, totalReward, bonusReward);
+      // the decrease took everything left in the reserves, so nothing accrues after it
+      expect(await virtualPool.rewardReserves()).to.deep.eq([0n, 0n]);
+
+      const [reward, bonus] = await collectAt(incentiveKey, _tokenId, enteredAt + 200);
+      expect(reward).to.be.within(10n * 100n - 1n, 10n * 100n);
+      expect(bonus).to.be.within(100n - 1n, 100n);
+    });
   });
 
   describe('#deactivate incentive', () => {
@@ -1293,6 +1359,41 @@ describe('unit/EternalFarms', () => {
       expect(rewards).to.eq(9970);
       expect(bonusRewards).to.eq(49851);
       expect(vpTick).to.eq(-150);
+    });
+
+    it('a new farming can replace a deactivated one on the same pool', async () => {
+      await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 10, 1);
+      const { tokenId: _tokenId, enteredAt } = await mintAndFarm(incentiveKey, fullRange);
+      const oldIncentiveId = await context.farmingCenter.deposits(_tokenId);
+
+      await Time.set(enteredAt + 100);
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+
+      const next = await helpers.createIncentiveFlow({ ...incentiveArgs, nonce: localNonce + 1n, rewardRate: 20n, bonusRewardRate: 2n });
+      const nextKey = { ...incentiveKey, nonce: localNonce + 1n };
+      expect((await context.eternalFarming.incentiveKeys(context.pool01)).nonce).to.eq(localNonce + 1n);
+      expect(await context.farmingCenter.virtualPoolAddresses(context.pool01)).to.eq(next.virtualPool);
+      // the position stays deposited in the old farming until it exits
+      await expect(context.farmingCenter.connect(lpUser0).enterFarming(nextKey, _tokenId)).to.be.revertedWith('Token already farmed');
+
+      // exited long after the deactivation, the old farming pays only up to it
+      await Time.set(enteredAt + 300);
+      await expect(context.farmingCenter.connect(lpUser0).exitFarming(incentiveKey, _tokenId))
+        .to.emit(context.eternalFarming, 'FarmEnded')
+        .withArgs(
+          _tokenId,
+          oldIncentiveId,
+          incentiveKey.rewardToken,
+          incentiveKey.bonusRewardToken,
+          lpUser0.address,
+          (r: bigint) => r >= 999n && r <= 1000n,
+          (b: bigint) => b >= 99n && b <= 100n
+        );
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(nextKey, _tokenId);
+      const [reward, bonus] = await collectAt(nextKey, _tokenId, (await blockTimestamp()) + 50);
+      expect(reward).to.be.within(20n * 50n - 1n, 20n * 50n);
+      expect(bonus).to.be.within(2n * 50n - 1n, 2n * 50n);
     });
   });
 
@@ -2254,6 +2355,37 @@ describe('unit/EternalFarms', () => {
         expect(incentiveAfter.bonusReward).to.eq(incentiveBefore.bonusReward);
       });
 
+      it('cannot overflow the incentive total even when the pool reserve still fits', async () => {
+        await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
+        const tokenId = await mintPosition(context.nft.connect(lpUser0), {
+          token0: await context.token0.getAddress(),
+          token1: await context.token1.getAddress(),
+          fee: FeeAmount.MEDIUM,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: lpUser0.address,
+          amount0Desired: amountDesired,
+          amount1Desired: amountDesired,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        });
+        await context.nft.connect(lpUser0).approveForFarming(tokenId, true, context.farmingCenter);
+        await context.farmingCenter.connect(lpUser0).enterFarming(incentiveKey, tokenId);
+        await Time.step(1000);
+        // distributing rewards takes them out of the pool reserve but not out of totalReward
+        await context.eternalFarming.connect(actors.wallets[0]).decreaseRewardsAmount(incentiveKey, 0, 0);
+
+        const incentive = await context.eternalFarming.incentives(incentiveId);
+        const virtualPool = (await ethers.getContractAt('EternalVirtualPool', incentive.virtualPoolAddress)) as any as EternalVirtualPool;
+        const [reserve0] = await virtualPool.rewardReserves();
+        expect(reserve0).to.be.lt(incentive.totalReward);
+
+        const amount = 2n ** 128n - 1n - reserve0;
+        await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.rewardToken], amount, await context.eternalFarming.getAddress());
+        await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, amount, 0)).to.be.revertedWithPanic(0x11);
+      });
+
       it('cannot add rewards to non-existent incentive', async () => {
         incentiveKey = {
           rewardToken: await context.rewardToken.getAddress(),
@@ -2319,6 +2451,28 @@ describe('unit/EternalFarms', () => {
         await tokenReentrant.prepareAttack(incentiveKey, 500, 500);
 
         await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey2, 1, 1)).to.be.revertedWith('STF');
+      });
+
+      it('stops paying when the reserve runs out and resumes from the top-up, not retroactively', async () => {
+        // the bonus rate goes up to the main one, so that both reserves run out
+        await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 100n, 100n);
+        const { tokenId: _tokenId, enteredAt } = await mintAndFarm(incentiveKey, fullRange);
+
+        // 150 s at 100 per second would be 15000, more than was deposited in either token
+        let [reward, bonus] = await collectAt(incentiveKey, _tokenId, enteredAt + 150);
+        expect(reward).to.be.within(totalReward - 1n, totalReward);
+        expect(bonus).to.be.within(bonusReward - 1n, bonusReward);
+        [reward, bonus] = await collectAt(incentiveKey, _tokenId, enteredAt + 200);
+        expect(reward).to.eq(0n);
+        expect(bonus).to.eq(0n);
+
+        // only the main reserve is topped up, the bonus one stays empty
+        await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.rewardToken], 1000n, await context.eternalFarming.getAddress());
+        await context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 1000n, 0n);
+        const toppedUpAt = await blockTimestamp();
+        [reward, bonus] = await collectAt(incentiveKey, _tokenId, toppedUpAt + 5);
+        expect(reward).to.be.within(100n * 5n - 1n, 100n * 5n);
+        expect(bonus).to.eq(0n);
       });
     });
 
@@ -2395,6 +2549,37 @@ describe('unit/EternalFarms', () => {
           'incentiveStopped'
         );
         await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 0, 0);
+      });
+
+      it('accrues at the old rates until the change and at the new ones after it', async () => {
+        const { tokenId: _tokenId, enteredAt } = await mintAndFarm(incentiveKey, fullRange);
+
+        await Time.set(enteredAt + 20);
+        await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 7, 5);
+        const [reward, bonus] = await collectAt(incentiveKey, _tokenId, enteredAt + 50);
+
+        expect(reward).to.be.within(100n * 20n + 7n * 30n - 2n, 100n * 20n + 7n * 30n);
+        expect(bonus).to.be.within(3n * 20n + 5n * 30n - 2n, 3n * 20n + 5n * 30n);
+      });
+    });
+
+    describe('#crossing', () => {
+      it('accrues only while the price is inside the farmed range', async () => {
+        const trader = actors.farmingDeployer();
+        const base = Math.floor(Number((await context.poolObj.connect(trader).globalState()).tick) / 60) * 60;
+        const { tokenId: _tokenId, enteredAt } = await mintAndFarm(incentiveKey, [base - 120, base + 120]);
+
+        await Time.set(enteredAt + 20);
+        await helpers.moveTickTo({ direction: 'down', desiredValue: base - 130, trader });
+        const leftAt = await blockTimestamp();
+        await Time.set(leftAt + 40);
+        await helpers.moveTickTo({ direction: 'up', desiredValue: base, trader });
+        const returnedAt = await blockTimestamp();
+
+        const [reward, bonus] = await collectAt(incentiveKey, _tokenId, returnedAt + 20);
+        const inside = BigInt(leftAt - enteredAt + 20);
+        expect(reward).to.be.within(100n * inside - 3n, 100n * inside);
+        expect(bonus).to.be.within(3n * inside - 3n, 3n * inside);
       });
     });
   });

@@ -49,6 +49,15 @@ describe('Path', () => {
   });
 
   describe('truncated paths', () => {
+    it('getFirstPool reverts when the path is shorter than one pool', async () => {
+      await expect(
+        path.getFirstPool('0x' + tokenAddresses[0].slice(2) + tokenAddresses[1].slice(2))
+      ).to.be.revertedWith('slice_outOfBounds');
+    });
+
+    it('decodeFirstPool reverts when the path is shorter than one pool', async () => {
+      await expect(path.decodeFirstPool(tokenAddresses[0])).to.be.revertedWith('toAddress_outOfBounds');
+    });
   });
 
   describe('#hasMultiplePools / #decodeFirstPool / #skipToken / #getFirstPool', () => {

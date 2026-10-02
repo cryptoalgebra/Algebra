@@ -143,6 +143,26 @@ describe('NonfungiblePositionManager', () => {
       await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x', { value: 1 });
     });
 
+    it('fails if tokens are not sorted', async () => {
+      await expect(
+        nft.createAndInitializePoolIfNecessary(tokens[1], tokens[0], ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x')
+      ).to.be.revertedWith('Invalid order of tokens');
+    });
+
+    it('does not create a missing custom pool', async () => {
+      expect(
+        await nft.createAndInitializePoolIfNecessary.staticCall(
+          tokens[0],
+          tokens[1],
+          other.address,
+          encodePriceSqrt(1, 1),
+          '0x'
+        )
+      ).to.eq(ZeroAddress);
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], other.address, encodePriceSqrt(1, 1), '0x');
+      expect(await factory.customPoolByPair(other.address, tokens[0], tokens[1])).to.eq(ZeroAddress);
+    });
+
     it('works if pool is created but not initialized', async () => {
       if (!wallet.provider) throw new Error('No provider');
 
@@ -189,6 +209,25 @@ describe('NonfungiblePositionManager', () => {
   });
 
   describe('#mint', () => {
+    it('fails if slippage is too high', async () => {
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
+      await expect(
+        nft.mint({
+          token0: tokens[0],
+          token1: tokens[1],
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: other.address,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 101,
+          amount1Min: 0,
+          deadline: 1,
+        })
+      ).to.be.revertedWith('Price slippage check');
+    });
+
     it('fails if pool does not exist', async () => {
       await expect(
         nft.mint({
@@ -586,6 +625,26 @@ describe('NonfungiblePositionManager', () => {
       ).to.be.revertedWith('Transaction too old');
     });
 
+    it('fails for a position off the new tick spacing, which can still be withdrawn', async () => {
+      const pool = poolAtAddress(await factory.poolByPair(tokens[0], tokens[1]), wallet);
+      await pool.setTickSpacing(200);
+      await expect(
+        nft.increaseLiquidity({
+          tokenId: tokenId,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 1,
+        })
+      ).to.be.revertedWithCustomError(pool, 'tickIsNotSpaced');
+
+      await nft
+        .connect(other)
+        .decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 1 });
+      expect((await nft.positions(tokenId)).liquidity).to.eq(0);
+    });
+
     it('can be paid with Native', async () => {
       const [token0, token1] = await sortedTokens(tokens[0], wnative);
 
@@ -950,6 +1009,28 @@ describe('NonfungiblePositionManager', () => {
   describe('#getApproved', async () => {
     it('cannot get approved for nonexistent  token', async () => {
       await expect(nft.getApproved(1)).to.be.revertedWith('ERC721: invalid token ID');
+    });
+  });
+
+  describe('#isApprovedOrOwner', () => {
+    const tokenId = 1;
+    beforeEach('create a position', () => createPosition());
+
+    it('accepts the owner, the approved address and an operator, and nobody else', async () => {
+      expect(await nft.isApprovedOrOwner(other.address, tokenId)).to.eq(true);
+      expect(await nft.isApprovedOrOwner(wallet.address, tokenId)).to.eq(false);
+
+      await nft.connect(other).approve(wallet.address, tokenId);
+      expect(await nft.isApprovedOrOwner(wallet.address, tokenId)).to.eq(true);
+
+      await nft.connect(other).approve(ZERO_ADDRESS, tokenId);
+      expect(await nft.isApprovedOrOwner(wallet.address, tokenId)).to.eq(false);
+      await nft.connect(other).setApprovalForAll(wallet.address, true);
+      expect(await nft.isApprovedOrOwner(wallet.address, tokenId)).to.eq(true);
+    });
+
+    it('cannot be asked about a nonexistent token', async () => {
+      await expect(nft.isApprovedOrOwner(wallet.address, 2)).to.be.revertedWith('ERC721: invalid token ID');
     });
   });
 
