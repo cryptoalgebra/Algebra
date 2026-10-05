@@ -71,10 +71,10 @@ interface IAlgebraPlugin {
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param withPaymentInAdvance The flag indicating whether the `swapWithPaymentInAdvance` method was called
   /// @param data Data that passed through the callback
-  // TODO: change comment
-  /// @return amountInDecrease
+  /// @return amountInDecrease The part of the input that goes to the plugin instead of being swapped (exactIn only).
+  /// It is charged in full even if the swap is executed partially
   /// @return selector The function selector for the hook
-  /// @return feeOverride
+  /// @return feeOverride The fee for this swap instead of the pool fee, 0 to keep the pool fee
   function beforeSwap(
     address sender,
     address recipient,
@@ -85,19 +85,19 @@ interface IAlgebraPlugin {
     bytes calldata data
   ) external returns (uint256 amountInDecrease, bytes4 selector, uint24 feeOverride);
 
-  /// @notice The hook called after swap calculation
+  /// @notice The hook called after swap calculation, before any tokens are transferred
   /// @param sender The initial msg.sender for the swap call
   /// @param recipient The address to receive the output of the swap
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
   /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
-  /// @param amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
-  /// @param amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+  /// @param amount0 The swapped amount of token0, without plugin deltas
+  /// @param amount1 The swapped amount of token1, without plugin deltas
   /// @param data Data that passed through the callback
   /// @return selector The function selector for the hook
-  /// @return amountInIncrease The amount to increase input (for exactOut case)
-  /// @return amountOutDecrease The amount to decrease output (for exactIn case)
+  /// @return amountInIncrease The amount to increase input (for exactOut case), goes to the plugin
+  /// @return amountOutDecrease The amount to decrease output (for exactIn case), goes to the plugin
   function afterSwapCalculation(
     address sender,
     address recipient,
@@ -116,8 +116,8 @@ interface IAlgebraPlugin {
   /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
-  /// @param amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
-  /// @param amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+  /// @param amount0 The amount of token0 paid by the caller (positive) or sent to the recipient (negative)
+  /// @param amount1 The amount of token1 paid by the caller (positive) or sent to the recipient (negative)
   /// @param totalSwapFeeAmount The total fee earned by LPs during the swap (before community/plugin fee deduction)
   /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
