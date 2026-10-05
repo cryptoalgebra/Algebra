@@ -72,8 +72,9 @@ interface IAlgebraPoolActions {
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param data Any data to be passed through to the callback. If using the Router it should contain SwapRouter#SwapCallbackData
-  /// @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
-  /// @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+  /// @return amount0 The amount of token0 paid by the caller (positive) or sent to the recipient (negative)
+  /// @return amount1 The amount of token1 paid by the caller (positive) or sent to the recipient (negative)
+  /// @dev The amounts include plugin deltas. On exactOut the input is not limited by the pool, check it in the callback
   function swap(
     address recipient,
     bool zeroToOne,
@@ -93,8 +94,9 @@ interface IAlgebraPoolActions {
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param data Any data to be passed through to the callback. If using the Router it should contain SwapRouter#SwapCallbackData
-  /// @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
-  /// @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+  /// @return amount0 The amount of token0 spent by the caller (positive) or sent to the recipient (negative)
+  /// @return amount1 The amount of token1 spent by the caller (positive) or sent to the recipient (negative)
+  /// @dev The amounts include plugin deltas and do not include the leftovers
   function swapWithPaymentInAdvance(
     address leftoversRecipient,
     address recipient,

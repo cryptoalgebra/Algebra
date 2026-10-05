@@ -3,6 +3,7 @@
 #
 #   echidna . --contract AssertFeeModeSwapEchidnaTest --config echidna.assertion.yaml
 #   echidna . --contract AssertSwapEchidnaTest        --config echidna.assertion.yaml
+#   echidna . --contract AssertDeltasEchidnaTest      --config echidna.assertion.yaml
 #
 # IMPORTANT: run `npx hardhat clean && npx hardhat compile` before a campaign, not a plain recompile.
 # Hardhat keeps old build-info files around on an incremental build and crytic-compile reads all of them,
