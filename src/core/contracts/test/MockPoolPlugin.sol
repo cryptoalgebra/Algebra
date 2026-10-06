@@ -70,10 +70,6 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
 
   function defaultPluginConfig() external view override returns (uint16) {}
 
-  function getCurrentFee() external pure override returns (uint16 fee) {
-    return 220;
-  }
-
   function setSelectorDisable(uint16 newSelectorsDisableConfig) external {
     selectorsDisableConfig = newSelectorsDisableConfig;
   }
@@ -92,6 +88,11 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
 
   function setOverrideFee(uint24 _overrideFee) external {
     overrideFee = _overrideFee;
+  }
+
+  /// @dev returns the same fee as beforeSwap
+  function getSwapFee(address, address, bool, int256, uint160, bool, bytes calldata) external view override returns (uint24) {
+    return overrideFee;
   }
 
   /// @notice The hook called before the state of a pool is initialized

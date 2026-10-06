@@ -27,7 +27,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @dev fits into one storage slot
   /// @param price The square root of the current price in Q64.96 format
   /// @param tick The current tick (price(tick) <= current price). May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
-  /// @param lastFee The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). May be obsolete if using dynamic fee plugin
+  /// @param lastFee The pool fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). Not applied to swaps that get the fee from the dynamic fee plugin
   /// @param pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
   /// @param communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
   /// @param unlocked  Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
@@ -139,11 +139,22 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   }
 
   /// @inheritdoc IAlgebraPoolState
-  function fee() external view override returns (uint16 currentFee) {
-    currentFee = globalState.lastFee;
-    uint16 pluginConfig = globalState.pluginConfig;
-
-    if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
+  function getSwapFee(
+    address sender,
+    address recipient,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    bool withPaymentInAdvance,
+    bytes calldata data
+  ) external view override returns (uint24 fee) {
+    uint16 pluginConfig;
+    (fee, pluginConfig) = (globalState.lastFee, globalState.pluginConfig);
+    address _plugin = plugin;
+    // as in the swap, the hook is not called for swaps by the plugin itself, so they pay the pool fee
+    if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE) && sender != _plugin) {
+      fee = IAlgebraDynamicFeePlugin(_plugin).getSwapFee(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, withPaymentInAdvance, data);
+    }
   }
 
   /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
