@@ -13,6 +13,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;
   bytes32 private cache1;
+  address private cacheDeployer;
 
   address private immutable extension;
   address private immutable factory;
@@ -24,10 +25,16 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function getDeployParameters() external view override returns (address _plugin, address _factory, address _token0, address _token1, address _extension) {
+  function getDeployParameters()
+    external
+    view
+    override
+    returns (address _plugin, address _factory, address _token0, address _token1, address _extension, address _deployer)
+  {
     (_plugin, _token0, _token1) = _readFromCache();
     _factory = factory;
     _extension = extension;
+    _deployer = cacheDeployer;
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
@@ -35,6 +42,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
     require(msg.sender == factory);
 
     _writeToCache(plugin, token0, token1);
+    cacheDeployer = deployer;
 
     bytes memory _encodedParams;
     if (deployer == address(0)) {
@@ -43,7 +51,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
       _encodedParams = abi.encode(deployer, token0, token1);
     }
     pool = address(new AlgebraPool{salt: keccak256(_encodedParams)}());
-    (cache0, cache1) = (bytes32(0), bytes32(0));
+    (cache0, cache1, cacheDeployer) = (bytes32(0), bytes32(0), address(0));
   }
 
   /// @notice densely packs three addresses into two storage slots
