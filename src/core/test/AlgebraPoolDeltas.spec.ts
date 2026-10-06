@@ -11,7 +11,7 @@ import {
   MIN_SQRT_RATIO,
   MAX_SQRT_RATIO,
 } from './shared/utilities';
-import { MockDeltaPlugin, MockTimeAlgebraPool, TestAlgebraCallee, TestERC20 } from '../typechain';
+import { MockDeltaPlugin, MockTimeAlgebraPool, TestAlgebraCallee, TestAlgebraSwapPay, TestERC20 } from '../typechain';
 
 const SHARE = 1_000_000n;
 const INT256_MAX = 2n ** 255n - 1n;
@@ -579,6 +579,182 @@ describe('AlgebraPool amount deltas', () => {
           }
         });
       }
+    }
+  });
+
+  describe('payment, hook flags and reentrancy', () => {
+    async function deployPayer(env: Env) {
+      const payer = (await (
+        await ethers.getContractFactory('TestAlgebraSwapPay')
+      ).deploy()) as any as TestAlgebraSwapPay;
+      await env.token0.approve(payer, MaxUint256);
+      await env.token1.approve(payer, MaxUint256);
+      return payer;
+    }
+    const pays = (zeroToOne: boolean, amount: bigint): [bigint, bigint] => (zeroToOne ? [amount, 0n] : [0n, amount]);
+    const limitFor = (zeroToOne: boolean) => (zeroToOne ? MIN_SQRT_RATIO + 1n : MAX_SQRT_RATIO - 1n);
+
+    for (const zeroToOne of DIRECTIONS) {
+      it(`the caller must pay amountInDecrease, ${dirName(zeroToOne)}`, async () => {
+        const env = await loadFixture(fullRangeFixture);
+        const payer = await deployPayer(env);
+        const amount = expandTo18Decimals(1);
+        await setDeltas(env, deltas({ inDecrease: absolute(amount / 100n) }));
+        const swap = (pay: bigint) =>
+          payer.swap(env.pool, env.other.address, zeroToOne, limitFor(zeroToOne), amount, ...pays(zeroToOne, pay));
+
+        // paying only the swapped part is not enough
+        await expect(swap(amount - amount / 100n)).to.be.revertedWithCustomError(env.pool, 'insufficientInputAmount');
+        await expect(swap(amount - 1n)).to.be.revertedWithCustomError(env.pool, 'insufficientInputAmount');
+        await expect(swap(amount)).to.not.be.reverted;
+      });
+
+      it(`the caller must pay amountInIncrease, ${dirName(zeroToOne)}`, async () => {
+        const amount = expandTo18Decimals(1) / 10n;
+        const d = deltas({ inIncrease: share(50_000n) });
+        let env = await loadFixture(fullRangeFixture);
+        await setDeltas(env, d);
+        const { paid, amountInIncrease } = checkAccounting(
+          await execute(env, 'exactOut', zeroToOne, amount),
+          'exactOut',
+          zeroToOne,
+          amount,
+          d,
+        );
+
+        // the same swap from the same state, paid by a contract that pays a fixed amount
+        env = await loadFixture(fullRangeFixture);
+        await setDeltas(env, d);
+        const payer = await deployPayer(env);
+        const swap = (pay: bigint) =>
+          payer.swap(env.pool, env.other.address, zeroToOne, limitFor(zeroToOne), -amount, ...pays(zeroToOne, pay));
+        await expect(swap(paid - amountInIncrease)).to.be.revertedWithCustomError(env.pool, 'insufficientInputAmount');
+        await expect(swap(paid - 1n)).to.be.revertedWithCustomError(env.pool, 'insufficientInputAmount');
+        await expect(swap(paid)).to.not.be.reverted;
+      });
+
+      it(`payment in advance: deltas are based on the amount actually received, ${dirName(zeroToOne)}`, async () => {
+        const env = await loadFixture(fullRangeFixture);
+        const payer = await deployPayer(env);
+        const amount = expandTo18Decimals(1);
+        const received = amount / 2n; // as with a fee-on-transfer token
+        await setDeltas(env, deltas({ inDecrease: share(10_000n) }));
+        const pluginBefore = await (zeroToOne ? env.token0 : env.token1).balanceOf(env.plugin);
+
+        await payer.swapSupportingFee(
+          env.pool,
+          env.other.address,
+          zeroToOne,
+          limitFor(zeroToOne),
+          amount,
+          ...pays(zeroToOne, received),
+        );
+
+        expect(await env.plugin.seenAmountRequired()).to.eq(received);
+        expect((await (zeroToOne ? env.token0 : env.token1).balanceOf(env.plugin)) - pluginBefore).to.eq(
+          received / 100n,
+        );
+        const [r0, r1] = await env.pool.getReserves();
+        expect(r0).to.eq(await env.token0.balanceOf(env.pool));
+        expect(r1).to.eq(await env.token1.balanceOf(env.pool));
+      });
+
+      it(`amountInDecrease is ignored without the beforeSwap flag, ${dirName(zeroToOne)}`, async () => {
+        const env = await loadFixture(fullRangeFixture);
+        await env.pool.setPluginConfig(AFTER_SWAP | AFTER_SWAP_CALCULATION);
+        await setDeltas(env, deltas({ inDecrease: share(100_000n) }));
+        const amount = expandTo18Decimals(1);
+
+        const r = await execute(env, 'exactIn', zeroToOne, amount);
+
+        const [i, o] = zeroToOne ? [0, 1] : [1, 0];
+        expect(r.seen.calc[i]).to.eq(amount); // the whole amount is swapped
+        expect(r.after.plugin[i] - r.before.plugin[i]).to.eq(0n);
+        expect(r.after.plugin[o] - r.before.plugin[o]).to.eq(0n);
+        expect(r.event[i]).to.eq(amount);
+      });
+
+      it(`amountInIncrease and amountOutDecrease are ignored without the afterSwapCalculation flag, ${dirName(zeroToOne)}`, async () => {
+        const env = await loadFixture(fullRangeFixture);
+        await env.pool.setPluginConfig(BEFORE_SWAP | AFTER_SWAP);
+        // both deltas at once would revert on any swap if the hook was called
+        await setDeltas(env, deltas({ inIncrease: share(100_000n), outDecrease: share(100_000n) }));
+        const amount = expandTo18Decimals(1) / 10n;
+
+        for (const kind of ['exactIn', 'exactOut', 'payInAdvance'] as Kind[]) {
+          const r = await execute(env, kind, zeroToOne, amount);
+          expect(r.after.plugin[0] - r.before.plugin[0]).to.eq(0n, kind);
+          expect(r.after.plugin[1] - r.before.plugin[1]).to.eq(0n, kind);
+        }
+        expect(await env.plugin.afterSwapCalculationCalls()).to.eq(0n);
+      });
+
+      it(`the pool is locked during afterSwapCalculation, ${dirName(zeroToOne)}`, async () => {
+        const env = await loadFixture(fullRangeFixture);
+        await env.plugin.setReenter(true);
+        for (const kind of ['exactIn', 'exactOut', 'payInAdvance'] as Kind[])
+          await expect(send(env, kind, zeroToOne, expandTo18Decimals(1) / 10n)).to.be.revertedWithCustomError(
+            env.pool,
+            'locked',
+          );
+      });
+    }
+  });
+
+  describe('hook arguments and events', () => {
+    for (const zeroToOne of DIRECTIONS) {
+      for (const kind of ['exactIn', 'exactOut', 'payInAdvance'] as Kind[]) {
+        it(`afterSwapCalculation receives amountRequired as specified by the caller, ${kind}, ${dirName(zeroToOne)}`, async () => {
+          const env = await loadFixture(fullRangeFixture);
+          const d =
+            kind === 'exactOut'
+              ? deltas({ inIncrease: share(10_000n) })
+              : deltas({ inDecrease: share(100_000n), outDecrease: share(10_000n) });
+          await setDeltas(env, d);
+          const amount = expandTo18Decimals(1) / 10n;
+
+          const r = await execute(env, kind, zeroToOne, amount);
+          checkAccounting(r, kind, zeroToOne, amount, d);
+
+          // not reduced by amountInDecrease
+          expect(await env.plugin.seenCalcAmountRequired()).to.eq(kind === 'exactOut' ? -amount : amount);
+          expect(await env.plugin.afterSwapCalculationCalls()).to.eq(1n);
+        });
+      }
+
+      it(`SwapFee carries the override fee with deltas, payment in advance, ${dirName(zeroToOne)}`, async () => {
+        const env = await loadFixture(fullRangeFixture);
+        await setDeltas(env, deltas({ inDecrease: share(10_000n), outDecrease: share(10_000n) }));
+        await env.plugin.setOverrideFee(3000);
+
+        await expect(send(env, 'payInAdvance', zeroToOne, expandTo18Decimals(1) / 10n))
+          .to.emit(env.pool, 'SwapFee')
+          .withArgs(await env.swapTarget.getAddress(), 3000);
+      });
+
+      it(`the plugin can be the recipient, ${dirName(zeroToOne)}`, async () => {
+        const env = await loadFixture(fullRangeFixture);
+        const d = deltas({ inDecrease: share(10_000n), outDecrease: share(20_000n) });
+        await setDeltas(env, d);
+        const amount = expandTo18Decimals(1) / 10n;
+        const [i, o] = zeroToOne ? [0, 1] : [1, 0];
+        const tokens = [env.token0, env.token1];
+        const before = [await tokens[0].balanceOf(env.plugin), await tokens[1].balanceOf(env.plugin)];
+
+        const limit = zeroToOne ? MIN_SQRT_RATIO + 1n : MAX_SQRT_RATIO - 1n;
+        await (zeroToOne
+          ? env.swapTarget.swapExact0For1(env.pool, amount, env.plugin, limit)
+          : env.swapTarget.swapExact1For0(env.pool, amount, env.plugin, limit));
+
+        // the whole output and amountInDecrease end up in the plugin
+        const [calc0, calc1] = [await env.plugin.seenCalc0(), await env.plugin.seenCalc1()];
+        const calcOut = zeroToOne ? calc1 : calc0;
+        expect((await tokens[i].balanceOf(env.plugin)) - before[i]).to.eq(amount / 100n);
+        expect((await tokens[o].balanceOf(env.plugin)) - before[o]).to.eq(-calcOut);
+        const [r0, r1] = await env.pool.getReserves();
+        expect(r0).to.eq(await env.token0.balanceOf(env.pool));
+        expect(r1).to.eq(await env.token1.balanceOf(env.pool));
+      });
     }
   });
 
