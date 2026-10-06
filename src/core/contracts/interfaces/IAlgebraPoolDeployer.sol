@@ -15,7 +15,11 @@ interface IAlgebraPoolDeployer {
   /// @return token0 The first token of the pool by address sort order
   /// @return token1 The second token of the pool by address sort order
   /// @return extension The pool extension contract address
-  function getDeployParameters() external view returns (address plugin, address factory, address token0, address token1, address extension);
+  /// @return deployer The custom deployer address (or zero for standard pools)
+  function getDeployParameters()
+    external
+    view
+    returns (address plugin, address factory, address token0, address token1, address extension, address deployer);
 
   /// @dev Deploys a pool with the given parameters by transiently setting the parameters in cache.
   /// @param plugin The pool associated plugin (if any)
