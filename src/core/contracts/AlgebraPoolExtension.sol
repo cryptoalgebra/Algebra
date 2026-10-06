@@ -113,6 +113,8 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
     address _plugin = plugin;
     if (_plugin == address(0)) revert pluginIsNotConnected();
     if (msg.sender != _plugin) _checkIfAdministrator();
+    // the dynamic fee is returned from the beforeSwap hook
+    if (newConfig.hasFlag(Plugins.DYNAMIC_FEE) && !newConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) revert invalidNewPluginConfig();
     _setPluginConfig(newConfig);
   }
 

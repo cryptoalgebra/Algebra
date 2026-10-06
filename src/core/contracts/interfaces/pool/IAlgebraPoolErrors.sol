@@ -62,6 +62,8 @@ interface IAlgebraPoolErrors {
   error invalidOverrideFee();
   /// @notice Emitted if an attempt is made to change the plugin configuration, but the plugin is not connected
   error pluginIsNotConnected();
+  /// @notice Emitted if new plugin config enables the dynamic fee without the beforeSwap hook
+  error invalidNewPluginConfig();
   /// @notice Emitted if a plugin returns invalid selector after hook call
   /// @param expectedSelector The expected selector
   error invalidHookResponse(bytes4 expectedSelector);

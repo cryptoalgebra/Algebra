@@ -49,8 +49,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 totalSwapFeeAmount; // Total swap fee earned by LPs (before community fee deduction)
   }
 
+  /// @param fee The fee applied to this swap, see `_beforeSwap`
   function _calculateSwap(
-    uint24 overrideFee,
+    uint24 fee,
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
@@ -59,17 +60,14 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
 
     SwapCalculationCache memory cache;
-    (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
+    (cache.amountRequiredInitial, cache.exactInput, cache.fee) = (amountRequired, amountRequired > 0, fee);
 
     // load from one storage slot
     (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick) = (liquidity, prevTickGlobal, nextTickGlobal);
 
     // load from one storage slot too
-    (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.lastFee, globalState.communityFee);
+    (currentPrice, currentTick, cache.communityFee) = (globalState.price, globalState.tick, globalState.communityFee);
     if (currentPrice == 0) revert notInitialized();
-    if (overrideFee != 0) {
-      cache.fee = overrideFee;
-    }
 
     if (zeroToOne) {
       if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
