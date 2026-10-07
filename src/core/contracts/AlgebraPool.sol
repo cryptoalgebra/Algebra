@@ -201,6 +201,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
+    uint24 overrideFee;
   }
 
   struct SwapCache {
@@ -266,49 +267,38 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         // Increase because amount1 is negative. It makes the pool send less to the user
         amount1 += int256(amountOutDecrease);
         // Increase amount0. It makes the user send more to the pool (this excess part will go to a plugin)
-        // amountInIncrease from _afterSwapCalculation() could be based on the amountIn as a result of swapCalculation (exactOut)
-        amount0 += int256(amountInIncrease);
+        // amountInIncrease (exactOut) or amountInDecrease (exactIn), only one of them can be non-zero
+        uint256 pluginAmountIn = amountInIncrease + _cache.amountInDecrease;
+        amount0 += int256(pluginAmountIn);
         unchecked {
           if (amount1 < 0) _transfer(token1, _cache.recipient, uint256(-amount1)); // amount1 cannot be > 0
         }
-        // totalAmount0 represents total amount of input token that user must send to pool
-        int256 totalAmount0 = amount0 + int256(_cache.amountInDecrease);
-        // in case of exactIn amount0 returned from _calculateSwap should be equal to amountRequired - amountInDecrease
-        // FAKE. Because if there is not enough liquidity then amountIn might be less then amountRequired
-        //        if (_cache.amountRequired > 0 ) {
-        //          assert(_cache.amountRequired == totalAmount0);
-        //        }
-        // optionally user also has to pay amountInDecrease to plugin
-        // amountInDecrease from _beforeSwap() could be based on the amountIn given as input (exactIn)
-        _swapCallback(totalAmount0, amount1, data); // callback to get tokens from the msg.sender
-        if (balance0Before + uint256(totalAmount0) > _balanceToken0()) revert insufficientInputAmount();
+        _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
+        if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
 
-        if (amountInIncrease + _cache.amountInDecrease > 0) _transfer(token0, plugin, amountInIncrease + _cache.amountInDecrease);
-        if (amountOutDecrease > 0) _transfer(token1, plugin, amountOutDecrease);
+        _transferToPlugin(token0, token1, pluginAmountIn, amountOutDecrease);
         // reflect reserve change and pay communityFee
-        if (fees.inToken0) _changeReserves(amount0 - int256(amountInIncrease), amount1 - int256(amountOutDecrease), fees.communityFeeAmount, 0);
-        else _changeReserves(amount0 - int256(amountInIncrease), amount1 - int256(amountOutDecrease), 0, fees.communityFeeAmount);
+        if (fees.inToken0) _changeReserves(amount0 - int256(pluginAmountIn), amount1 - int256(amountOutDecrease), fees.communityFeeAmount, 0);
+        else _changeReserves(amount0 - int256(pluginAmountIn), amount1 - int256(amountOutDecrease), 0, fees.communityFeeAmount);
       } else {
         // These amounts are representing pool <-> user payments
         // Increase because amount0 is negative. It makes the pool send less to the user
         amount0 += int256(amountOutDecrease);
-        // Increase amount1. It makes the user send more to the pool
-        amount1 += int256(amountInIncrease);
+        // Increase amount1. It makes the user send more to the pool (this excess part will go to a plugin)
+        // amountInIncrease (exactOut) or amountInDecrease (exactIn), only one of them can be non-zero
+        uint256 pluginAmountIn = amountInIncrease + _cache.amountInDecrease;
+        amount1 += int256(pluginAmountIn);
 
         unchecked {
           if (amount0 < 0) _transfer(token0, _cache.recipient, uint256(-amount0)); // amount0 cannot be > 0
         }
-        // optionally user also has to pay amountInDecrease to plugin
-        // amountInDecrease from _beforeSwap() could be based on the amountIn given as input (exactIn)
-        int256 totalAmount1 = amount1 + int256(_cache.amountInDecrease);
-        _swapCallback(amount0, totalAmount1, data); // callback to get tokens from the msg.sender
-        if (balance1Before + uint256(totalAmount1) > _balanceToken1()) revert insufficientInputAmount();
+        _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
+        if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
 
-        if ((amountInIncrease + _cache.amountInDecrease) > 0) _transfer(token1, plugin, amountInIncrease + _cache.amountInDecrease);
-        if (amountOutDecrease > 0) _transfer(token0, plugin, amountOutDecrease);
+        _transferToPlugin(token1, token0, pluginAmountIn, amountOutDecrease);
         // reflect reserve change and pay communityFee
-        if (fees.inToken0) _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(amountInIncrease), fees.communityFeeAmount, 0);
-        else _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(amountInIncrease), 0, fees.communityFeeAmount);
+        if (fees.inToken0) _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(pluginAmountIn), fees.communityFeeAmount, 0);
+        else _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(pluginAmountIn), 0, fees.communityFeeAmount);
       }
 
       _emitSwapEvent(
@@ -361,36 +351,55 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (amountToSell == 0) revert insufficientInputAmount();
 
     _unlock();
-    (, uint24 overrideFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    // overrideFee is kept in eventParams to prevent "stack too deep"
+    SwapEventParams memory eventParams;
+    uint256 amountInDecrease;
+    (amountInDecrease, eventParams.overrideFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
     _lock();
 
     _updateReserves();
 
-    SwapEventParams memory eventParams;
     FeesAmount memory fees;
     (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
-      overrideFee,
+      eventParams.overrideFee,
       zeroToOne,
-      amountToSell,
+      amountToSell - int256(amountInDecrease),
       limitSqrtPrice
     );
 
+    (, uint256 amountOutDecrease) = _afterSwapCalculation(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
+
     unchecked {
-      // transfer to the recipient. The fees are in the fee token, not necessarily the input one
+      // the pool keeps only the swapped amounts, the plugin deltas are not swapped
+      // the fees are in the fee token, not necessarily the input one
       if (zeroToOne) {
+        // reflect reserve change and pay communityFee
+        if (fees.inToken0) _changeReserves(amount0 - amountToSell, amount1, fees.communityFeeAmount, 0);
+        else _changeReserves(amount0 - amountToSell, amount1, 0, fees.communityFeeAmount);
+
+        // These amounts are representing pool <-> user payments, as in `swap`
+        (amount0, amount1) = (amount0 + int256(amountInDecrease), amount1 + int256(amountOutDecrease));
+
+        // transfer to the recipient and return the leftovers
         if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
-        uint256 leftover = uint256(amountToSell - amount0); // return the leftovers
+        uint256 leftover = uint256(amountToSell - amount0);
         if (leftover != 0) _transfer(token0, leftoversRecipient, leftover);
-        // reflect reserve change and pay communityFee
-        if (fees.inToken0) _changeReserves(-leftover.toInt256(), amount1, fees.communityFeeAmount, 0);
-        else _changeReserves(-leftover.toInt256(), amount1, 0, fees.communityFeeAmount);
+
+        _transferToPlugin(token0, token1, amountInDecrease, amountOutDecrease);
       } else {
-        if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
-        uint256 leftover = uint256(amountToSell - amount1); // return the leftovers
-        if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
         // reflect reserve change and pay communityFee
-        if (fees.inToken0) _changeReserves(amount0, -leftover.toInt256(), fees.communityFeeAmount, 0);
-        else _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount);
+        if (fees.inToken0) _changeReserves(amount0, amount1 - amountToSell, fees.communityFeeAmount, 0);
+        else _changeReserves(amount0, amount1 - amountToSell, 0, fees.communityFeeAmount);
+
+        // These amounts are representing pool <-> user payments, as in `swap`
+        (amount0, amount1) = (amount0 + int256(amountOutDecrease), amount1 + int256(amountInDecrease));
+
+        // transfer to the recipient and return the leftovers
+        if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
+        uint256 leftover = uint256(amountToSell - amount1);
+        if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
+
+        _transferToPlugin(token1, token0, amountInDecrease, amountOutDecrease);
       }
     }
 
@@ -401,11 +410,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       eventParams.currentPrice,
       eventParams.currentLiquidity,
       eventParams.currentTick,
-      overrideFee
+      eventParams.overrideFee
     );
 
     _unlock();
     _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, fees.totalSwapFeeAmount, data);
+  }
+
+  /// @dev transfers plugin deltas in the input and output tokens
+  function _transferToPlugin(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut) private {
+    if (amountIn > 0) _transfer(tokenIn, plugin, amountIn);
+    if (amountOut > 0) _transfer(tokenOut, plugin, amountOut);
   }
 
   /// @dev internal function to reduce bytecode size

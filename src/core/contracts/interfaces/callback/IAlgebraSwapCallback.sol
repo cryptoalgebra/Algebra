@@ -10,6 +10,7 @@ interface IAlgebraSwapCallback {
   /// @dev In the implementation you must pay the pool tokens owed for the swap.
   /// The caller of this method _must_ be checked to be a AlgebraPool deployed by the canonical AlgebraFactory.
   /// amount0Delta and amount1Delta can both be 0 if no tokens were swapped.
+  /// The positive amount includes the part that goes to the plugin, if any.
   /// @param amount0Delta The amount of token0 that was sent (negative) or must be received (positive) by the pool by
   /// the end of the swap. If positive, the callback must send that amount of token0 to the pool.
   /// @param amount1Delta The amount of token1 that was sent (negative) or must be received (positive) by the pool by

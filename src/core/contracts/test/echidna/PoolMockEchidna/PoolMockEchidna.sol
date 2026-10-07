@@ -101,7 +101,7 @@ contract PoolMockEchidna is AlgebraPool {
     return balance1;
   }
 
-  function _transfer(address token, address, uint256 amount) internal override {
+  function _transfer(address token, address, uint256 amount) internal virtual override {
     if (token == token0) {
       balance0 -= amount;
     } else {
