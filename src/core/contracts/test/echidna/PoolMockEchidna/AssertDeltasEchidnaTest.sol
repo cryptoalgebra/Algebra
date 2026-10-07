@@ -6,18 +6,21 @@ import '../../MockDeltaPlugin.sol';
 
 /// @notice Checks that plugin amount deltas never leak into the pool: the pool moves exactly by the swap math amounts,
 /// the plugin gets exactly the deltas and the caller never pays more than requested on exactIn
-/// @dev The mock has no extension, so the pool is initialized and the plugin is connected directly in the constructor.
-/// The community fee is zero, so nothing goes to the vault
+/// @dev The pool is initialized and the plugin is connected in the constructor, so every sequence starts with a working
+/// pool. The fee mode, the community fee and the vault can be changed by the inherited setters: a payment to the vault
+/// is told apart from the swapper's and the plugin's, and the community fee of a swap may land only in its fee token
 contract AssertDeltasEchidnaTest is PoolMockEchidna {
   MockDeltaPlugin internal deltaPlugin;
 
-  uint256 internal sentToPlugin0;
-  uint256 internal sentToPlugin1;
-  uint256 internal sentToOthers0;
-  uint256 internal sentToOthers1;
-  uint256 internal balance0Before;
-  uint256 internal balance1Before;
+  // what the pool sent to each party during the checked swap and what the swapper paid in, indexed by token
+  uint256[2] internal sentToPlugin;
+  uint256[2] internal sentToVault;
+  uint256[2] internal sentToSwapper;
+  uint256[2] internal paidBySwapper;
+  uint256[2] internal balanceBefore;
   uint160 internal priceBefore;
+  uint256 internal feeToken;
+  uint256 internal otherTokenFeePendingBefore;
 
   struct Deltas {
     uint24 inDecreaseShare;
@@ -55,10 +58,13 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
 
     (int256 amount0, int256 amount1) = IAlgebraPool(this).swap(address(this), zeroToOne, amountRequired, limitSqrtPrice, '');
 
-    _checkSwap(zeroToOne, amountRequired, amount0, amount1, limitSqrtPrice);
-    // the empty callback data makes the mock pay exactly the requested amount
-    if (amountRequired > 0) assert((zeroToOne ? amount0 : amount1) <= amountRequired);
-    else assert(-(zeroToOne ? amount1 : amount0) <= -int256(amountRequired));
+    (int256 amountIn, int256 amountOut) = _checkSwap(zeroToOne, amountRequired, amount0, amount1, limitSqrtPrice, false);
+    // the empty callback data makes the mock pay exactly what the pool asks for: the reported input, deltas included
+    (uint256 tokenIn, ) = _tokens(zeroToOne);
+    assert(paidBySwapper[tokenIn] == uint256(amountIn));
+    assert(sentToSwapper[tokenIn] == 0);
+    if (amountRequired > 0) assert(amountIn <= amountRequired);
+    else assert(-amountOut <= -int256(amountRequired));
   }
 
   function swapWithPaymentInAdvanceDeltasWrapped(bool zeroToOne, uint128 amountToSell, uint160 limitSqrtPrice) public {
@@ -74,15 +80,25 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
       ''
     );
 
-    _checkSwap(zeroToOne, int256(uint256(amountToSell)), amount0, amount1, limitSqrtPrice);
-    // the leftovers are returned, the plugin part is spent
-    int256 spent = zeroToOne ? amount0 : amount1;
+    (int256 spent, ) = _checkSwap(zeroToOne, int256(uint256(amountToSell)), amount0, amount1, limitSqrtPrice, true);
+    // the whole amount is paid upfront, the leftovers are returned, the plugin part is spent
+    (uint256 tokenIn, ) = _tokens(zeroToOne);
     assert(spent >= 0 && spent <= int256(uint256(amountToSell)));
-    assert((zeroToOne ? sentToOthers0 : sentToOthers1) == uint256(amountToSell) - uint256(spent));
+    assert(paidBySwapper[tokenIn] == amountToSell);
+    assert(sentToSwapper[tokenIn] == uint256(amountToSell) - uint256(spent));
   }
 
   /// @dev Sets the deltas allowed for the swap type, so that most of the swaps succeed
   function _beforeCheckedSwap(bool zeroToOne, bool exactIn, uint160 limitSqrtPrice) private returns (uint160) {
+    // the setters are reachable, so the plugin or its hooks may have been swapped out
+    require(plugin == address(deltaPlugin));
+    uint16 pluginConfig = globalState.pluginConfig;
+    require(Plugins.hasFlag(pluginConfig, Plugins.BEFORE_SWAP_FLAG));
+    require(Plugins.hasFlag(pluginConfig, Plugins.AFTER_SWAP_FLAG));
+    require(Plugins.hasFlag(pluginConfig, Plugins.AFTER_SWAP_CALCULATION_FLAG));
+    // a vault at either address would make its payments indistinguishable from theirs
+    require(communityVault != plugin && communityVault != address(this));
+
     Deltas memory d = deltas;
     deltaPlugin.setInDecrease(exactIn ? d.inDecreaseShare : 0, true, d.target == 0 ? d.addend : 0);
     deltaPlugin.setInIncrease(exactIn ? 0 : d.inIncreaseShare, true, d.target == 1 ? d.addend : 0);
@@ -90,27 +106,54 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
 
     // an excess from `donate` is absorbed by the swap, which is covered by the other suites
     require(balance0 == reserve0 && balance1 == reserve1);
-    (sentToPlugin0, sentToPlugin1, sentToOthers0, sentToOthers1) = (0, 0, 0, 0);
-    (balance0Before, balance1Before, priceBefore) = (balance0, balance1, globalState.price);
+    delete sentToPlugin;
+    delete sentToVault;
+    delete sentToSwapper;
+    delete paidBySwapper;
+    (balanceBefore, priceBefore) = ([balance0, balance1], globalState.price);
+
+    uint8 feeMode = globalState.feeMode;
+    feeToken = (feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : feeMode == Constants.FEE_MODE_TOKEN0) ? 0 : 1;
+    otherTokenFeePendingBefore = feeToken == 0 ? communityFeePending1 : communityFeePending0;
     return _clampLimit(zeroToOne, limitSqrtPrice);
   }
 
-  function _checkSwap(bool zeroToOne, int256 amountRequired, int256 amount0, int256 amount1, uint160 limitSqrtPrice) private view {
+  function _checkSwap(
+    bool zeroToOne,
+    int256 amountRequired,
+    int256 amount0,
+    int256 amount1,
+    uint160 limitSqrtPrice,
+    bool withPaymentInAdvance
+  ) private view returns (int256 amountIn, int256 amountOut) {
+    (uint256 tokenIn, uint256 tokenOut) = _tokens(zeroToOne);
+    (amountIn, amountOut) = zeroToOne ? (amount0, amount1) : (amount1, amount0);
     (int256 calcIn, int256 calcOut) = zeroToOne
       ? (deltaPlugin.seenCalc0(), deltaPlugin.seenCalc1())
       : (deltaPlugin.seenCalc1(), deltaPlugin.seenCalc0());
 
-    // the deltas only move tokens between the caller and the plugin
+    // the deltas only move tokens between the caller and the plugin, exactly as the plugin set them
     assert(calcIn >= 0 && calcOut <= 0);
-    assert((zeroToOne ? amount0 : amount1) == calcIn + int256(zeroToOne ? sentToPlugin0 : sentToPlugin1));
-    assert((zeroToOne ? amount1 : amount0) == calcOut + int256(zeroToOne ? sentToPlugin1 : sentToPlugin0));
-    assert((zeroToOne ? sentToOthers1 : sentToOthers0) == uint256(-(zeroToOne ? amount1 : amount0)));
-    assert(deltaPlugin.seenAmountRequired() == amountRequired);
+    assert(sentToPlugin[tokenIn] == _expectedInputDeltas(amountRequired, uint256(calcIn)));
+    assert(sentToPlugin[tokenOut] == _expectedOutputDelta(uint256(-calcOut)));
+    assert(amountIn == calcIn + int256(sentToPlugin[tokenIn]));
+    assert(amountOut == calcOut + int256(sentToPlugin[tokenOut]));
+    assert(sentToSwapper[tokenOut] == uint256(-amountOut));
+    assert(paidBySwapper[tokenOut] == 0);
 
-    // the pool moves exactly by the swap math amounts and stays in sync with its reserves
-    assert(int256(balance0) - int256(balance0Before) == (zeroToOne ? calcIn : calcOut));
-    assert(int256(balance1) - int256(balance1Before) == (zeroToOne ? calcOut : calcIn));
+    // the hooks get the amount as the caller gave it, not reduced by amountInDecrease
+    assert(deltaPlugin.seenAmountRequired() == amountRequired);
+    assert(deltaPlugin.seenCalcAmountRequired() == amountRequired);
+    assert(deltaPlugin.seenWithPaymentInAdvance() == withPaymentInAdvance);
+
+    // the pool, together with what it sent to the vault, moves exactly by the swap math amounts and stays in sync
+    assert(int256(_balanceOf(tokenIn) + sentToVault[tokenIn]) - int256(balanceBefore[tokenIn]) == calcIn);
+    assert(int256(_balanceOf(tokenOut) + sentToVault[tokenOut]) - int256(balanceBefore[tokenOut]) == calcOut);
     assert(balance0 == reserve0 && balance1 == reserve1);
+
+    // the community fee of the swap stays in its fee token
+    uint256 otherTokenFee = (feeToken == 0 ? communityFeePending1 : communityFeePending0) + sentToVault[1 - feeToken];
+    assert(otherTokenFee == otherTokenFeePendingBefore);
 
     // the plugin sees what the caller paid and received
     assert(deltaPlugin.seenAfterSwap0() == amount0 && deltaPlugin.seenAfterSwap1() == amount1);
@@ -120,14 +163,48 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
     else assert(priceAfter >= priceBefore && priceAfter <= limitSqrtPrice);
   }
 
+  /// @dev What the plugin returns for the input side, with the same rounding as `MockDeltaPlugin`
+  function _expectedInputDeltas(int256 amountRequired, uint256 calcIn) private view returns (uint256) {
+    Deltas memory d = deltas;
+    if (amountRequired > 0) {
+      uint256 base = uint256(amountRequired);
+      return FullMath.mulDiv(base, d.inDecreaseShare, 1e6) + (d.target == 0 ? d.addend : 0);
+    }
+    return FullMath.mulDiv(calcIn, d.inIncreaseShare, 1e6) + (d.target == 1 ? d.addend : 0);
+  }
+
+  function _expectedOutputDelta(uint256 calcOut) private view returns (uint256) {
+    if (deltaPlugin.seenCalcAmountRequired() < 0) return 0;
+    Deltas memory d = deltas;
+    return FullMath.mulDiv(calcOut, d.outDecreaseShare, 1e6) + (d.target == 2 ? d.addend : 0);
+  }
+
+  function _tokens(bool zeroToOne) private pure returns (uint256 tokenIn, uint256 tokenOut) {
+    (tokenIn, tokenOut) = zeroToOne ? (0, 1) : (1, 0);
+  }
+
+  function _balanceOf(uint256 token) private view returns (uint256) {
+    return token == 0 ? balance0 : balance1;
+  }
+
   function _transfer(address token, address to, uint256 amount) internal override {
     super._transfer(token, to, amount);
-    if (token == token0) {
-      if (to == address(deltaPlugin)) sentToPlugin0 += amount;
-      else sentToOthers0 += amount;
-    } else {
-      if (to == address(deltaPlugin)) sentToPlugin1 += amount;
-      else sentToOthers1 += amount;
+    uint256 index = token == token0 ? 0 : 1;
+    // the counters are reset before each checked swap, but other calls may pile up more than a checked sum can hold
+    unchecked {
+      if (to == address(deltaPlugin)) sentToPlugin[index] += amount;
+      else if (to == communityVault) sentToVault[index] += amount;
+      else if (to == address(this)) sentToSwapper[index] += amount;
+    }
+  }
+
+  function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) internal override {
+    super._swapCallback(amount0, amount1, data);
+    if (data.length == 0) {
+      unchecked {
+        if (amount0 > 0) paidBySwapper[0] += uint256(amount0);
+        else if (amount1 > 0) paidBySwapper[1] += uint256(amount1);
+      }
     }
   }
 
