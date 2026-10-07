@@ -60,6 +60,14 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(bytes4(reason) == desiredSelector);
     }
 
+    // try to reenter setFeeMode. Unlike the probes above, this one also fails if the call goes through:
+    // the callee holds the administrator role here, so a missing lock would let it succeed silently
+    try IAlgebraPool(msg.sender).setFeeMode(1) {
+      revert('setFeeMode was not locked');
+    } catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
     // try to reenter setPlugin
     try IAlgebraPool(msg.sender).setPlugin(address(this)) {} catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);

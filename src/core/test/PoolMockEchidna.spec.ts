@@ -1,0 +1,155 @@
+import { ethers } from 'hardhat';
+import { expect } from './shared/expect';
+import { encodePriceSqrt, expandTo18Decimals, MIN_SQRT_RATIO } from './shared/utilities';
+import { AssertFeeModeSwapEchidnaTest, PropFeeTokenIsolationEchidnaTest, PropReservesEchidnaTest } from '../typechain';
+
+// The fuzzing suites run under echidna in CI, so nothing else checks the assumptions they are written under.
+// These cases drive the harness contracts directly and pin the ones that were silently false.
+describe('echidna fee mode harnesses', () => {
+  const liquidity = expandTo18Decimals(1);
+  const payment = expandTo18Decimals(10);
+
+  describe('PoolMockEchidna', () => {
+    it('initializes through its own extension, at a price folded into the valid range', async () => {
+      const suite = (await (await ethers.getContractFactory('PropReservesEchidnaTest')).deploy()) as any as PropReservesEchidnaTest;
+      await suite.initializeWrapped(0);
+
+      const { price, lastFee } = await suite.globalState();
+      expect(price).to.eq(MIN_SQRT_RATIO);
+      expect(lastFee).to.eq(100);
+      expect(await suite.tickSpacing()).to.eq(1);
+    });
+  });
+
+  describe('PropFeeTokenIsolationEchidnaTest', () => {
+    let suite: PropFeeTokenIsolationEchidnaTest;
+
+    beforeEach('deploy and seed the harness', async () => {
+      const factory = await ethers.getContractFactory('PropFeeTokenIsolationEchidnaTest');
+      suite = (await factory.deploy()) as any as PropFeeTokenIsolationEchidnaTest;
+      await suite.initialize(encodePriceSqrt(1, 1));
+      await suite.mintAroundCurrentTickWrapped(6000, liquidity, payment, payment);
+    });
+
+    it('starts with the fee token pinned to token0', async () => {
+      expect((await suite.globalState()).feeMode).to.eq(1);
+      expect(await suite.echidna_check_other_token_never_accrues_fees()).to.be.true;
+      expect(await suite.echidna_check_pending_fees_are_in_fee_token_only()).to.be.true;
+    });
+
+    it('holds while swaps run in both directions', async () => {
+      await suite.swap(suite, true, expandTo18Decimals(1) / 100n, encodePriceSqrt(99, 100), '0x');
+      await suite.swap(suite, false, expandTo18Decimals(1) / 100n, encodePriceSqrt(101, 100), '0x');
+
+      expect(await suite.totalFeeGrowth0Token()).to.be.gt(0);
+      expect(await suite.echidna_check_other_token_never_accrues_fees()).to.be.true;
+      expect(await suite.echidna_check_pending_fees_are_in_fee_token_only()).to.be.true;
+    });
+
+    it('holds when a flash is taken, because the harness keeps it on the token0 side', async () => {
+      // the argument is dropped by the override, so the token1 accumulator cannot move
+      await suite.flashWrapped(suite, expandTo18Decimals(1) / 100n, expandTo18Decimals(1) / 100n);
+      // a flash only leaves the fee as an excess balance: the next operation is what sweeps it into fee growth
+      await suite.swap(suite, true, expandTo18Decimals(1) / 100n, encodePriceSqrt(99, 100), '0x');
+
+      expect(await suite.totalFeeGrowth1Token()).to.eq(0);
+      expect(await suite.echidna_check_other_token_never_accrues_fees()).to.be.true;
+    });
+
+    it('holds when a range that takes only token0 is also paid token1, because the harness credits what was owed', async () => {
+      // the pool refunds overpayment only in tokens the range needs, so the token1 here would stay as an excess
+      await suite.mintWrapped(6000, 6060, liquidity, payment, payment);
+      await suite.swap(suite, true, expandTo18Decimals(1) / 100n, encodePriceSqrt(99, 100), '0x');
+
+      expect(await suite.totalFeeGrowth1Token()).to.eq(0);
+      expect(await suite.echidna_check_other_token_never_accrues_fees()).to.be.true;
+    });
+
+    it('holds when a payment in advance for token0 also sends token1, because the harness credits what was owed', async () => {
+      const amount = expandTo18Decimals(1) / 100n;
+      await suite.swapWithPaymentInAdvanceWrapped(true, amount, encodePriceSqrt(99, 100), amount, payment);
+      await suite.swap(suite, true, amount, encodePriceSqrt(98, 100), '0x');
+
+      expect(await suite.totalFeeGrowth1Token()).to.eq(0);
+      expect(await suite.echidna_check_other_token_never_accrues_fees()).to.be.true;
+    });
+
+    it('would not hold after a raw flash that pays token1, which is why the config blacklists the pool flash', async () => {
+      // the callback credits whatever the data names, and a flash keeps what it was paid as its fee
+      const data = ethers.AbiCoder.defaultAbiCoder().encode(['uint256', 'uint256'], [0, 1000]);
+      await suite.flash(suite, 0, 0, data);
+      await suite.swap(suite, true, expandTo18Decimals(1) / 100n, encodePriceSqrt(99, 100), '0x');
+
+      expect(await suite.echidna_check_other_token_never_accrues_fees()).to.be.false;
+    });
+
+    it('would not hold if a sequence could move the fee mode, which is why the config blacklists the setters', async () => {
+      // both entry points are reachable: the harness inherits the whole pool and accepts every caller as an administrator
+      await suite.setFeeMode(2);
+      await suite.swap(suite, false, expandTo18Decimals(1) / 100n, encodePriceSqrt(101, 100), '0x');
+
+      expect(await suite.totalFeeGrowth1Token()).to.be.gt(0);
+      expect(await suite.echidna_check_other_token_never_accrues_fees()).to.be.false;
+    });
+  });
+
+  describe('AssertFeeModeSwapEchidnaTest', () => {
+    let suite: AssertFeeModeSwapEchidnaTest;
+
+    beforeEach('deploy and seed the harness', async () => {
+      const factory = await ethers.getContractFactory('AssertFeeModeSwapEchidnaTest');
+      suite = (await factory.deploy()) as any as AssertFeeModeSwapEchidnaTest;
+      await suite.initialize(encodePriceSqrt(1, 1));
+      await suite.mintAroundCurrentTickWrapped(6000, liquidity, payment, payment);
+    });
+
+    it('runs the zero fee check at the default rate and puts the rate back', async () => {
+      // the default rate is 100, so requiring a zero rate instead of setting one left this unreached
+      expect((await suite.globalState()).lastFee).to.eq(100);
+
+      await suite.swapWithoutFeeWrapped(true, expandTo18Decimals(1) / 100n, encodePriceSqrt(99, 100));
+
+      expect((await suite.globalState()).lastFee).to.eq(100);
+      expect(await suite.totalFeeGrowth0Token()).to.eq(0);
+      expect(await suite.totalFeeGrowth1Token()).to.eq(0);
+    });
+
+    it('checks the fee token of a whole swap in both directions', async () => {
+      await suite.swapAndCheckFeeTokenWrapped(true, expandTo18Decimals(1) / 100n, encodePriceSqrt(99, 100));
+      await suite.swapAndCheckFeeTokenWrapped(false, expandTo18Decimals(1) / 100n, encodePriceSqrt(101, 100));
+
+      // the default mode takes the fee from the input, so both accumulators moved
+      expect(await suite.totalFeeGrowth0Token()).to.be.gt(0);
+      expect(await suite.totalFeeGrowth1Token()).to.be.gt(0);
+    });
+
+    it('lets the input of an exactIn swap that cannot move the price become the fee, in the fee token only', async () => {
+      // the counterexample echidna found: at this price 1 wei of token1 cannot move the sqrt price by one unit
+      const fresh = (await (
+        await ethers.getContractFactory('AssertFeeModeSwapEchidnaTest')
+      ).deploy()) as any as AssertFeeModeSwapEchidnaTest;
+      await fresh.initializeWrapped(5774619113608n);
+      await fresh.mintAroundCurrentTickWrapped(
+        1,
+        81834140674865963342729282033n,
+        23047810124949406296762716242700818808504636n,
+        777359109n
+      );
+
+      await fresh.swapWithoutFeeWrapped(false, 1, 0);
+      expect(await fresh.totalFeeGrowth1Token()).to.eq(2n ** 128n / 81834140674865963342729282033n);
+      expect(await fresh.totalFeeGrowth0Token()).to.eq(0);
+    });
+
+    for (const check of ['swapAndCheckFeeTokenWrapped', 'swapWithoutFeeWrapped'] as const) {
+      it(`skips ${check} while an excess waits to be swept, and runs it once a swap has settled it`, async () => {
+        // a token1 swap would sweep this token0 donation into the token0 accumulator, which is not its own fee
+        await suite.donate(1, 0);
+        await expect(suite[check](false, expandTo18Decimals(1) / 100n, encodePriceSqrt(101, 100))).to.be.revertedWithoutReason();
+
+        await suite.swap(suite, true, expandTo18Decimals(1) / 100n, encodePriceSqrt(99, 100), '0x');
+        await suite[check](false, expandTo18Decimals(1) / 100n, encodePriceSqrt(101, 100));
+      });
+    }
+  });
+});

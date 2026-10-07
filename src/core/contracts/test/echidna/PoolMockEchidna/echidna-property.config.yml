@@ -4,6 +4,11 @@ format: 'text'
 testMode: "property"
 #coverage controls coverage guided testing
 coverage: false
+# The fee token is pinned per suite, so the setters that could move it and the raw `flash`, which pays fees in both tokens, stay out.
+# The entry has to name the contract under test even though both functions are inherited: a bare signature,
+# or the declaring contract, is silently ignored. Entries that match nothing are harmless for the other suites
+filterFunctions: ["PropFeeTokenIsolationEchidnaTest.setFeeMode(uint8)", "PropFeeTokenIsolationEchidnaTest.setFeeModeWrapped(uint8)", "PropFeeTokenIsolationEchidnaTest.flash(address,uint256,uint256,bytes)"]
+filterBlacklist: true
 # #psender is the sender for property transactions; by default intentionally
 # #the same as contract deployer
 # psender: "0x00a329c0648769a73afac7f9381e08fb43dbea70"

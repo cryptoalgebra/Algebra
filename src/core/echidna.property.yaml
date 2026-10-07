@@ -15,6 +15,12 @@ testLimit: 500000
 seqLen: 100
 shrinkLimit: 5000
 
+# The fee token is pinned per suite, so the setters that could move it and the raw `flash`, which pays fees in both tokens, stay out.
+# The entry has to name the contract under test even though both functions are inherited: a bare signature,
+# or the declaring contract, is silently ignored. Entries that match nothing are harmless for the other suites
+filterFunctions: ["PropFeeTokenIsolationEchidnaTest.setFeeMode(uint8)", "PropFeeTokenIsolationEchidnaTest.setFeeModeWrapped(uint8)", "PropFeeTokenIsolationEchidnaTest.flash(address,uint256,uint256,bytes)"]
+filterBlacklist: true
+
 # the pool mock mints its own balances in the callbacks, so no funding is needed
 balanceContract: 0
 balanceAddr: 0

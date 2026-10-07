@@ -42,6 +42,7 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
   /// @notice A swap only ever moves the accumulator of the fee token
   function swapAndCheckFeeTokenWrapped(bool zeroToOne, int128 amountRequired, uint160 limitSqrtPrice) public {
     require(amountRequired != 0);
+    _requireNoExcess();
     limitSqrtPrice = _clampLimit(zeroToOne, limitSqrtPrice);
 
     uint8 feeMode = globalState.feeMode;
@@ -58,21 +59,45 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
     else assert(!growth0Changed);
   }
 
-  /// @notice A zero fee rate leaves both accumulators and both pending balances untouched
+  /// @notice A zero fee rate leaves both accumulators and both pending balances untouched, except for an exactIn swap
+  /// with the fee on the input that stops short of its limit. That step books the input left over as the fee at any
+  /// rate: it is too small to move the sqrt price by one unit, and for token0 at a low price that can be any amount.
+  /// Then only the other token is checked
+  /// @dev The rate is zeroed here and put back afterwards. Requiring it instead left the body unreached unless the
+  /// sequence happened to call the inherited `setFee(0)` first, which the default rate of 100 made rare
   function swapWithoutFeeWrapped(bool zeroToOne, int128 amountRequired, uint160 limitSqrtPrice) public {
     require(amountRequired != 0);
-    require(globalState.lastFee == 0);
+    _requireNoExcess();
+    uint16 feeBefore = globalState.lastFee;
+    if (feeBefore != 0) IAlgebraPool(this).setFee(0);
     limitSqrtPrice = _clampLimit(zeroToOne, limitSqrtPrice);
+
+    uint8 feeMode = globalState.feeMode;
+    bool feeInToken0 = feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : feeMode == Constants.FEE_MODE_TOKEN0;
+    bool remainderMayBecomeFee = amountRequired > 0 && feeInToken0 == zeroToOne;
 
     (uint256 growth0Before, uint256 growth1Before) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
     (uint104 communityPending0Before, uint104 communityPending1Before) = (communityFeePending0, communityFeePending1);
 
     IAlgebraPool(this).swap(address(this), zeroToOne, amountRequired, limitSqrtPrice, '');
+    remainderMayBecomeFee = remainderMayBecomeFee && globalState.price != limitSqrtPrice;
 
-    assert(totalFeeGrowth0Token == growth0Before);
-    assert(totalFeeGrowth1Token == growth1Before);
-    assert(communityFeePending0 == communityPending0Before);
-    assert(communityFeePending1 == communityPending1Before);
+    if (!remainderMayBecomeFee || !feeInToken0) {
+      assert(totalFeeGrowth0Token == growth0Before);
+      assert(communityFeePending0 == communityPending0Before);
+    }
+    if (!remainderMayBecomeFee || feeInToken0) {
+      assert(totalFeeGrowth1Token == growth1Before);
+      assert(communityFeePending1 == communityPending1Before);
+    }
+
+    if (feeBefore != 0) IAlgebraPool(this).setFee(feeBefore);
+  }
+
+  /// @dev A swap sweeps any earlier overpayment, donation or flash fee into fee growth of its own token, which is
+  /// not the swap's fee. The first call that runs with liquidity in range settles it, and the checks run after that
+  function _requireNoExcess() private view {
+    require(balance0 == reserve0 && balance1 == reserve1);
   }
 
   function _clampLimit(bool zeroToOne, uint160 limitSqrtPrice) private view returns (uint160) {

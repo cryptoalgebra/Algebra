@@ -40,4 +40,19 @@ contract PriceMovementMathTest {
       return gasBefore - gasleft();
     }
   }
+
+  function getGasCostOfmovePriceTowardsTargetWithFeeMode(
+    bool feeOnInput,
+    uint160 sqrtP,
+    uint160 sqrtPTarget,
+    uint128 liquidity,
+    int256 amountRemaining,
+    uint24 feePips
+  ) external view returns (uint256) {
+    unchecked {
+      uint256 gasBefore = gasleft();
+      PriceMovementMath.movePriceTowardsTarget(feeOnInput, sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, feePips);
+      return gasBefore - gasleft();
+    }
+  }
 }

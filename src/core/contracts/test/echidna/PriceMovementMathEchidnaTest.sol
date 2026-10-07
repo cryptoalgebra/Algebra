@@ -49,7 +49,7 @@ contract PriceMovementMathEchidnaTest {
   ) public pure {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
-    require(feePips < 1e6);
+    feePips = feePips % 1_000_000; // folded rather than required: a raw draw is in range only six percent of the time
 
     StepResult memory r = _run(feeOnInput, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
 
@@ -128,13 +128,28 @@ contract PriceMovementMathEchidnaTest {
     uint24 feePips
   ) external pure {
     _requireReachablePrices(sqrtPriceRaw, sqrtPriceTargetRaw);
-    require(feePips < 1e6);
+    feePips = feePips % 1_000_000; // folded rather than required: a raw draw is in range only six percent of the time
     require(amountRemaining >= 0);
 
     StepResult memory onInput = _run(true, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
     StepResult memory onOutput = _run(false, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
 
-    assert(onOutput.received <= onInput.received);
+    // a budget the input side rounds entirely into the fee never reaches the curve, and concavity says nothing there
+    require(onInput.amountIn > 0);
+
+    // over a price move this small the curve is linear to within the rounding of the delta helpers: the concavity
+    // gap goes to zero and the ordering is left to rounding, which flips it either way
+    uint256 priceMove = sqrtPriceTargetRaw <= sqrtPriceRaw ? sqrtPriceRaw - onInput.sqrtQ : onInput.sqrtQ - sqrtPriceRaw;
+    require(priceMove != 0 && priceMove * 1e9 >= sqrtPriceRaw);
+
+    // the input side rounds its fee up and loses under one wei of curve input, which at low liquidity can be worth
+    // several wei of output. So it is compared with the smallest budget that puts one wei more onto the curve
+    uint256 afterFee = FullMath.mulDiv(uint256(amountRemaining), DENOMINATOR - feePips, DENOMINATOR);
+    uint256 budgetPlusOne = FullMath.mulDivRoundingUp(afterFee + 1, DENOMINATOR, DENOMINATOR - feePips);
+    require(budgetPlusOne <= uint256(type(int256).max));
+    StepResult memory onInputPlusOne = _run(true, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, int256(budgetPlusOne), feePips);
+
+    assert(onOutput.received <= onInputPlusOne.received);
     assert(onOutput.amountIn >= onInput.amountIn); // and it puts at least as much of the budget onto the curve
   }
 
@@ -150,7 +165,7 @@ contract PriceMovementMathEchidnaTest {
   ) external pure {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
-    require(feePips < 1e6);
+    feePips = feePips % 1_000_000; // folded rather than required: a raw draw is in range only six percent of the time
     require(liquidity > 0);
 
     StepResult memory r = _run(feeOnInput, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);

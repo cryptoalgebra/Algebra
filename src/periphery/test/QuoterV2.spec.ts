@@ -1,7 +1,14 @@
 import { MaxUint256, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { CustomPoolDeployerTest, IAlgebraFactory, MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
+import {
+  CustomPoolDeployerTest,
+  IAlgebraFactory,
+  MockTimeNonfungiblePositionManager,
+  MockTimeSwapRouter,
+  QuoterV2,
+  TestERC20,
+} from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { MaxUint128, ZERO_ADDRESS } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
@@ -25,6 +32,7 @@ describe('QuoterV2', function () {
     path: [string, string, string, string, string];
     quoter: QuoterV2;
     factory: IAlgebraFactory;
+    router: MockTimeSwapRouter;
   }> = async () => {
     const { wnative, factory, router, tokens, customPoolDeployer, path, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
@@ -47,6 +55,7 @@ describe('QuoterV2', function () {
       nft,
       quoter,
       factory,
+      router,
     };
   };
 
@@ -55,6 +64,7 @@ describe('QuoterV2', function () {
   let path: [string, string, string, string, string];
   let quoter: QuoterV2;
   let factory: IAlgebraFactory;
+  let router: MockTimeSwapRouter;
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners();
@@ -63,7 +73,7 @@ describe('QuoterV2', function () {
 
   describe('quotes', () => {
     const subFixture = async () => {
-      const { tokens, customPoolDeployer, path, nft, quoter, factory } = await swapRouterFixture();
+      const { tokens, customPoolDeployer, path, nft, quoter, factory, router } = await swapRouterFixture();
       await createPool(nft, wallet, tokens[0].address, tokens[1].address, ZERO_ADDRESS);
 
       await customPoolDeployer.createCustomPool(customPoolDeployer, wallet.address, await tokens[1].getAddress(), await tokens[2].getAddress(), '0x');
@@ -75,11 +85,52 @@ describe('QuoterV2', function () {
         nft,
         quoter,
         factory,
+        router,
       };
     };
 
     beforeEach(async () => {
-      ({ tokens, path, nft, quoter, factory } = await loadFixture(subFixture));
+      ({ tokens, path, nft, quoter, factory, router } = await loadFixture(subFixture));
+    });
+
+    describe('with the fee taken from the output', () => {
+      it('quotes match the executed swaps, exactIn across two ticks and exactOut after it', async () => {
+        const pool = await ethers.getContractAt(
+          'IAlgebraPool',
+          await factory.poolByPair(tokens[0].address, tokens[2].address),
+          wallet
+        );
+        // the tokens are sorted, so token2 is token1 of this pool and the output of both swaps below
+        await pool.setFeeMode(2);
+        const pair = {
+          tokenIn: tokens[0].address,
+          tokenOut: tokens[2].address,
+          deployer: ZERO_ADDRESS,
+          limitSqrtPrice: 0,
+        };
+        const swapParams = { ...pair, recipient: trader.address, deadline: 2n ** 32n };
+
+        const exactIn = await quoter.quoteExactInputSingle.staticCall({ ...pair, amountIn: 10000 });
+        expect(exactIn.amountOut).to.eq(9896n);
+        expect(exactIn.initializedTicksCrossed).to.eq(2);
+        let tx = await router
+          .connect(trader)
+          .exactInputSingle({ ...swapParams, amountIn: 10000, amountOutMinimum: exactIn.amountOut });
+        await expect(tx).to.changeTokenBalance(tokens[2], trader, exactIn.amountOut);
+        expect((await pool.globalState()).price).to.eq(exactIn.sqrtPriceX96After);
+
+        const exactOut = await quoter.quoteExactOutputSingle.staticCall({ ...pair, amount: 1000 });
+        expect(exactOut.amountIn).to.eq(1022n);
+        expect(exactOut.initializedTicksCrossed).to.eq(0);
+        tx = await router
+          .connect(trader)
+          .exactOutputSingle({ ...swapParams, amountOut: 1000, amountInMaximum: exactOut.amountIn });
+        await expect(tx).to.changeTokenBalance(tokens[2], trader, 1000);
+        await expect(tx).to.changeTokenBalance(tokens[0], trader, -exactOut.amountIn);
+        expect((await pool.globalState()).price).to.eq(exactOut.sqrtPriceX96After);
+
+        expect(await pool.totalFeeGrowth0Token()).to.eq(0);
+      });
     });
 
     describe('#quoteExactInput', () => {
