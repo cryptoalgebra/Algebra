@@ -491,4 +491,38 @@ describe('AlgebraPool fee mode', () => {
       expect(await pool.totalFeeGrowth0Token()).to.eq(0);
     });
   });
+
+  describe('with plugin deltas', () => {
+    let poolPlugin: MockPoolPlugin;
+
+    beforeEach('connect a plugin', async () => {
+      poolPlugin = (await (await ethers.getContractFactory('MockPoolPlugin')).deploy(pool)) as any as MockPoolPlugin;
+      await pool.setPlugin(poolPlugin);
+      await pool.setPluginConfig(512); // AFTER_SWAP_CALCULATION
+    });
+
+    it('amountOutDecrease is capped by the output left after the fee', async () => {
+      await initializeWithLiquidity(FEE_MODE_TOKEN1);
+      await pool.setCommunityFee(100);
+      const amount = expandTo18Decimals(1) / 10n;
+      // what this swap hands over once the fee is taken from token1
+      const outputAfterFee = 95190476190476190n;
+
+      // still below the output before the fee, but more than the trader is owed
+      await poolPlugin.setAmountOutDecrease(outputAfterFee + 1n);
+      await expect(swapExact0For1(amount, wallet.address)).to.be.revertedWithCustomError(
+        pool,
+        'invalidAmountOutDecrease'
+      );
+
+      await poolPlugin.setAmountOutDecrease(outputAfterFee);
+      const tx = await swapExact0For1(amount, wallet.address);
+      await expect(tx).to.changeTokenBalances(
+        token1,
+        [wallet, poolPlugin, vaultAddress],
+        [0, outputAfterFee, 4761904761904n]
+      );
+      await expect(tx).to.changeTokenBalances(token0, [wallet, poolPlugin, vaultAddress], [-amount, 0, 0]);
+    });
+  });
 });
