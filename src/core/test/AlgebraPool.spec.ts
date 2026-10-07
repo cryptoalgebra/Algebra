@@ -2532,7 +2532,7 @@ describe('AlgebraPool', () => {
         .to.emit(pool, 'Swap').withArgs(
           await swapTarget.getAddress(),
           wallet.address,
-          expandTo18Decimals(1) - expandTo18Decimals(1) / 100n, // the swap amount is decreased by amountInDecrease
+          expandTo18Decimals(1), // the event shows what the user paid, including the part that goes to the plugin
           -497362409242500018n,
           39823052726313498882156089247n,
           1000000000000000000n,
