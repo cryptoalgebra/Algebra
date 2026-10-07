@@ -187,6 +187,126 @@ describe('Quoter', () => {
       });
     });
 
+    describe('with the fee fixed to token0', () => {
+      it('quotes what an executed swap pays out, in both directions', async () => {
+        const poolAddress = await factory.poolByPair(tokens[0].address, tokens[1].address);
+        const pool = await ethers.getContractAt('IAlgebraPool', poolAddress, wallet);
+        await pool.setFeeMode(1);
+
+        // 1 -> 0 runs second, so it quotes against the price the first swap left behind
+        const cases: [string, string, bigint, bigint][] = [
+          [tokens[0].address, tokens[1].address, encodePriceSqrt(100, 102), 998n],
+          [tokens[1].address, tokens[0].address, encodePriceSqrt(102, 100), 999n],
+        ];
+
+        for (const [tokenIn, tokenOut, limitSqrtPrice, expectedOut] of cases) {
+          const { amountOut, fee } = await quoter.quoteExactInputSingle.staticCall(
+            tokenIn,
+            tokenOut,
+            ZERO_ADDRESS,
+            1000,
+            limitSqrtPrice
+          );
+          expect(amountOut).to.eq(expectedOut);
+          expect(fee).to.eq(500);
+
+          const received = tokenOut === tokens[0].address ? tokens[0] : tokens[1];
+          await expect(
+            router.connect(trader).exactInputSingle({
+              tokenIn,
+              tokenOut,
+              deployer: ZERO_ADDRESS,
+              limitSqrtPrice,
+              amountOutMinimum: 0,
+              deadline: 2n ** 32n,
+              amountIn: 1000,
+              recipient: trader.address,
+            })
+          ).to.changeTokenBalance(received, trader, amountOut);
+        }
+
+        // both swaps took their fee out of token0, so the other accumulator never moved
+        expect(await pool.totalFeeGrowth1Token()).to.eq(0);
+      });
+
+      it('quotes what an executed exactOut swap costs, in both directions', async () => {
+        const poolAddress = await factory.poolByPair(tokens[0].address, tokens[1].address);
+        const pool = await ethers.getContractAt('IAlgebraPool', poolAddress, wallet);
+        await pool.setFeeMode(1);
+
+        // without a price limit the quoter and the router both insist on the full amount out;
+        // 1 -> 0 takes the fee from that output and quotes against the price 0 -> 1 left behind
+        const cases: [TestERC20WithAddress, TestERC20WithAddress, bigint][] = [
+          [tokens[0], tokens[1], 1003n],
+          [tokens[1], tokens[0], 1000n],
+        ];
+
+        for (const [tokenIn, tokenOut, expectedIn] of cases) {
+          const { amountIn, fee } = await quoter.quoteExactOutputSingle.staticCall(
+            tokenIn.address,
+            tokenOut.address,
+            ZERO_ADDRESS,
+            1000,
+            0
+          );
+          expect(amountIn).to.eq(expectedIn);
+          expect(fee).to.eq(500);
+
+          // the quote is the most the router may take
+          const tx = await router.connect(trader).exactOutputSingle({
+            tokenIn: tokenIn.address,
+            tokenOut: tokenOut.address,
+            deployer: ZERO_ADDRESS,
+            recipient: trader.address,
+            deadline: 2n ** 32n,
+            amountOut: 1000,
+            amountInMaximum: amountIn,
+            limitSqrtPrice: 0,
+          });
+          await expect(tx).to.changeTokenBalance(tokenOut, trader, 1000);
+          await expect(tx).to.changeTokenBalance(tokenIn, trader, -amountIn);
+        }
+
+        expect(await pool.totalFeeGrowth1Token()).to.eq(0);
+      });
+    });
+
+    describe('with the fee taken from the output of every hop', () => {
+      it('a two-hop exactOut costs what the quoter says and delivers the exact amount', async () => {
+        const pool01 = await ethers.getContractAt(
+          'IAlgebraPool',
+          await factory.poolByPair(tokens[0].address, tokens[1].address),
+          wallet
+        );
+        const pool12 = await ethers.getContractAt(
+          'IAlgebraPool',
+          await factory.customPoolByPair(path[3], tokens[1].address, tokens[2].address),
+          wallet
+        );
+        // the tokens are sorted, so each hop gives out token1 of its pool, and that is where the fee stays
+        await pool01.setFeeMode(2);
+        await pool12.setFeeMode(2);
+
+        // the router runs the last hop first and pays for it from inside the swap callback
+        const exactOutputPath = encodePath(path.slice().reverse());
+        const { amountIn } = await quoter.quoteExactOutput.staticCall(exactOutputPath, 1000);
+        expect(amountIn).to.eq(1006n);
+
+        const tx = await router.connect(trader).exactOutput({
+          path: exactOutputPath,
+          recipient: trader.address,
+          deadline: 2n ** 32n,
+          amountOut: 1000,
+          amountInMaximum: amountIn,
+        });
+        await expect(tx).to.changeTokenBalance(tokens[2], trader, 1000);
+        await expect(tx).to.changeTokenBalance(tokens[0], trader, -amountIn);
+        expect(await tokens[1].balanceOf(router)).to.eq(0);
+        expect(await pool01.totalFeeGrowth0Token()).to.eq(0);
+        expect(await pool12.totalFeeGrowth0Token()).to.eq(0);
+      });
+    });
+
     describe('#quoteExactInputSingle', () => {
       it('0 -> 1', async () => {
         const { amountOut, fee } = await quoter.quoteExactInputSingle.staticCall(

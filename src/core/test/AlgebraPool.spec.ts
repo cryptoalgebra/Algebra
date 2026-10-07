@@ -2629,7 +2629,20 @@ describe('AlgebraPool', () => {
 
     it('swap works with max override fee value', async () => {
       await poolPlugin.setOverrideFee(999999);
-      await swapExact0For1(expandTo18Decimals(1), wallet.address);
+      // all but a millionth of the input is taken as the fee
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.changeTokenBalance(
+        token1,
+        wallet,
+        999999000000n
+      );
+    })
+
+    it('swap fails if the override fee reaches 100%', async () => {
+      await poolPlugin.setOverrideFee(1000000);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.revertedWithCustomError(
+        pool,
+        'invalidOverrideFee'
+      );
     })
 
     it('swap fails if plugin returns incorrect beforeSwap selector', async () => {

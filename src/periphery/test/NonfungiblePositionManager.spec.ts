@@ -848,6 +848,68 @@ describe('NonfungiblePositionManager', () => {
       ).to.be.not.reverted;
     });
 
+    it('pays the fee in the fee token when the pool fixes it, whichever way the swap went', async () => {
+      for (const token of tokens) await token.approve(router, MaxUint256);
+      const [t0, t1] = [await tokens[0].getAddress(), await tokens[1].getAddress()];
+      const pool = await ethers.getContractAt('IAlgebraPool', await factory.poolByPair(t0, t1), wallet);
+      await pool.setFeeMode(1);
+
+      await nft.mint({
+        token0: t0,
+        token1: t1,
+        deployer: ZERO_ADDRESS,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: other.address,
+        amount0Desired: expandTo18Decimals(1),
+        amount1Desired: expandTo18Decimals(1),
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 2n ** 32n,
+      });
+
+      // token1 goes in, so the fee token is the output token of this swap
+      await router.exactInputSingle({
+        tokenIn: t1,
+        tokenOut: t0,
+        deployer: ZERO_ADDRESS,
+        limitSqrtPrice: encodePriceSqrt(102, 100),
+        amountOutMinimum: 0,
+        deadline: 2n ** 32n,
+        amountIn: expandTo18Decimals(1) / 10n,
+        recipient: wallet.address,
+      });
+      // and back with token0 in, where the fee token is the input token
+      await router.exactInputSingle({
+        tokenIn: t0,
+        tokenOut: t1,
+        deployer: ZERO_ADDRESS,
+        limitSqrtPrice: encodePriceSqrt(98, 100),
+        amountOutMinimum: 0,
+        deadline: 2n ** 32n,
+        amountIn: expandTo18Decimals(1) / 10n,
+        recipient: wallet.address,
+      });
+
+      const owed = await nft.connect(other).collect.staticCall({
+        tokenId: 2,
+        recipient: other.address,
+        amount0Max: MaxUint128,
+        amount1Max: MaxUint128,
+      });
+      expect(owed.amount0).to.eq(14933733051701n);
+      expect(owed.amount1).to.eq(0);
+
+      // the event carries what the manager itself booked, which the pool's own accounting cannot vouch for
+      const before = await tokens[0].balanceOf(other.address);
+      await expect(
+        nft.connect(other).collect({ tokenId: 2, recipient: other.address, amount0Max: MaxUint128, amount1Max: MaxUint128 })
+      )
+        .to.emit(nft, 'Collect')
+        .withArgs(2, other.address, 14933733051701n, 0);
+      expect((await tokens[0].balanceOf(other.address)) - before).to.eq(owed.amount0);
+    });
+
     it('no op if no tokens are owed', async () => {
       await expect(
         nft.connect(other).collect({
