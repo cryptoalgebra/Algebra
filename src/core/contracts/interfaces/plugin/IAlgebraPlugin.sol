@@ -74,7 +74,8 @@ interface IAlgebraPlugin {
   /// @return amountInDecrease The part of the input that goes to the plugin instead of being swapped (exactIn only).
   /// It is charged in full even if the swap is executed partially
   /// @return selector The function selector for the hook
-  /// @return feeOverride The fee for this swap instead of the pool fee, 0 to keep the pool fee
+  /// @return feeOverride The fee for this swap if the dynamic fee is enabled, zero meaning a zero fee, not the pool fee.
+  /// Must be zero if the dynamic fee is disabled
   function beforeSwap(
     address sender,
     address recipient,

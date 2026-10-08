@@ -12,7 +12,7 @@ interface IAlgebraPoolState {
   /// **Important security note: this method checks reentrancy lock and should be preferred in most cases**.
   /// @return sqrtPrice The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value
   /// @return tick The current global tick of the pool. May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
-  /// @return lastFee The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). May be obsolete if using dynamic fee plugin
+  /// @return lastFee The pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). Not applied to swaps that get the fee from the dynamic fee plugin
   /// @return pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
   /// @return activeLiquidity  The currently in-range liquidity available to the pool
   /// @return nextTick The next initialized tick after current global tick
@@ -37,7 +37,7 @@ interface IAlgebraPoolState {
   /// @return price The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value
   /// @return tick The current tick of the pool, i.e. according to the last tick transition that was run
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
-  /// @return lastFee The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). May be obsolete if using dynamic fee plugin
+  /// @return lastFee The pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). Not applied to swaps that get the fee from the dynamic fee plugin
   /// @return pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
   /// @return communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
   /// @return unlocked Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
@@ -106,13 +106,28 @@ interface IAlgebraPoolState {
   /// @return The fee growth accumulator for token1
   function totalFeeGrowth1Token() external view returns (uint256);
 
-  /// @notice The current pool fee value
-  /// @dev In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
-  /// If the plugin implements complex fee logic, this method may return an incorrect value or revert.
-  /// In this case, see the plugin implementation and related documentation.
+  /// @notice The fee for a swap with the given parameters: the one from the dynamic fee plugin if enabled, otherwise the pool fee
+  /// @dev The parameters are the ones the `beforeSwap` hook gets. The dynamic fee may differ from the fee of the actual swap
+  /// if the plugin changes its state in the `beforeSwap` hook, see the `SwapFee` event for the fee applied to each swap.
+  /// Reverts if the dynamic fee is enabled but the plugin does not implement `IAlgebraDynamicFeePlugin`
   /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
-  /// @return currentFee The current pool fee value in hundredths of a bip, i.e. 1e-6
-  function fee() external view returns (uint16 currentFee);
+  /// @param sender The address that would call the swap
+  /// @param recipient The address to receive the output of the swap
+  /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
+  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+  /// @param limitSqrtPrice The Q64.96 sqrt price limit
+  /// @param withPaymentInAdvance The flag indicating whether the `swapWithPaymentInAdvance` method would be called
+  /// @param data Data that would be passed through the callback
+  /// @return fee The swap fee in hundredths of a bip, i.e. 1e-6
+  function getSwapFee(
+    address sender,
+    address recipient,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    bool withPaymentInAdvance,
+    bytes calldata data
+  ) external view returns (uint24 fee);
 
   /// @notice The tracked token0 and token1 reserves of pool
   /// @dev If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.
