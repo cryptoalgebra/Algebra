@@ -20,8 +20,10 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
     }
 
     /// @inheritdoc IAlgebraPlugin
-    uint16 public constant override defaultPluginConfig =
-        uint16(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+    /// @dev a function, not a constant: slither fails to fold a uint16 constant built from the flags
+    function defaultPluginConfig() public pure override returns (uint16) {
+        return uint16(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+    }
 
     function beforeInitialize(address, uint160) external override returns (bytes4) {
         pool = msg.sender;
@@ -138,7 +140,7 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
     }
 
     function _updatePluginConfigInPool() internal {
-        uint16 newPluginConfig = defaultPluginConfig;
+        uint16 newPluginConfig = defaultPluginConfig();
 
         (, , , uint16 currentPluginConfig) = _getPoolState();
         if (currentPluginConfig != newPluginConfig) {
