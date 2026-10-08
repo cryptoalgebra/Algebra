@@ -11,7 +11,7 @@ import './TestERC20.sol';
 contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   address public pool;
   uint16 public selectorsDisableConfig;
-  uint24 public overrideFee;
+  uint24 public dynamicFee;
   bool public isDisabled;
 
   uint256 public amountInDecrease;
@@ -86,13 +86,13 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     amountOutDecrease = newAmountOutDecrease;
   }
 
-  function setOverrideFee(uint24 _overrideFee) external {
-    overrideFee = _overrideFee;
+  function setDynamicFee(uint24 _dynamicFee) external {
+    dynamicFee = _dynamicFee;
   }
 
   /// @dev returns the same fee as beforeSwap
   function getSwapFee(address, address, bool, int256, uint160, bool, bytes calldata) external view override returns (uint24) {
-    return overrideFee;
+    return dynamicFee;
   }
 
   /// @notice The hook called before the state of a pool is initialized
@@ -165,8 +165,8 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   ) external override returns (uint256, bytes4, uint24) {
     emit BeforeSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, withPaymentInAdvance, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG))
-      return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, overrideFee);
-    return (0, IAlgebraPlugin.defaultPluginConfig.selector, overrideFee);
+      return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, dynamicFee);
+    return (0, IAlgebraPlugin.defaultPluginConfig.selector, dynamicFee);
   }
 
   /// @notice The hook called after swap calculation

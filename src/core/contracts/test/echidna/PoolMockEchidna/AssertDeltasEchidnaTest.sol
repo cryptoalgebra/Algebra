@@ -48,8 +48,8 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
     deltas = Deltas(inDecreaseShare % 1e6, inIncreaseShare % 5e6, outDecreaseShare % (1e6 + 1), addend, target % 3);
   }
 
-  function setOverrideFeeWrapped(uint24 overrideFee) public {
-    deltaPlugin.setOverrideFee(overrideFee % 1e6);
+  function setDynamicFeeWrapped(uint24 dynamicFee) public {
+    deltaPlugin.setDynamicFee(dynamicFee % 1e6);
   }
 
   function swapWithDeltasWrapped(bool zeroToOne, int128 amountRequired, uint160 limitSqrtPrice) public {

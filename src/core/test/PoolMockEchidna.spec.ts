@@ -182,8 +182,8 @@ describe('echidna pool harnesses', () => {
 
       for (const mode of [0, 1, 2]) {
         await suite.setFeeModeWrapped(mode);
-        for (const overrideFee of [0, 3000]) {
-          await suite.setOverrideFeeWrapped(overrideFee);
+        for (const dynamicFee of [0, 3000]) {
+          await suite.setDynamicFeeWrapped(dynamicFee);
           await suite.swapWithDeltasWrapped(true, amount, 0);
           await suite.swapWithDeltasWrapped(false, amount, 2n ** 160n - 1n);
           await suite.swapWithDeltasWrapped(true, -amount, 0);
@@ -194,8 +194,8 @@ describe('echidna pool harnesses', () => {
       }
     });
 
-    it('applies the override fee to the checked swaps', async () => {
-      await suite.setOverrideFeeWrapped(3000);
+    it('applies the dynamic fee to the checked swaps', async () => {
+      await suite.setDynamicFeeWrapped(3000);
       await expect(suite.swapWithDeltasWrapped(true, amount, 0))
         .to.emit(suite, 'SwapFee')
         .withArgs(await suite.getAddress(), 3000);
@@ -213,7 +213,7 @@ describe('echidna pool harnesses', () => {
       expect((await suite.globalState()).price).to.eq(encodePriceSqrt(99, 100));
       const reservesAfter = await suite.getReserves();
       expect([reservesAfter[0] - reservesBefore[0], reservesAfter[1] - reservesBefore[1]]).to.deep.eq([
-        5038319091121189n,
+        5037815259212076n,
         -5012562893380045n,
       ]);
     });
