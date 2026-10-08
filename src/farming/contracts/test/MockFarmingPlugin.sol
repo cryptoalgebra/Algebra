@@ -16,8 +16,6 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     address public incentive;
     address private _lastIncentiveOwner;
 
-    uint16 public constant DEFAULT_PLUGIN_CONFIG = uint16(Plugins.AFTER_SWAP_FLAG);
-
     modifier onlyPool() {
         require(msg.sender == pool, 'Only pool');
         _;
@@ -28,8 +26,9 @@ contract MockFarmingPlugin is IAlgebraPlugin {
         pluginFactory = _pluginFactory;
     }
 
-    function defaultPluginConfig() external pure override returns (uint16) {
-        return DEFAULT_PLUGIN_CONFIG;
+    /// @dev a function, not a constant: slither fails to fold a uint16 constant built from the flags
+    function defaultPluginConfig() public pure override returns (uint16) {
+        return uint16(Plugins.AFTER_SWAP_FLAG);
     }
 
     function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
@@ -123,8 +122,9 @@ contract MockFarmingPlugin is IAlgebraPlugin {
 
     function _updatePluginConfigInPool() internal {
         (, , , uint16 currentPluginConfig, , , ) = IAlgebraPoolState(pool).globalState();
-        if (currentPluginConfig != DEFAULT_PLUGIN_CONFIG) {
-            IAlgebraPool(pool).setPluginConfig(DEFAULT_PLUGIN_CONFIG);
+        uint16 newPluginConfig = defaultPluginConfig();
+        if (currentPluginConfig != newPluginConfig) {
+            IAlgebraPool(pool).setPluginConfig(newPluginConfig);
         }
     }
 
