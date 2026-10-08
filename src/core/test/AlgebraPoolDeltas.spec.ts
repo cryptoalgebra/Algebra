@@ -65,6 +65,8 @@ async function deploy(mintRanges: [number, number, bigint][]): Promise<Env> {
   await pool.setPlugin(plugin);
   await pool.setPluginConfig(DELTA_CONFIG | DYNAMIC_FEE);
   await pool.initialize(encodePriceSqrt(1, 1));
+  // with the dynamic fee the plugin sets the fee of every swap, so keep the pool fee by default
+  await plugin.setOverrideFee((await pool.globalState()).lastFee);
   await token0.approve(swapTarget, MaxUint256);
   await token1.approve(swapTarget, MaxUint256);
   for (const [bottom, top, liquidity] of mintRanges)
@@ -101,13 +103,8 @@ async function setDeltas(env: Env, d: Deltas) {
 }
 
 async function setFee(env: Env, fee: number) {
-  if (fee === 0) {
-    // an override of 0 means "keep the pool fee", so a zero fee needs the static fee
-    await env.pool.setPluginConfig(DELTA_CONFIG);
-    await env.pool.setFee(0);
-  } else {
-    await env.plugin.setOverrideFee(fee);
-  }
+  // with the dynamic fee the plugin sets the fee of every swap, zero included
+  await env.plugin.setOverrideFee(fee);
 }
 
 async function setFeeMode(env: Env, feeMode: number) {
@@ -677,6 +674,7 @@ describe('AlgebraPool amount deltas', () => {
       it(`amountInIncrease and amountOutDecrease are ignored without the afterSwapCalculation flag, ${dirName(zeroToOne)}`, async () => {
         const env = await loadFixture(fullRangeFixture);
         await env.pool.setPluginConfig(BEFORE_SWAP | AFTER_SWAP);
+        await env.plugin.setOverrideFee(0); // the dynamic fee is disabled
         // both deltas at once would revert on any swap if the hook was called
         await setDeltas(env, deltas({ inIncrease: share(100_000n), outDecrease: share(100_000n) }));
         const amount = expandTo18Decimals(1) / 10n;
