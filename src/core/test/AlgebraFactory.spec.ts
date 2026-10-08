@@ -125,6 +125,7 @@ describe('AlgebraFactory', () => {
     expect(await pool.factory(), 'pool factory address').to.eq(await factory.getAddress());
     expect(await pool.token0(), 'pool token0').to.eq(TEST_ADDRESSES[0]);
     expect(await pool.token1(), 'pool token1').to.eq(TEST_ADDRESSES[1]);
+    expect(await pool.deployer(), 'pool deployer').to.eq(ZeroAddress);
   }
 
   describe('#createPool', () => {
@@ -272,6 +273,7 @@ describe('AlgebraFactory', () => {
       expect(await pool.factory(), 'pool factory address').to.eq(await factory.getAddress());
       expect(await pool.token0(), 'pool token0').to.eq(TEST_ADDRESSES[0]);
       expect(await pool.token1(), 'pool token1').to.eq(TEST_ADDRESSES[1]);
+      expect(await pool.deployer(), 'pool deployer').to.eq(await customPoolCreator.getAddress());
     }
 
     beforeEach('Deploy CustomPoolCreator', async () => {
@@ -301,6 +303,11 @@ describe('AlgebraFactory', () => {
       );
 
       expect(addressCalculatedByFactory).to.be.eq(poolAddress);
+    });
+
+    it('a standard pool created after a custom one has no deployer', async () => {
+      await createAndCheckCustomPool(factory, [TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+      await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
     });
 
     it('cannot reenter from custom pool deployer', async () => {
