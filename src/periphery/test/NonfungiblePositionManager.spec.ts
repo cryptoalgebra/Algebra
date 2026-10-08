@@ -9,6 +9,7 @@ import {
   IAlgebraFactory,
   SwapRouter,
   MockPositionFollower,
+  TestPositionManagerCaller,
 } from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { computePoolAddress } from './shared/computePoolAddress';
@@ -1846,7 +1847,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('cannot be called by non-admin', async () => {
-        await expect(nft.connect(other).setWhitelistStatus(other.address, true)).to.be.revertedWithoutReason;
+        await expect(nft.connect(other).setWhitelistStatus(other.address, true)).to.be.revertedWithoutReason();
       });
     });
 
@@ -2523,6 +2524,143 @@ describe('NonfungiblePositionManager', () => {
             deadline: 10000,
           })
         ).to.not.be.reverted;
+      });
+    });
+
+    // position 2 of `wallet`, minted at 5000 under the lock, so it unlocks at 5300
+    const mintLocked = async () => {
+      await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+      await nft.setTime(5000);
+      await nft.mint({
+        token0: tokens[0].getAddress(),
+        token1: tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: wallet.address,
+        amount0Desired: 1000,
+        amount1Desired: 1000,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 10000,
+      });
+    };
+    const decrease = { tokenId: 2, liquidity: 100, amount0Min: 0, amount1Min: 0, deadline: 10000 };
+    const increase = {
+      tokenId: 2,
+      amount0Desired: 100,
+      amount1Desired: 100,
+      amount0Min: 0,
+      amount1Min: 0,
+      deadline: 10000,
+    };
+
+    describe('lock across later changes', () => {
+      it('lowering the lock period does not shorten a lock already set', async () => {
+        await mintLocked();
+        await nft.setLiquidityLockPeriod(60);
+        expect(await nft.liquidityUnlockTime(2)).to.eq(5000 + LOCK_PERIOD);
+
+        // the new period has passed, the one the position was locked with has not
+        await nft.setTime(5060);
+        await expect(nft.decreaseLiquidity(decrease)).to.be.revertedWith('LL');
+        await nft.setTime(5000 + LOCK_PERIOD);
+        await expect(nft.decreaseLiquidity(decrease)).to.emit(nft, 'DecreaseLiquidity');
+      });
+
+      it('switching the lock off and on again brings back the lock set before', async () => {
+        await mintLocked();
+        await nft.setLiquidityLockPeriod(0);
+        expect(await nft.liquidityUnlockTime(2)).to.eq(0);
+        await nft.setTime(5001);
+        await expect(nft.decreaseLiquidity(decrease)).to.emit(nft, 'DecreaseLiquidity');
+
+        // the unlock time stored at the mint is still there, nothing cleared it while the lock was off
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        expect(await nft.liquidityUnlockTime(2)).to.eq(5000 + LOCK_PERIOD);
+        await expect(nft.decreaseLiquidity(decrease)).to.be.revertedWith('LL');
+        await nft.setTime(5000 + LOCK_PERIOD);
+        await expect(nft.decreaseLiquidity(decrease)).to.emit(nft, 'DecreaseLiquidity');
+      });
+
+      it('the lock stays with the token when the position is transferred', async () => {
+        await mintLocked();
+        await nft.transferFrom(wallet.address, other.address, 2);
+        expect(await nft.liquidityUnlockTime(2)).to.eq(5000 + LOCK_PERIOD);
+
+        await nft.setTime(5001);
+        await expect(nft.connect(other).decreaseLiquidity(decrease)).to.be.revertedWith('LL');
+      });
+
+      it('an approved operator is held by the lock as well', async () => {
+        await mintLocked();
+        await nft.approve(other.address, 2);
+
+        await nft.setTime(5001);
+        await expect(nft.connect(other).decreaseLiquidity(decrease)).to.be.revertedWith('LL');
+      });
+    });
+
+    describe('lock through a contract', () => {
+      let caller: TestPositionManagerCaller;
+
+      beforeEach('deploy a contract between the account and the position manager', async () => {
+        caller = (await (
+          await ethers.getContractFactory('TestPositionManagerCaller')
+        ).deploy(nft)) as any as TestPositionManagerCaller;
+        for (const token of tokens) {
+          await token.transfer(caller, 1_000_000);
+          await caller.approve(token);
+        }
+      });
+
+      it('a whitelisted contract mints without a lock even when tx.origin is not whitelisted', async () => {
+        await nft.setLiquidityLockPeriod(LOCK_PERIOD);
+        await nft.setWhitelistStatus(caller, true);
+        await nft.setTime(5000);
+
+        await caller.connect(other).mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: other.address,
+          amount0Desired: 1000,
+          amount1Desired: 1000,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10000,
+        });
+        expect(await nft.liquidityUnlockTime(2)).to.eq(0);
+        await expect(nft.connect(other).decreaseLiquidity(decrease)).to.emit(nft, 'DecreaseLiquidity');
+      });
+
+      it('an approved or whitelisted contract can add liquidity under the lock for a stranger tx.origin', async () => {
+        await mintLocked();
+
+        // neither `other` nor the contract has any right to the position yet
+        await expect(caller.connect(other).increaseLiquidity(increase)).to.be.revertedWith('NA');
+
+        await nft.approve(caller, 2);
+        await expect(caller.connect(other).increaseLiquidity(increase)).to.emit(nft, 'IncreaseLiquidity');
+
+        await nft.approve(ZERO_ADDRESS, 2);
+        await nft.setWhitelistStatus(caller, true);
+        await expect(caller.connect(other).increaseLiquidity(increase)).to.emit(nft, 'IncreaseLiquidity');
+      });
+
+      it('decrease skips the lock for a whitelisted msg.sender, but not for a whitelisted tx.origin', async () => {
+        await mintLocked();
+        await nft.approve(caller, 2);
+
+        // a whitelisted tx.origin spares a position the lock when it is set, but does not lift it on decrease
+        await nft.setWhitelistStatus(wallet.address, true);
+        await nft.setTime(5001);
+        await expect(caller.decreaseLiquidity(decrease)).to.be.revertedWith('LL');
+
+        await nft.setWhitelistStatus(caller, true);
+        await expect(caller.decreaseLiquidity(decrease)).to.emit(nft, 'DecreaseLiquidity');
       });
     });
   });

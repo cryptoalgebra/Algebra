@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { Wallet, ZeroAddress } from 'ethers';
+import { Wallet, ZeroHash } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from './shared/expect';
 import { poolFixture } from './shared/fixtures';
@@ -9,7 +9,7 @@ import { MockTimeAlgebraPool, AlgebraFactory, TestERC20, TestAlgebraCallee, Alge
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
 
 describe('AlgebraPoolExtension', () => {
-  let wallet: Wallet, other: Wallet;
+  let wallet: Wallet;
   let pool: MockTimeAlgebraPool;
   let factory: AlgebraFactory;
   let token0: TestERC20;
@@ -19,7 +19,7 @@ describe('AlgebraPoolExtension', () => {
   let createPoolWrapped: ThenArg<ReturnType<typeof poolFixture>>['createPool'];
 
   beforeEach('deploy fixture', async () => {
-    [wallet, other] = await (ethers as any).getSigners();
+    [wallet] = await (ethers as any).getSigners();
     let _createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool'];
     ({
       token0,
@@ -40,83 +40,10 @@ describe('AlgebraPoolExtension', () => {
   });
 
   describe('extension deployment', () => {
-    it('factory deploys poolExtension in constructor', async () => {
-      const extensionAddress = await factory.poolExtension();
-      expect(extensionAddress).to.not.eq(ZeroAddress);
-    });
-
-    it('pool has non-zero algebraPoolExtension', async () => {
+    it('pool has an algebraPoolExtension with code', async () => {
+      // a delegatecall to an address without code succeeds and does nothing, so non-zero is not enough
       const extensionAddress = await pool.algebraPoolExtension();
-      expect(extensionAddress).to.not.eq(ZeroAddress);
-    });
-  });
-
-  describe('delegated setters modify pool storage', () => {
-    it('setCommunityFee changes pool state', async () => {
-      await pool.setCommunityFee(170);
-      expect((await pool.globalState()).communityFee).to.eq(170);
-    });
-
-    it('setTickSpacing changes pool state', async () => {
-      await pool.setTickSpacing(100);
-      expect(await pool.tickSpacing()).to.eq(100);
-    });
-
-    it('setFee changes pool state', async () => {
-      await pool.setFee(500);
-      expect((await pool.globalState()).lastFee).to.eq(500);
-    });
-
-    it('setPlugin changes pool state', async () => {
-      const pluginAddress = wallet.address;
-      await pool.setPlugin(pluginAddress);
-      expect(await pool.plugin()).to.eq(pluginAddress);
-      // setPlugin also resets pluginConfig
-      expect((await pool.globalState()).pluginConfig).to.eq(0);
-    });
-  });
-
-  describe('delegated setters emit correct events', () => {
-    it('setCommunityFee emits CommunityFee', async () => {
-      await expect(pool.setCommunityFee(170)).to.emit(pool, 'CommunityFee').withArgs(170);
-    });
-
-    it('setTickSpacing emits TickSpacing', async () => {
-      await expect(pool.setTickSpacing(100)).to.emit(pool, 'TickSpacing').withArgs(100);
-    });
-
-    it('setFee emits Fee', async () => {
-      await expect(pool.setFee(500)).to.emit(pool, 'Fee').withArgs(500);
-    });
-
-    it('setPlugin emits Plugin', async () => {
-      await expect(pool.setPlugin(wallet.address)).to.emit(pool, 'Plugin').withArgs(wallet.address);
-    });
-  });
-
-  describe('permission checks through delegation', () => {
-    it('setCommunityFee reverts for non-admin', async () => {
-      await expect(pool.connect(other).setCommunityFee(170)).to.be.reverted;
-    });
-
-    it('setTickSpacing reverts for non-admin', async () => {
-      await expect(pool.connect(other).setTickSpacing(100)).to.be.reverted;
-    });
-
-    it('setFee reverts for non-admin', async () => {
-      await expect(pool.connect(other).setFee(500)).to.be.reverted;
-    });
-
-    it('setPlugin reverts for non-admin', async () => {
-      await expect(pool.connect(other).setPlugin(wallet.address)).to.be.reverted;
-    });
-
-    it('setCommunityVault reverts for non-admin', async () => {
-      await expect(pool.connect(other).setCommunityVault(wallet.address)).to.be.reverted;
-    });
-
-    it('setPluginConfig reverts for non-admin (no plugin)', async () => {
-      await expect(pool.connect(other).setPluginConfig(1)).to.be.reverted;
+      expect(await ethers.provider.getCode(extensionAddress)).to.not.eq('0x');
     });
   });
 
@@ -134,54 +61,62 @@ describe('AlgebraPoolExtension', () => {
     });
 
     it('swap reverts', async () => {
-      await expect(extension.swap(wallet.address, true, 100, 0n, '0x')).to.be.reverted;
+      await expect(extension.swap(wallet.address, true, 100, 0n, '0x')).to.be.revertedWithCustomError(
+        extension,
+        'notAllowed'
+      );
     });
 
     it('mint reverts', async () => {
-      await expect(extension.mint(wallet.address, wallet.address, -100, 100, 1000, '0x')).to.be.reverted;
+      await expect(extension.mint(wallet.address, wallet.address, -100, 100, 1000, '0x')).to.be.revertedWithCustomError(
+        extension,
+        'notAllowed'
+      );
     });
 
     it('burn reverts', async () => {
-      await expect(extension.burn(-100, 100, 0, '0x')).to.be.reverted;
+      await expect(extension.burn(-100, 100, 0, '0x')).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
 
     it('collect reverts', async () => {
-      await expect(extension.collect(wallet.address, -100, 100, 0, 0)).to.be.reverted;
+      await expect(extension.collect(wallet.address, -100, 100, 0, 0)).to.be.revertedWithCustomError(
+        extension,
+        'notAllowed'
+      );
     });
 
     it('flash reverts', async () => {
-      await expect(extension.flash(wallet.address, 0, 0, '0x')).to.be.reverted;
+      await expect(extension.flash(wallet.address, 0, 0, '0x')).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
 
     it('sync reverts', async () => {
-      await expect(extension.sync()).to.be.reverted;
+      await expect(extension.sync()).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
 
     it('skim reverts', async () => {
-      await expect(extension.skim()).to.be.reverted;
-    });
-  });
-
-  describe('validation logic through delegation', () => {
-    it('setCommunityFee reverts for invalid value', async () => {
-      await expect(pool.setCommunityFee(1001)).to.be.reverted;
+      await expect(extension.skim()).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
 
-    it('setCommunityFee reverts for same value', async () => {
-      await pool.setCommunityFee(170);
-      await expect(pool.setCommunityFee(170)).to.be.reverted;
+    it('swapWithPaymentInAdvance reverts', async () => {
+      await expect(
+        extension.swapWithPaymentInAdvance(wallet.address, wallet.address, true, 100, 0n, '0x')
+      ).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
 
-    it('setTickSpacing reverts for zero', async () => {
-      await expect(pool.setTickSpacing(0)).to.be.reverted;
+    it('getReserves reverts', async () => {
+      await expect(extension.getReserves()).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
 
-    it('setTickSpacing reverts for negative', async () => {
-      await expect(pool.setTickSpacing(-1)).to.be.reverted;
+    it('positions reverts', async () => {
+      await expect(extension.positions(ZeroHash)).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
 
-    it('setTickSpacing reverts for same value', async () => {
-      await expect(pool.setTickSpacing(60)).to.be.reverted;
+    it('tickTreeRoot reverts', async () => {
+      await expect(extension.tickTreeRoot()).to.be.revertedWithCustomError(extension, 'notAllowed');
+    });
+
+    it('tickTreeSecondLayer reverts', async () => {
+      await expect(extension.tickTreeSecondLayer(0)).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
   });
 });

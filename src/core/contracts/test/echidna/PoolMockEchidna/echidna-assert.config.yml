@@ -4,6 +4,10 @@ format: 'text'
 testMode: "assertion"
 #coverage controls coverage guided testing
 coverage: false
+# The solvency check drains the positions it tracks, so positions it cannot see must not exist: the raw `mint`
+# stays out. The entry names the contract under test, as a bare signature is silently ignored
+filterFunctions: ["AssertFeeModeSwapEchidnaTest.mint(address,address,int24,int24,uint128,bytes)"]
+filterBlacklist: true
 # #psender is the sender for property transactions; by default intentionally
 # #the same as contract deployer
 # psender: "0x00a329c0648769a73afac7f9381e08fb43dbea70"

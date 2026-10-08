@@ -146,6 +146,35 @@ describe('echidna pool harnesses', () => {
       expect(await fresh.totalFeeGrowth0Token()).to.eq(0);
     });
 
+    it('can always drain every position and still pay the pending community fee, without changing the pool', async () => {
+      await suite.mintAroundCurrentTickWrapped(600, liquidity, payment, payment);
+      await suite.setCommunityVault('0x000000000000000000000000000000000000dEaD');
+      await suite.setCommunityFee(100);
+      const amount = expandTo18Decimals(1) / 10n;
+      for (const mode of [0, 1, 2]) {
+        await suite.setFeeModeWrapped(mode);
+        await suite.swapExactInWrapped(true, amount, 0);
+        await suite.swapExactOutWrapped(false, amount, 2n ** 160n - 1n);
+      }
+
+      const before = [await suite.liquidity(), await suite.getReserves(), await suite.getCommunityFeePending()];
+      await suite.checkSolvencyWrapped();
+      expect([await suite.liquidity(), await suite.getReserves(), await suite.getCommunityFeePending()]).to.deep.eq(before);
+    });
+
+    it('keeps at most 16 positions, which is why only this suite tracks them', async () => {
+      // the range from beforeEach is the first one
+      for (let tick = 1; tick < 16; tick++) await suite.mintWrapped(-tick, tick, 1000, payment, payment);
+      await expect(suite.mintWrapped(-16, 16, 1000, payment, payment)).to.be.revertedWithoutReason();
+
+      // a suite that does not track them mints as many ranges as it likes
+      const other = (await (
+        await ethers.getContractFactory('PropReservesEchidnaTest')
+      ).deploy()) as any as PropReservesEchidnaTest;
+      await other.initializeWrapped(2n ** 96n);
+      for (let tick = 1; tick <= 17; tick++) await other.mintWrapped(-tick, tick, 1000, payment, payment);
+    });
+
     for (const check of ['swapAndCheckFeeTokenWrapped', 'swapWithoutFeeWrapped'] as const) {
       it(`skips ${check} while an excess waits to be swept, and runs it once a swap has settled it`, async () => {
         // a token1 swap would sweep this token0 donation into the token0 accumulator, which is not its own fee

@@ -15,12 +15,13 @@ const TEST_ADDRESSES: [string, string, string] = [
 ];
 
 describe('AlgebraFactory', () => {
-  let wallet: Wallet, other: Wallet, third: Wallet;
+  let wallet: Wallet, other: Wallet;
 
   let factory: AlgebraFactory;
   let poolDeployer: AlgebraPoolDeployer;
   let poolBytecode: string;
   let defaultPluginFactory: MockDefaultPluginFactory;
+  let vaultAddress: string;
 
   const fixture = async () => {
     const [deployer] = await ethers.getSigners();
@@ -47,13 +48,13 @@ describe('AlgebraFactory', () => {
     const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory');
     const defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as any as MockDefaultPluginFactory;
 
-    return { factory, poolDeployer, defaultPluginFactory };
+    return { factory, poolDeployer, defaultPluginFactory, vaultAddress: await vault.getAddress() };
   };
 
   before('create fixture loader', async () => {
     // gas depends on deployed addresses, so start from a fresh chain regardless of earlier spec files
     await reset();
-    [wallet, other, third] = await (ethers as any).getSigners();
+    [wallet, other] = await (ethers as any).getSigners();
   });
 
   before('load pool bytecode', async () => {
@@ -61,7 +62,7 @@ describe('AlgebraFactory', () => {
   });
 
   beforeEach('deploy factory', async () => {
-    ({ factory, poolDeployer, defaultPluginFactory } = await loadFixture(fixture));
+    ({ factory, poolDeployer, defaultPluginFactory, vaultAddress } = await loadFixture(fixture));
   });
 
   it('cannot create invalid vault factory stub', async () => {
@@ -126,6 +127,7 @@ describe('AlgebraFactory', () => {
     expect(await pool.token0(), 'pool token0').to.eq(TEST_ADDRESSES[0]);
     expect(await pool.token1(), 'pool token1').to.eq(TEST_ADDRESSES[1]);
     expect(await pool.deployer(), 'pool deployer').to.eq(ZeroAddress);
+    expect(await pool.algebraPoolExtension(), 'pool extension').to.eq(await factory.poolExtension());
   }
 
   describe('#createPool', () => {
@@ -197,7 +199,7 @@ describe('AlgebraFactory', () => {
       let pool = poolContractFactory.attach(poolAddress);
 
       await pool.initialize(encodePriceSqrt(1, 1));
-      expect(await pool.communityVault()).to.not.eq(ZeroAddress);
+      expect(await pool.communityVault()).to.eq(vaultAddress);
     });
 
     it('works without community vault factory', async () => {
@@ -307,6 +309,13 @@ describe('AlgebraFactory', () => {
 
     it('a standard pool created after a custom one has no deployer', async () => {
       await createAndCheckCustomPool(factory, [TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+
+      // the next deploy overwrites the cache anyway, so the reset is only visible in between
+      const [plugin, _factory, token0, token1, extension, deployer] = await poolDeployer.getDeployParameters();
+      expect([plugin, token0, token1, deployer], 'deploy cache').to.deep.eq([ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress]);
+      expect(_factory).to.eq(await factory.getAddress());
+      expect(extension).to.eq(await factory.poolExtension());
+
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
     });
 
@@ -330,7 +339,7 @@ describe('AlgebraFactory', () => {
       let pool = poolContractFactory.attach(poolAddress);
 
       await pool.initialize(encodePriceSqrt(1, 1));
-      expect(await pool.communityVault()).to.not.eq(ZeroAddress);
+      expect(await pool.communityVault()).to.eq(vaultAddress);
     });
 
     it('works without community vault factory', async () => {

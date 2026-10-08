@@ -29,10 +29,28 @@ contract PoolMockEchidna is AlgebraPool {
 
   PositionData lastMintedPosition;
 
+  /// @dev Every range minted through the wrappers, kept only by the suites that set `trackPositions`: the cap would
+  /// cut the exploration of the others short. The harness owns all of them, so a suite that blacklists the raw `mint`
+  /// knows every position in the pool
+  bool internal trackPositions;
+  PositionData[] internal trackedPositions;
+  mapping(bytes32 => bool) internal isTracked;
+  uint256 internal constant MAX_TRACKED_POSITIONS = 16;
+
+  function _track(int24 bottomTick, int24 topTick) internal {
+    if (!trackPositions) return;
+    bytes32 key = keccak256(abi.encode(bottomTick, topTick));
+    if (isTracked[key]) return;
+    require(trackedPositions.length < MAX_TRACKED_POSITIONS);
+    isTracked[key] = true;
+    trackedPositions.push(PositionData(bottomTick, topTick));
+  }
+
   function mintWrapped(int24 bottomTick, int24 topTick, uint128 liquidityDesired, uint256 pay0, uint256 pay1) public {
     bytes memory data = abi.encode(MintData(pay0, pay1));
     IAlgebraPool(this).mint(msg.sender, address(this), bottomTick, topTick, liquidityDesired, data);
     lastMintedPosition = PositionData(bottomTick, topTick);
+    _track(bottomTick, topTick);
   }
 
   function mintAroundCurrentTickWrapped(int24 tickDelta, uint128 liquidityDesired, uint256 pay0, uint256 pay1) public {
@@ -45,6 +63,7 @@ contract PoolMockEchidna is AlgebraPool {
     bytes memory data = abi.encode(MintData(pay0, pay1));
     IAlgebraPool(this).mint(msg.sender, address(this), bottomTick, topTick, liquidityDesired, data);
     lastMintedPosition = PositionData(bottomTick, topTick);
+    _track(bottomTick, topTick);
   }
 
   function burnLastMintedPosition(uint128 liquidityDelta) public {
