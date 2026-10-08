@@ -110,7 +110,8 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
     delete sentToVault;
     delete sentToSwapper;
     delete paidBySwapper;
-    (balanceBefore, priceBefore) = ([balance0, balance1], globalState.price);
+    balanceBefore = [balance0, balance1];
+    priceBefore = globalState.price;
 
     uint8 feeMode = globalState.feeMode;
     feeToken = (feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : feeMode == Constants.FEE_MODE_TOKEN0) ? 0 : 1;
