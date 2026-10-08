@@ -15,6 +15,11 @@ testLimit: 500000
 seqLen: 50
 shrinkLimit: 5000
 
+# The solvency check drains the positions it tracks, so positions it cannot see must not exist: the raw `mint`
+# stays out. The entry names the contract under test, as a bare signature is silently ignored
+filterFunctions: ["AssertFeeModeSwapEchidnaTest.mint(address,address,int24,int24,uint128,bytes)"]
+filterBlacklist: true
+
 # the pool mock mints its own balances in the callbacks, so no funding is needed
 balanceContract: 0
 balanceAddr: 0

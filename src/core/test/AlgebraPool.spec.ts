@@ -2068,6 +2068,67 @@ describe('AlgebraPool', () => {
       expect((await pool.getCommunityFeePending())[0]).to.eq(0);
       expect(await token0.balanceOf(vaultAddress)).to.eq(vaultBalance + pending0);
     });
+
+    it('pending community fees stay pending while there is no vault and go to the next one', async () => {
+      await pool.setCommunityFee(170);
+      await swapExact0For1(expandTo18Decimals(1), wallet.address); // the first transfer happens right away
+      await swapExact0For1(expandTo18Decimals(1), wallet.address);
+      expect(await pool.getCommunityFeePending()).to.deep.eq([85000000000000n, 0n]);
+
+      // removing the vault also switches the community fee off
+      await pool.setCommunityVault(ZeroAddress);
+      expect((await pool.globalState()).communityFee).to.eq(0);
+
+      // the window has passed, but there is nowhere to send the fees, and the pool keeps working
+      await pool.advanceTime(8 * 3600);
+      await expect(swapExact1For0(expandTo18Decimals(1), wallet.address)).to.not.emit(pool, 'CommunityFeeTransfer');
+      await expect(mint(wallet.address, minTick, maxTick, 1000)).to.not.emit(pool, 'CommunityFeeTransfer');
+      expect(await pool.getCommunityFeePending()).to.deep.eq([85000000000000n, 0n]);
+
+      const newVault = await (await ethers.getContractFactory('AlgebraCommunityVault')).deploy(factory);
+      await pool.setCommunityVault(newVault);
+      await expect(mint(wallet.address, minTick, maxTick, 1000))
+        .to.emit(pool, 'CommunityFeeTransfer')
+        .withArgs(await newVault.getAddress(), 85000000000000n, 0);
+      expect(await token0.balanceOf(newVault)).to.eq(85000000000000n);
+      expect(await pool.getCommunityFeePending()).to.deep.eq([0n, 0n]);
+    });
+
+    it('after the window a mint without new fees sends both pending amounts and notifies the vault', async () => {
+      const handler = await (await ethers.getContractFactory('MockCommunityVaultFeeHandler')).deploy();
+      await pool.setCommunityFee(170);
+      await swapExact0For1(expandTo18Decimals(1), wallet.address); // the first transfer happens right away
+      await swapExact0For1(expandTo18Decimals(1), wallet.address);
+      await swapExact1For0(expandTo18Decimals(2), wallet.address);
+      expect(await pool.getCommunityFeePending()).to.deep.eq([85000000000000n, 170000000000000n]);
+
+      await pool.setCommunityVault(handler);
+      await pool.advanceTime(8 * 3600);
+      const tx = await mint(wallet.address, minTick, maxTick, 1000);
+      await expect(tx)
+        .to.emit(pool, 'CommunityFeeTransfer')
+        .withArgs(await handler.getAddress(), 85000000000000n, 170000000000000n);
+      await expect(tx)
+        .to.emit(handler, 'HandleCommunityFee')
+        .withArgs(
+          await pool.getAddress(),
+          await token0.getAddress(),
+          await token1.getAddress(),
+          85000000000000n,
+          170000000000000n
+        );
+      expect(await pool.getCommunityFeePending()).to.deep.eq([0n, 0n]);
+    });
+
+    it('a vault without code gets the fees without the handler call', async () => {
+      await pool.setCommunityVault(other.address);
+      await pool.setCommunityFee(170);
+
+      // the first transfer happens right away, a handler call on an address without code would revert
+      const tx = await swapExact0For1(expandTo18Decimals(1), wallet.address);
+      await expect(tx).to.emit(pool, 'CommunityFeeTransfer').withArgs(other.address, 85000000000000n, 0);
+      await expect(tx).to.changeTokenBalance(token0, other, 85000000000000n);
+    });
   });
 
   describe('#tickSpacing', () => {
@@ -2590,14 +2651,10 @@ describe('AlgebraPool', () => {
       await poolPlugin.setSelectorDisable(1); // disable BEFORE_SWAP_FLAG selector
       await poolPlugin.setDynamicFee(5000);
 
-      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.reverted;
-    })
-
-    it('works correct on swap', async () => {
-      await poolPlugin.setDynamicFee(4000);
-      await swapExact0For1(expandTo18Decimals(1), wallet.address);
-      await swapExact0For1(expandTo18Decimals(1), wallet.address);
-      await swapExact1For0(expandTo18Decimals(1), wallet.address);
+      const selector = poolPlugin.interface.getFunction('beforeSwap').selector;
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+        .to.be.revertedWithCustomError(pool, 'invalidHookResponse')
+        .withArgs(selector);
     })
 
     it('communityFee is charged from dynamic fee', async () => {
@@ -3310,6 +3367,10 @@ describe('AlgebraPool', () => {
         await pool.setPlugin(other.address);
         await expect(pool.setPluginConfig(1)).to.emit(pool, 'PluginConfig').withArgs(1);
         expect((await pool.globalState()).pluginConfig).to.eq(1);
+
+        // the config is uint16, so the flags above the first byte must survive
+        await expect(pool.setPluginConfig(1023)).to.emit(pool, 'PluginConfig').withArgs(1023);
+        expect((await pool.globalState()).pluginConfig).to.eq(1023);
       });
     });
 

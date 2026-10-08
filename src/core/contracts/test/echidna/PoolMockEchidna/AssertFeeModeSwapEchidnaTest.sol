@@ -7,6 +7,10 @@ import './PoolMockEchidna.sol';
 /// @dev A rounding error that is invisible within one step can compound across ticks into a swap that
 /// under-delivers or over-charges
 contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
+  constructor() {
+    trackPositions = true;
+  }
+
   /// @notice An exactOut swap either delivers the requested amount in full or stops because it ran out of room
   function swapExactOutWrapped(bool zeroToOne, uint128 amountOut, uint160 limitSqrtPrice) public {
     require(amountOut > 0);
@@ -92,6 +96,33 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
     }
 
     if (feeBefore != 0) IAlgebraPool(this).setFee(feeBefore);
+  }
+
+  error Drained();
+
+  /// @notice At any moment every position can be burned and collected in full, and what is left still covers the
+  /// pending community fee
+  /// @dev The raw `mint` is blacklisted in the config, so the tracked positions are all there are. The drain runs in a
+  /// self-call that always reverts, which leaves the pool as it was; only how it reverted is read
+  function checkSolvencyWrapped() public {
+    // hooks pointed at an address without code would fail the burns for a reason that has nothing to do with solvency
+    require(globalState.pluginConfig == 0 || plugin.code.length > 0);
+    try this.drainAndRevert() {} catch (bytes memory reason) {
+      assert(reason.length == 4 && bytes4(reason) == Drained.selector);
+    }
+  }
+
+  function drainAndRevert() external {
+    require(msg.sender == address(this));
+    for (uint256 i; i < trackedPositions.length; i++) {
+      PositionData memory p = trackedPositions[i];
+      uint256 positionLiquidity = getOrCreatePosition(address(this), p.bottomTick, p.topTick).liquidity;
+      if (positionLiquidity > 0) IAlgebraPool(this).burn(p.bottomTick, p.topTick, uint128(positionLiquidity), '');
+      IAlgebraPool(this).collect(address(this), p.bottomTick, p.topTick, type(uint128).max, type(uint128).max);
+    }
+    // an overpaid position would already have failed above, when the mock balance went below zero
+    if (balance0 >= communityFeePending0 && balance1 >= communityFeePending1) revert Drained();
+    revert();
   }
 
   /// @dev A swap sweeps any earlier overpayment, donation or flash fee into fee growth of its own token, which is
