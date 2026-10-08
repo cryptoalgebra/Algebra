@@ -24,9 +24,9 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
 
   /// @dev Extension is deployed by the factory, so msg.sender == factory.
   /// Only factory immutable needed for this extension, it is used for permission checks
-  /// token0, token1, algebraPoolExtension are set to address(0) because the current setters don't need them
-  function _getDeployParameters() internal virtual view override returns (address, address, address, address, address) {
-    return (address(0), msg.sender, address(0), address(0), address(0));
+  /// token0, token1, algebraPoolExtension, deployer are set to address(0) because the current setters don't need them
+  function _getDeployParameters() internal virtual view override returns (address, address, address, address, address, address) {
+    return (address(0), msg.sender, address(0), address(0), address(0), address(0));
   }
 
   /// @inheritdoc IAlgebraPoolActions

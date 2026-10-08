@@ -24,9 +24,9 @@ contract MockTimeAlgebraPoolDeployer {
     mockPoolHash = keccak256(type(MockTimeAlgebraPool).creationCode);
   }
 
-  function getDeployParameters() external view returns (address, address, address, address, address) {
+  function getDeployParameters() external view returns (address, address, address, address, address, address) {
     (address dataStorage, address token0, address token1) = _readFromCache();
-    return (dataStorage, factory, token0, token1, _poolExtension);
+    return (dataStorage, factory, token0, token1, _poolExtension, address(0));
   }
 
   event PoolDeployed(address pool);
