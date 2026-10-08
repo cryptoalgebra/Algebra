@@ -66,7 +66,7 @@ async function deploy(mintRanges: [number, number, bigint][]): Promise<Env> {
   await pool.setPluginConfig(DELTA_CONFIG | DYNAMIC_FEE);
   await pool.initialize(encodePriceSqrt(1, 1));
   // with the dynamic fee the plugin sets the fee of every swap, so keep the pool fee by default
-  await plugin.setOverrideFee((await pool.globalState()).lastFee);
+  await plugin.setDynamicFee((await pool.globalState()).lastFee);
   await token0.approve(swapTarget, MaxUint256);
   await token1.approve(swapTarget, MaxUint256);
   for (const [bottom, top, liquidity] of mintRanges)
@@ -104,7 +104,7 @@ async function setDeltas(env: Env, d: Deltas) {
 
 async function setFee(env: Env, fee: number) {
   // with the dynamic fee the plugin sets the fee of every swap, zero included
-  await env.plugin.setOverrideFee(fee);
+  await env.plugin.setDynamicFee(fee);
 }
 
 async function setFeeMode(env: Env, feeMode: number) {
@@ -652,7 +652,7 @@ describe('AlgebraPool amount deltas', () => {
       it(`amountInIncrease and amountOutDecrease are ignored without the afterSwapCalculation flag, ${dirName(zeroToOne)}`, async () => {
         const env = await loadFixture(fullRangeFixture);
         await env.pool.setPluginConfig(BEFORE_SWAP | AFTER_SWAP);
-        await env.plugin.setOverrideFee(0); // the dynamic fee is disabled
+        await env.plugin.setDynamicFee(0); // the dynamic fee is disabled
         // both deltas at once would revert on any swap if the hook was called
         await setDeltas(env, deltas({ inIncrease: share(100_000n), outDecrease: share(100_000n) }));
         const amount = expandTo18Decimals(1) / 10n;
@@ -698,10 +698,10 @@ describe('AlgebraPool amount deltas', () => {
         });
       }
 
-      it(`SwapFee carries the override fee with deltas, payment in advance, ${dirName(zeroToOne)}`, async () => {
+      it(`SwapFee carries the dynamic fee with deltas, payment in advance, ${dirName(zeroToOne)}`, async () => {
         const env = await loadFixture(fullRangeFixture);
         await setDeltas(env, deltas({ inDecrease: share(10_000n), outDecrease: share(10_000n) }));
-        await env.plugin.setOverrideFee(3000);
+        await env.plugin.setDynamicFee(3000);
 
         await expect(send(env, 'payInAdvance', zeroToOne, expandTo18Decimals(1) / 10n))
           .to.emit(env.pool, 'SwapFee')

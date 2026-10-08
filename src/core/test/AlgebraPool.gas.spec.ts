@@ -121,7 +121,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         beforeEach('load the fixture', async () => {
           const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
           poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
-          await poolPlugin.setOverrideFee(1000);
+          await poolPlugin.setDynamicFee(1000);
           await pool.setPlugin(poolPlugin);
           await pool.setPluginConfig(255);
 

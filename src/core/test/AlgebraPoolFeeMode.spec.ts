@@ -462,7 +462,7 @@ describe('AlgebraPool fee mode', () => {
     });
   });
 
-  describe('with the override fee', () => {
+  describe('with the dynamic fee', () => {
     let poolPlugin: MockPoolPlugin;
 
     beforeEach('connect a plugin', async () => {
@@ -471,9 +471,9 @@ describe('AlgebraPool fee mode', () => {
       await pool.setPluginConfig(1 | 128); // BEFORE_SWAP | DYNAMIC_FEE
     });
 
-    it('the largest override fee leaves a millionth of the output, exactIn and exactOut alike', async () => {
+    it('the largest dynamic fee leaves a millionth of the output, exactIn and exactOut alike', async () => {
       await initializeWithLiquidity(FEE_MODE_TOKEN1);
-      await poolPlugin.setOverrideFee(999999);
+      await poolPlugin.setDynamicFee(999999);
 
       // the curve gives out 95238095238095238, the trader keeps a millionth of it
       await expect(swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address)).to.changeTokenBalance(

@@ -21,7 +21,7 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   Delta public inDecrease; // base: |amountRequired|
   Delta public inIncrease; // base: the input calculated by the swap math
   Delta public outDecrease; // base: the output calculated by the swap math
-  uint24 public overrideFee;
+  uint24 public dynamicFee;
   bool public reenter; // swap in the pool from afterSwapCalculation
 
   int256 public seenAmountRequired;
@@ -46,8 +46,8 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     outDecrease = Delta(value, isShare, addend);
   }
 
-  function setOverrideFee(uint24 newOverrideFee) external {
-    overrideFee = newOverrideFee;
+  function setDynamicFee(uint24 newDynamicFee) external {
+    dynamicFee = newDynamicFee;
   }
 
   function setReenter(bool newReenter) external {
@@ -64,7 +64,7 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
 
   /// @dev returns the same fee as beforeSwap
   function getSwapFee(address, address, bool, int256, uint160, bool, bytes calldata) external view override returns (uint24) {
-    return overrideFee;
+    return dynamicFee;
   }
 
   function beforeSwap(
@@ -78,7 +78,7 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   ) external override returns (uint256 amountInDecrease, bytes4, uint24) {
     (seenAmountRequired, seenWithPaymentInAdvance) = (amountRequired, withPaymentInAdvance);
     amountInDecrease = _apply(inDecrease, amountRequired > 0 ? uint256(amountRequired) : uint256(-amountRequired));
-    return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, overrideFee);
+    return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, dynamicFee);
   }
 
   function afterSwapCalculation(
