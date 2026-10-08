@@ -62,8 +62,9 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     return 0;
   }
 
-  function getCurrentFee() external pure override returns (uint16) {
-    return 500;
+  /// @dev returns the same fee as beforeSwap
+  function getSwapFee(address, address, bool, int256, uint160, bool, bytes calldata) external view override returns (uint24) {
+    return overrideFee;
   }
 
   function beforeSwap(

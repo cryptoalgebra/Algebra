@@ -201,7 +201,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
-    uint24 overrideFee;
+    uint24 fee;
   }
 
   struct SwapCache {
@@ -210,7 +210,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     int256 amountRequired;
     uint160 limitSqrtPrice;
     bytes data;
-    uint24 overrideFee;
+    uint24 fee;
     uint256 amountInDecrease;
   }
 
@@ -227,7 +227,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     // amountInDecrease is either in token0 or token1 depending on zeroToOne
     // can only be non-zero if exactIn!
     // can only decrease the input token affecting the amount passed to the swap calculation
-    (_cache.amountInDecrease, _cache.overrideFee) = _beforeSwap(
+    (_cache.amountInDecrease, _cache.fee) = _beforeSwap(
       _cache.recipient,
       _cache.zeroToOne,
       _cache.amountRequired,
@@ -241,7 +241,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       // scope to prevent "stack too deep"
       SwapEventParams memory eventParams;
       (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
-        _cache.overrideFee,
+        _cache.fee,
         _cache.zeroToOne,
         _cache.amountRequired - int256(_cache.amountInDecrease),
         _cache.limitSqrtPrice
@@ -308,7 +308,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         eventParams.currentPrice,
         eventParams.currentLiquidity,
         eventParams.currentTick,
-        _cache.overrideFee
+        _cache.fee
       );
     }
 
@@ -351,17 +351,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (amountToSell == 0) revert insufficientInputAmount();
 
     _unlock();
-    // overrideFee is kept in eventParams to prevent "stack too deep"
+    // the fee is kept in eventParams to prevent "stack too deep"
     SwapEventParams memory eventParams;
     uint256 amountInDecrease;
-    (amountInDecrease, eventParams.overrideFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    (amountInDecrease, eventParams.fee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
     _lock();
 
     _updateReserves();
 
     FeesAmount memory fees;
     (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
-      eventParams.overrideFee,
+      eventParams.fee,
       zeroToOne,
       amountToSell - int256(amountInDecrease),
       limitSqrtPrice
@@ -410,7 +410,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       eventParams.currentPrice,
       eventParams.currentLiquidity,
       eventParams.currentTick,
-      eventParams.overrideFee
+      eventParams.fee
     );
 
     _unlock();
@@ -431,9 +431,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 newPrice,
     uint128 newLiquidity,
     int24 newTick,
-    uint24 overrideFee
+    uint24 fee
   ) private {
-    emit SwapFee(msg.sender, overrideFee);
+    emit SwapFee(msg.sender, fee);
     emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
   }
 
@@ -444,11 +444,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitPrice,
     bool payInAdvance,
     bytes calldata data
-  ) internal returns (uint256 amountInDecrease, uint24 overrideFee) {
-    uint16 pluginConfig = globalState.pluginConfig;
+  ) internal returns (uint256 amountInDecrease, uint24 fee) {
+    // the pool fee is used unless the plugin with the dynamic fee sets the fee for this swap
+    uint16 pluginConfig;
+    (fee, pluginConfig) = (globalState.lastFee, globalState.pluginConfig);
     if (pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
-      if (_isPlugin()) return (0, 0);
+      if (_isPlugin()) return (0, fee);
       bytes4 selector;
+      uint24 overrideFee;
       (amountInDecrease, selector, overrideFee) = IAlgebraPlugin(plugin).beforeSwap(
         msg.sender,
         recipient,
@@ -458,8 +461,11 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         payInAdvance,
         data
       );
-      if (!pluginConfig.hasFlag(Plugins.DYNAMIC_FEE) && overrideFee > 0) revert dynamicFeeDisabled();
-      if (overrideFee >= Constants.FEE_DENOMINATOR) revert invalidOverrideFee();
+      if (pluginConfig.hasFlag(Plugins.DYNAMIC_FEE)) {
+        // zero is a valid fee here, not a fallback to the pool fee
+        if (overrideFee >= Constants.FEE_DENOMINATOR) revert invalidOverrideFee();
+        fee = overrideFee;
+      } else if (overrideFee > 0) revert dynamicFeeDisabled();
       // amountInDecrease is only valid for exactIn (amount > 0) and must be less than amount
       if (amountInDecrease != 0 && (amount < 0 || amountInDecrease >= uint256(amount))) revert invalidAmountInDecrease();
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);

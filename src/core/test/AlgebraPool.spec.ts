@@ -2209,19 +2209,46 @@ describe('AlgebraPool', () => {
     });
   });
 
-  describe('#fee getter', async () => {
-    it('works without plugin', async () => {
+  describe('#getSwapFee', async () => {
+    const swapFee = (sender: string) => pool.getSwapFee(sender, sender, true, 1000, MIN_SQRT_RATIO + 1n, false, '0x');
+
+    it('returns the pool fee without plugin', async () => {
       await pool.setFee(150);
-      expect(await pool.fee()).to.be.eq(150);
+      expect(await swapFee(wallet.address)).to.be.eq(150);
     });
 
-    it('works with plugin', async () => {
-      const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
-      const poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
-      await pool.setPlugin(poolPlugin);
-      await pool.setPluginConfig(255);
+    describe('with plugin', () => {
+      let poolPlugin: MockPoolPlugin;
+      beforeEach('connect plugin', async () => {
+        await pool.setFee(150);
+        const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
+        poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
+        await pool.setPlugin(poolPlugin);
+        await poolPlugin.setOverrideFee(4000);
+      });
 
-      expect(await pool.fee()).to.be.eq(220);
+      it('returns the plugin fee with the dynamic fee enabled', async () => {
+        await pool.setPluginConfig(255);
+        expect(await swapFee(wallet.address)).to.be.eq(4000);
+        await poolPlugin.setOverrideFee(0);
+        expect(await swapFee(wallet.address)).to.be.eq(0);
+      });
+
+      it('returns the pool fee with the dynamic fee disabled', async () => {
+        await pool.setPluginConfig(127);
+        expect(await swapFee(wallet.address)).to.be.eq(150);
+      });
+
+      it('returns the pool fee for swaps by the plugin', async () => {
+        await pool.setPluginConfig(255);
+        expect(await swapFee(await poolPlugin.getAddress())).to.be.eq(150);
+      });
+
+      it('reverts if the plugin does not return the fee', async () => {
+        await pool.setPlugin(other.address);
+        await pool.setPluginConfig(255);
+        await expect(swapFee(wallet.address)).to.be.reverted;
+      });
     });
   });
 
@@ -2523,6 +2550,8 @@ describe('AlgebraPool', () => {
       await pool.setPlugin(poolPlugin);
       await pool.setPluginConfig(1023);
       await pool.initialize(encodePriceSqrt(1, 1));
+      // with the dynamic fee the plugin sets the fee of every swap, so keep the pool fee
+      await poolPlugin.setOverrideFee((await pool.globalState()).lastFee);
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
     });
 
@@ -2881,6 +2910,7 @@ describe('AlgebraPool', () => {
 
       it('after swap fee on transfer tokens the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
+        await poolPlugin.setOverrideFee((await pool.globalState()).lastFee); // keep the pool fee
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(swapExact1For0SupportingFee(10000, wallet.address))
           .to.be.emit(poolPlugin, 'AfterSwap')
@@ -2914,6 +2944,7 @@ describe('AlgebraPool', () => {
 
       it('after swap the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
+        await poolPlugin.setOverrideFee((await pool.globalState()).lastFee); // keep the pool fee
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(swapExact0For1(10000, wallet.address))
           .to.be.emit(poolPlugin, 'AfterSwap')
@@ -3282,21 +3313,18 @@ describe('AlgebraPool', () => {
         await expect(pool.setFee(20000)).to.emit(pool, 'Fee').withArgs(20000);
         const { lastFee } = await pool.globalState();
         expect(lastFee).to.eq(20000);
-
-        const fee = await pool.fee();
-        expect(lastFee).to.eq(fee);
       });
 
       it('only owner can set fee', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
-        await pool.setPluginConfig(128);
+        await pool.setPluginConfig(129);
         await expect(pool.connect(other).setFee(20000)).to.be.revertedWithCustomError(pool, 'notAllowed');
       });
 
       it('if dynamic fee is on, owner can not set fee in pool', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
-        await pool.setPluginConfig(128);
+        await pool.setPluginConfig(129);
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(pool.setFee(20000)).to.be.revertedWithCustomError(pool, 'dynamicFeeActive');
       });
@@ -3317,6 +3345,44 @@ describe('AlgebraPool', () => {
         await expect(swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address)).to.be.revertedWithCustomError(pool, 'dynamicFeeDisabled');
         await poolPlugin.setOverrideFee(0);
         await expect(swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address)).to.be.not.reverted;
+      });
+
+      it('zero override fee is applied if dynamic fee enabled', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+        expect((await pool.globalState()).lastFee).to.be.gt(0);
+        await poolPlugin.setOverrideFee(0);
+        await expect(swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address))
+          .to.emit(pool, 'SwapFee')
+          .withArgs(await swapTarget.getAddress(), 0);
+        expect(await pool.totalFeeGrowth0Token()).to.eq(0);
+      });
+
+      it('dynamic fee cannot be enabled without beforeSwap hook', async () => {
+        await expect(pool.setPluginConfig(128)).to.be.revertedWithCustomError(pool, 'invalidNewPluginConfig');
+        await expect(pool.setPluginConfig(255 & ~1)).to.be.revertedWithCustomError(pool, 'invalidNewPluginConfig');
+        await expect(pool.setPluginConfig(129)).to.not.be.reverted;
+      });
+
+      it('pool fee is applied to swaps by the plugin if dynamic fee enabled', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+        await poolPlugin.setOverrideFee(0);
+        await token0.transfer(poolPlugin, expandTo18Decimals(1));
+        const { lastFee } = await pool.globalState();
+        await expect(poolPlugin.swap()).to.emit(pool, 'SwapFee').withArgs(await poolPlugin.getAddress(), lastFee);
+        expect(await pool.totalFeeGrowth0Token()).to.be.gt(0);
+      });
+
+      it('SwapFee carries the pool fee if dynamic fee disabled', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+        await pool.setPluginConfig(1);
+        await poolPlugin.setOverrideFee(0);
+        const { lastFee } = await pool.globalState();
+        await expect(swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address))
+          .to.emit(pool, 'SwapFee')
+          .withArgs(await swapTarget.getAddress(), lastFee);
       });
 
     });
