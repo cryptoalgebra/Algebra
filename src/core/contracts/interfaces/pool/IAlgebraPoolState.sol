@@ -72,14 +72,10 @@ interface IAlgebraPoolState {
       uint256 outerFeeGrowth1Token
     );
 
-  /// @notice The timestamp of the last sending of tokens to vault/plugin
-  /// @return The timestamp truncated to 32 bits
-  function lastFeeTransferTimestamp() external view returns (uint32);
-
-  /// @notice The amounts of token0 and token1 that will be sent to the vault
-  /// @dev Will be sent FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
-  /// @return communityFeePending0 The amount of token0 that will be sent to the vault
-  /// @return communityFeePending1 The amount of token1 that will be sent to the vault
+  /// @notice The amounts of token0 and token1 accumulated for the vault
+  /// @dev The vault claims them with `claimCommunityFee`
+  /// @return communityFeePending0 The amount of token0 accumulated for the vault
+  /// @return communityFeePending1 The amount of token1 accumulated for the vault
   function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
 
   /// @notice Returns the address of currently used plugin
