@@ -70,15 +70,15 @@ describe('AlgebraPool fee mode', () => {
 
   describe('#setFeeMode', () => {
     it('is off by default', async () => {
-      expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_DEFAULT);
+      expect(await pool.feeMode()).to.eq(FEE_MODE_DEFAULT);
     });
 
     it('sets the mode and emits an event', async () => {
       await expect(pool.setFeeMode(FEE_MODE_TOKEN0)).to.emit(pool, 'FeeMode').withArgs(FEE_MODE_TOKEN0);
-      expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_TOKEN0);
+      expect(await pool.feeMode()).to.eq(FEE_MODE_TOKEN0);
 
       await expect(pool.setFeeMode(FEE_MODE_TOKEN1)).to.emit(pool, 'FeeMode').withArgs(FEE_MODE_TOKEN1);
-      expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_TOKEN1);
+      expect(await pool.feeMode()).to.eq(FEE_MODE_TOKEN1);
     });
 
     it('can be set back to the default', async () => {

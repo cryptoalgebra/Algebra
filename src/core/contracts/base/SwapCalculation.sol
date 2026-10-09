@@ -77,8 +77,8 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
     {
       // only the fee token accrues fee growth during a swap, so the accumulator follows it, not the swap direction
-      uint8 feeMode = globalState.feeMode;
-      cache.feeTokenIsZero = feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : feeMode == Constants.FEE_MODE_TOKEN0;
+      uint8 _feeMode = feeMode;
+      cache.feeTokenIsZero = _feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : _feeMode == Constants.FEE_MODE_TOKEN0;
     }
     cache.feeOnInput = cache.feeTokenIsZero == zeroToOne;
     (cache.totalFeeGrowthFeeToken, fees.inToken0) = cache.feeTokenIsZero ? (totalFeeGrowth0Token, true) : (totalFeeGrowth1Token, false);
