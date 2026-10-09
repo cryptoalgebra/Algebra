@@ -5,7 +5,6 @@ import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
 import '../interfaces/pool/IAlgebraPoolErrors.sol';
 import '../interfaces/IAlgebraFactory.sol';
-import '../interfaces/vault/IAlgebraCommunityVaultFeeHandler.sol';
 /// @title Algebra reserves management abstract contract
 /// @notice Encapsulates logic for tracking and changing pool reserves
 /// @dev The reserve mechanism allows the pool to keep track of unexpected increases in balances
@@ -68,8 +67,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
     }
   }
 
-  /// @notice Applies deltas to reserves and pays communityFees
-  /// @dev Community fee is sent to the vault at a specified frequency or when variables communityFeePending{0,1} overflow
+  /// @notice Applies deltas to reserves and accumulates communityFees
+  /// @dev Community fee stays in the pool until the vault claims it
   /// @param deltaR0 Amount of token0 to add/subtract to/from reserve0, must not exceed uint128
   /// @param deltaR1 Amount of token1 to add/subtract to/from reserve1, must not exceed uint128
   /// @param communityFee0 Amount of token0 to pay as communityFee, must not exceed uint128
@@ -80,25 +79,9 @@ abstract contract ReservesManager is AlgebraPoolBase {
     uint256 communityFee0,
     uint256 communityFee1
   ) internal {
-    bool feeTransferDue = _blockTimestamp() - lastFeeTransferTimestamp >= Constants.FEE_TRANSFER_FREQUENCY;
-    if (communityFee0 > 0 || communityFee1 > 0) {
-      uint256 feePending0 = communityFeePending0 + communityFee0;
-      uint256 feePending1 = communityFeePending1 + communityFee1;
-
-      if (
-        feeTransferDue ||
-        feePending0 > type(uint104).max ||
-        feePending1 > type(uint104).max
-      ) {
-        (deltaR0, deltaR1) = _sendPendingCommunityFees(feePending0, feePending1, deltaR0, deltaR1);
-      } else {
-        (communityFeePending0, communityFeePending1) = (uint104(feePending0), uint104(feePending1));
-      }
-    } else if (feeTransferDue) {
-      (uint104 feePending0, uint104 feePending1) = (communityFeePending0, communityFeePending1);
-      if (feePending0 | feePending1 != 0) {
-        (deltaR0, deltaR1) = _sendPendingCommunityFees(feePending0, feePending1, deltaR0, deltaR1);
-      }
+    if (communityFee0 | communityFee1 != 0) {
+      // the pending fees are a part of the reserves, so the casts are safe if the reserves fit in uint128 below
+      (communityFeePending0, communityFeePending1) = (uint128(communityFeePending0 + communityFee0), uint128(communityFeePending1 + communityFee1));
     }
 
     if (deltaR0 | deltaR1 == 0) return;
@@ -106,40 +89,5 @@ abstract contract ReservesManager is AlgebraPoolBase {
     if (deltaR0 != 0) _reserve0 = (uint256(int256(_reserve0) + deltaR0)).toUint128();
     if (deltaR1 != 0) _reserve1 = (uint256(int256(_reserve1) + deltaR1)).toUint128();
     (reserve0, reserve1) = (uint128(_reserve0), uint128(_reserve1));
-  }
-
-  function _sendPendingCommunityFees(
-    uint256 feePending0,
-    uint256 feePending1,
-    int256 deltaR0,
-    int256 deltaR1
-  ) private returns (int256, int256) {
-    address _communityVault = communityVault;
-    // there is nowhere to send the fees without a vault, so keep them pending instead of blocking the pool.
-    // the cast is safe: a pool without a vault cannot accrue new fees, `setCommunityVault` zeroes `communityFee`
-    if (_communityVault == address(0)) {
-      (communityFeePending0, communityFeePending1) = (uint104(feePending0), uint104(feePending1));
-      return (deltaR0, deltaR1);
-    }
-
-    (uint256 feeSent0, uint256 feeSent1) = _transferCommunityFees(feePending0, feePending1, _communityVault);
-    (communityFeePending0, communityFeePending1) = (0, 0);
-    lastFeeTransferTimestamp = _blockTimestamp();
-    return (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
-  }
-
-  /// @notice Transfers the accumulated community fees to the vault and notifies it
-  function _transferCommunityFees(uint256 feePending0, uint256 feePending1, address communityVaultAddr) private returns (uint256, uint256) {
-    if (feePending0 > 0) _transfer(token0, communityVaultAddr, feePending0);
-    if (feePending1 > 0) _transfer(token1, communityVaultAddr, feePending1);
-
-    emit CommunityFeeTransfer(communityVaultAddr, feePending0, feePending1);
-
-    // a vault without code must not be able to block the pool
-    if ((feePending0 | feePending1 != 0) && communityVaultAddr.code.length > 0) {
-      IAlgebraCommunityVaultFeeHandler(communityVaultAddr).handleCommunityFee(token0, token1, feePending0, feePending1);
-    }
-
-    return (feePending0, feePending1);
   }
 }
