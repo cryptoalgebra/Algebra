@@ -81,7 +81,7 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
     bool remainderMayBecomeFee = amountRequired > 0 && feeInToken0 == zeroToOne;
 
     (uint256 growth0Before, uint256 growth1Before) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
-    (uint104 communityPending0Before, uint104 communityPending1Before) = (communityFeePending0, communityFeePending1);
+    (uint128 communityPending0Before, uint128 communityPending1Before) = (communityFeePending0, communityFeePending1);
 
     IAlgebraPool(this).swap(address(this), zeroToOne, amountRequired, limitSqrtPrice, '');
     remainderMayBecomeFee = remainderMayBecomeFee && globalState.price != limitSqrtPrice;

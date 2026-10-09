@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-import './IAlgebraCommunityVaultFeeHandler.sol';
-
 /// @title The interface for the Algebra community fee vault
-/// @notice Community fee from pools is sent here, if it is enabled
+/// @notice Community fee from pools is claimed here, if it is enabled
 /// @dev Version: Algebra Integral
-interface IAlgebraCommunityVault is IAlgebraCommunityVaultFeeHandler {
+interface IAlgebraCommunityVault {
   /// @notice Event emitted when a fees has been claimed
   /// @param token The address of token fee
   /// @param to The address where claimed rewards were sent to
@@ -16,6 +14,11 @@ interface IAlgebraCommunityVault is IAlgebraCommunityVaultFeeHandler {
   /// @notice Emitted when a CommunityFeeReceiver address changed
   /// @param newCommunityFeeReceiver New fee receiver address
   event CommunityFeeReceiver(address newCommunityFeeReceiver);
+
+  /// @notice Claims the accumulated community fees from pools to this vault
+  /// @dev Anyone can call it, the fees can only be sent to this vault
+  /// @param pools The pools to claim from, each must have this vault set as the community vault
+  function claimCommunityFees(address[] calldata pools) external;
 
   /// @notice Withdraw protocol fees from vault
   /// @param token The token address

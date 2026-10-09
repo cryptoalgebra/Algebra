@@ -46,4 +46,10 @@ interface IAlgebraPoolPermissionedActions {
   /// @notice Forces balances to match reserves. Excessive tokens will be sent to msg.sender
   /// @dev Only plugin can call this function
   function skim() external;
+
+  /// @notice Sends the accumulated community fees to the community vault
+  /// @dev Only the community vault can call this function
+  /// @return amount0 The amount of token0 sent
+  /// @return amount1 The amount of token1 sent
+  function claimCommunityFee() external returns (uint128 amount0, uint128 amount1);
 }

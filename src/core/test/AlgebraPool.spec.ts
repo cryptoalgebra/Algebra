@@ -679,9 +679,16 @@ describe('AlgebraPool', () => {
         await swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address);
         await swapExact1For0(expandTo18Decimals(1) / 100n, wallet.address);
 
-        expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('8500000000000');
-        const [, communityFeePending1] = await pool.getCommunityFeePending();
+        // nothing is sent until the vault claims
+        expect(await token0.balanceOf(vaultAddress)).to.eq(0);
+        const [communityFeePending0, communityFeePending1] = await pool.getCommunityFeePending();
+        expect(communityFeePending0.toString()).to.eq('8500000000000');
         expect(communityFeePending1.toString()).to.eq('850000000000');
+
+        const vault = await ethers.getContractAt('AlgebraCommunityVault', vaultAddress);
+        await vault.claimCommunityFees([pool]);
+        expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('8500000000000');
+        expect((await token1.balanceOf(vaultAddress)).toString()).to.eq('850000000000');
       });
 
       it('positions are protected before community fee is turned on', async () => {
@@ -1988,19 +1995,20 @@ describe('AlgebraPool', () => {
       expect(token0FeesNext).to.eq(0);
       expect(token1FeesNext).to.eq(0);
 
-      expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('85000000000000');
+      expect(await token0.balanceOf(vaultAddress)).to.eq(0);
       const [communityFeePending0] = await pool.getCommunityFeePending();
-      expect(communityFeePending0).to.be.eq('85000000000000');
+      expect(communityFeePending0).to.be.eq('170000000000000');
       expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0);
 
       await pool.burn(minTick, maxTick, 0, '0x'); // poke to update fees
       await expect(pool.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128))
         .to.emit(token0, 'Transfer')
         .withArgs(await pool.getAddress(), wallet.address, '414999999999999');
-      expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('85000000000000');
+      expect(await token0.balanceOf(vaultAddress)).to.eq(0);
 
+      // collecting by LPs does not touch the community fee
       const [communityFeePending0After] = await pool.getCommunityFeePending();
-      expect(communityFeePending0After).to.be.eq('85000000000000');
+      expect(communityFeePending0After).to.be.eq('170000000000000');
       expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0);
     });
 
@@ -2028,106 +2036,86 @@ describe('AlgebraPool', () => {
       await checkFees(async (amount: any) => swapExact1For0SupportingFee(amount, wallet.address), false);
     });
 
-    it('pending community fees are sent to the vault connected when they are transferred', async () => {
-      await pool.setCommunityFee(170);
-      await swapExact0For1(expandTo18Decimals(1), wallet.address); // the first transfer happens right away
-      await swapExact0For1(expandTo18Decimals(1), wallet.address);
-      const [pending0] = await pool.getCommunityFeePending();
-      expect(pending0).to.be.gt(0);
+    describe('#claimCommunityFee', () => {
+      let vault: any;
 
-      // a vault with code also gets the fee handler call, a vault without code is covered separately
-      const newVault = await (await ethers.getContractFactory('AlgebraCommunityVault')).deploy(factory);
-      await pool.setCommunityVault(newVault);
-      await pool.advanceTime(8 * 3600);
-      const [vaultBalanceBefore, newVaultBalanceBefore] = [
-        await token0.balanceOf(vaultAddress),
-        await token0.balanceOf(newVault),
-      ];
+      beforeEach(async () => {
+        vault = await ethers.getContractAt('AlgebraCommunityVault', vaultAddress);
+        await pool.setCommunityFee(170);
+        await swapExact0For1(expandTo18Decimals(1), wallet.address);
+        await swapExact1For0(expandTo18Decimals(1), wallet.address);
+      });
 
-      // a swap in the other direction adds no token0 fee, so the token0 transfer is exactly the old pending amount
-      await swapExact1For0(expandTo18Decimals(1), wallet.address);
-      expect((await token0.balanceOf(newVault)) - newVaultBalanceBefore).to.eq(pending0);
-      expect(await token0.balanceOf(vaultAddress)).to.eq(vaultBalanceBefore);
-      expect((await pool.getCommunityFeePending())[0]).to.eq(0);
-    });
+      it('can only be called by the community vault', async () => {
+        await expect(pool.claimCommunityFee()).to.be.revertedWithCustomError(pool, 'notAllowed');
+        await expect(pool.connect(other).claimCommunityFee()).to.be.revertedWithCustomError(pool, 'notAllowed');
+      });
 
-    it('pending community fees are not sent before the full transfer window has passed', async () => {
-      await pool.setCommunityFee(170);
-      await swapExact0For1(expandTo18Decimals(1), wallet.address); // the first transfer happens right away
-      await swapExact0For1(expandTo18Decimals(1), wallet.address);
-      const [pending0] = await pool.getCommunityFeePending();
-      const vaultBalance = await token0.balanceOf(vaultAddress);
+      it('sends the pending fees to the vault and keeps the reserves equal to the balances', async () => {
+        const [pending0, pending1] = await pool.getCommunityFeePending();
+        expect(pending0).to.be.gt(0);
+        expect(pending1).to.be.gt(0);
+        const [reserve0, reserve1] = await pool.getReserves();
 
-      await pool.advanceTime(8 * 3600 - 1);
-      await swapExact1For0(expandTo18Decimals(1), wallet.address);
-      expect((await pool.getCommunityFeePending())[0]).to.eq(pending0);
-      expect(await token0.balanceOf(vaultAddress)).to.eq(vaultBalance);
+        await expect(vault.claimCommunityFees([pool]))
+          .to.emit(pool, 'CommunityFeeTransfer')
+          .withArgs(vaultAddress, pending0, pending1);
 
-      await pool.advanceTime(1);
-      await swapExact1For0(expandTo18Decimals(1), wallet.address);
-      expect((await pool.getCommunityFeePending())[0]).to.eq(0);
-      expect(await token0.balanceOf(vaultAddress)).to.eq(vaultBalance + pending0);
-    });
+        expect(await pool.getCommunityFeePending()).to.deep.eq([0n, 0n]);
+        expect(await token0.balanceOf(vaultAddress)).to.eq(pending0);
+        expect(await token1.balanceOf(vaultAddress)).to.eq(pending1);
+        expect(await pool.getReserves()).to.deep.eq([reserve0 - pending0, reserve1 - pending1]);
+        expect(await token0.balanceOf(pool)).to.eq(reserve0 - pending0);
+        expect(await token1.balanceOf(pool)).to.eq(reserve1 - pending1);
+      });
 
-    it('pending community fees stay pending while there is no vault and go to the next one', async () => {
-      await pool.setCommunityFee(170);
-      await swapExact0For1(expandTo18Decimals(1), wallet.address); // the first transfer happens right away
-      await swapExact0For1(expandTo18Decimals(1), wallet.address);
-      expect(await pool.getCommunityFeePending()).to.deep.eq([85000000000000n, 0n]);
+      it('does nothing without pending fees', async () => {
+        await vault.claimCommunityFees([pool]);
+        const balances = [await token0.balanceOf(vaultAddress), await token1.balanceOf(vaultAddress)];
+        const reserves = await pool.getReserves();
 
-      // removing the vault also switches the community fee off
-      await pool.setCommunityVault(ZeroAddress);
-      expect((await pool.globalState()).communityFee).to.eq(0);
+        await expect(vault.claimCommunityFees([pool])).to.not.emit(pool, 'CommunityFeeTransfer');
 
-      // the window has passed, but there is nowhere to send the fees, and the pool keeps working
-      await pool.advanceTime(8 * 3600);
-      await expect(swapExact1For0(expandTo18Decimals(1), wallet.address)).to.not.emit(pool, 'CommunityFeeTransfer');
-      await expect(mint(wallet.address, minTick, maxTick, 1000)).to.not.emit(pool, 'CommunityFeeTransfer');
-      expect(await pool.getCommunityFeePending()).to.deep.eq([85000000000000n, 0n]);
+        expect([await token0.balanceOf(vaultAddress), await token1.balanceOf(vaultAddress)]).to.deep.eq(balances);
+        expect(await pool.getReserves()).to.deep.eq(reserves);
+      });
 
-      const newVault = await (await ethers.getContractFactory('AlgebraCommunityVault')).deploy(factory);
-      await pool.setCommunityVault(newVault);
-      await expect(mint(wallet.address, minTick, maxTick, 1000))
-        .to.emit(pool, 'CommunityFeeTransfer')
-        .withArgs(await newVault.getAddress(), 85000000000000n, 0);
-      expect(await token0.balanceOf(newVault)).to.eq(85000000000000n);
-      expect(await pool.getCommunityFeePending()).to.deep.eq([0n, 0n]);
-    });
+      it('does not change the fees of liquidity providers', async () => {
+        const growth = [await pool.totalFeeGrowth0Token(), await pool.totalFeeGrowth1Token()];
+        await vault.claimCommunityFees([pool]);
+        expect([await pool.totalFeeGrowth0Token(), await pool.totalFeeGrowth1Token()]).to.deep.eq(growth);
 
-    it('after the window a mint without new fees sends both pending amounts and notifies the vault', async () => {
-      const handler = await (await ethers.getContractFactory('MockCommunityVaultFeeHandler')).deploy();
-      await pool.setCommunityFee(170);
-      await swapExact0For1(expandTo18Decimals(1), wallet.address); // the first transfer happens right away
-      await swapExact0For1(expandTo18Decimals(1), wallet.address);
-      await swapExact1For0(expandTo18Decimals(2), wallet.address);
-      expect(await pool.getCommunityFeePending()).to.deep.eq([85000000000000n, 170000000000000n]);
+        // the position can still collect everything it earned
+        await pool.burn(minTick, maxTick, 0, '0x');
+        const [, , , tokensOwed0, tokensOwed1] = await pool.positions(await getPositionKey(wallet.address, minTick, maxTick, pool));
+        await expect(pool.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128))
+          .to.emit(pool, 'Collect')
+          .withArgs(wallet.address, wallet.address, minTick, maxTick, tokensOwed0, tokensOwed1);
+      });
 
-      await pool.setCommunityVault(handler);
-      await pool.advanceTime(8 * 3600);
-      const tx = await mint(wallet.address, minTick, maxTick, 1000);
-      await expect(tx)
-        .to.emit(pool, 'CommunityFeeTransfer')
-        .withArgs(await handler.getAddress(), 85000000000000n, 170000000000000n);
-      await expect(tx)
-        .to.emit(handler, 'HandleCommunityFee')
-        .withArgs(
-          await pool.getAddress(),
-          await token0.getAddress(),
-          await token1.getAddress(),
-          85000000000000n,
-          170000000000000n
-        );
-      expect(await pool.getCommunityFeePending()).to.deep.eq([0n, 0n]);
-    });
+      it('the new vault claims the fees accumulated before the vault change', async () => {
+        const [pending0, pending1] = await pool.getCommunityFeePending();
+        await pool.setCommunityVault(other.address);
 
-    it('a vault without code gets the fees without the handler call', async () => {
-      await pool.setCommunityVault(other.address);
-      await pool.setCommunityFee(170);
+        await expect(vault.claimCommunityFees([pool])).to.be.revertedWithCustomError(pool, 'notAllowed');
+        await expect(pool.connect(other).claimCommunityFee())
+          .to.emit(pool, 'CommunityFeeTransfer')
+          .withArgs(other.address, pending0, pending1);
+      });
 
-      // the first transfer happens right away, a handler call on an address without code would revert
-      const tx = await swapExact0For1(expandTo18Decimals(1), wallet.address);
-      await expect(tx).to.emit(pool, 'CommunityFeeTransfer').withArgs(other.address, 85000000000000n, 0);
-      await expect(tx).to.changeTokenBalance(token0, other, 85000000000000n);
+      it('fees stay pending while there is no vault', async () => {
+        const pending = await pool.getCommunityFeePending();
+        await pool.setCommunityVault(ZeroAddress);
+        // turning the vault off also turns the community fee off
+        expect((await pool.globalState()).communityFee).to.eq(0);
+
+        await swapExact0For1(expandTo18Decimals(1), wallet.address);
+        expect(await pool.getCommunityFeePending()).to.deep.eq(pending);
+
+        await pool.setCommunityVault(vaultAddress);
+        await vault.claimCommunityFees([pool]);
+        expect(await token0.balanceOf(vaultAddress)).to.eq(pending[0]);
+      });
     });
   });
 
@@ -2350,39 +2338,31 @@ describe('AlgebraPool', () => {
       await expect(flash(100, 100, other.address)).to.be.revertedWithCustomError(pool, 'transferFailed');
     });
 
-    it('flash overflows communityFee0', async () => {
-      await pool.initialize(encodePriceSqrt(1, 1));
-      await pool.setCommunityFee(1000);
-      const MAX_PENDING_FEE = 2n ** 104n - 1n;
+    for (const token of [0, 1]) {
+      it(`community fee in token${token} accumulates beyond uint104 and is claimed in full`, async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await pool.setCommunityFee(1000);
+        const LARGE_FEE = 2n ** 104n;
 
-      await token0.approve(swapTarget, MaxUint256);
-      await token1.approve(swapTarget, MaxUint256);
+        await token0.approve(swapTarget, MaxUint256);
+        await token1.approve(swapTarget, MaxUint256);
 
-      await flash(0, 0, wallet.address, 1, 1);
-      await flash(0, 0, wallet.address, MAX_PENDING_FEE, 0);
-      await flash(0, 0, wallet.address, 1, 1);
+        await flash(0, 0, wallet.address, 1, 1);
+        await flash(0, 0, wallet.address, token == 0 ? LARGE_FEE : 0n, token == 1 ? LARGE_FEE : 0n);
+        await flash(0, 0, wallet.address, 1, 1);
 
-      const [reserve0after, reserve1after] = await pool.getReserves();
-      expect(reserve0after).to.eq(0);
-      expect(reserve1after).to.eq(0);
-    });
+        const expected = token == 0 ? [LARGE_FEE + 2n, 2n] : [2n, LARGE_FEE + 2n];
+        const [pending0, pending1] = await pool.getCommunityFeePending();
+        expect([pending0, pending1]).to.deep.eq(expected);
+        expect(await pool.getReserves()).to.deep.eq(expected);
 
-    it('flash overflows communityFee1', async () => {
-      await pool.initialize(encodePriceSqrt(1, 1));
-      await pool.setCommunityFee(1000);
-      const MAX_PENDING_FEE = 2n ** 104n - 1n;
-
-      await token0.approve(swapTarget, MaxUint256);
-      await token1.approve(swapTarget, MaxUint256);
-
-      await flash(0, 0, wallet.address, 1, 1);
-      await flash(0, 0, wallet.address, 0, MAX_PENDING_FEE);
-      await flash(0, 0, wallet.address, 1, 1);
-
-      const [reserve0after, reserve1after] = await pool.getReserves();
-      expect(reserve0after).to.eq(0);
-      expect(reserve1after).to.eq(0);
-    });
+        const vault = await ethers.getContractAt('AlgebraCommunityVault', vaultAddress);
+        await vault.claimCommunityFees([pool]);
+        expect(await pool.getReserves()).to.deep.eq([0n, 0n]);
+        expect(await token0.balanceOf(vaultAddress)).to.eq(expected[0]);
+        expect(await token1.balanceOf(vaultAddress)).to.eq(expected[1]);
+      });
+    }
 
     describe('after liquidity added', () => {
       let balanceToken0: bigint;
@@ -2561,8 +2541,9 @@ describe('AlgebraPool', () => {
           expect(await pool.totalFeeGrowth0Token()).to.eq((3n * 2n ** 128n) / expandTo18Decimals(2));
           expect(await pool.totalFeeGrowth1Token()).to.eq((8n * 2n ** 128n) / expandTo18Decimals(2));
 
-          expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(0);
-          expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(1);
+          const [communityFeePending0, communityFeePending1] = await pool.getCommunityFeePending();
+          expect(communityFeePending0).to.eq(0);
+          expect(communityFeePending1).to.eq(1);
         });
         it('allows donating token0', async () => {
           await expect(flash(0, 0, ZeroAddress, 567, 0))
@@ -2573,8 +2554,7 @@ describe('AlgebraPool', () => {
           await pool.burn(minTick, maxTick, 0, '0x');
 
           const [communityFeePending0] = await pool.getCommunityFeePending();
-          expect(Number(communityFeePending0.toString())).to.eq(0);
-          expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(96);
+          expect(Number(communityFeePending0.toString())).to.eq(96);
 
           expect(await pool.totalFeeGrowth0Token()).to.eq((471n * 2n ** 128n) / expandTo18Decimals(2));
         });
@@ -2587,8 +2567,7 @@ describe('AlgebraPool', () => {
           await pool.burn(minTick, maxTick, 0, '0x');
 
           const [, communityFeePending1] = await pool.getCommunityFeePending();
-          expect(Number(communityFeePending1.toString())).to.eq(0);
-          expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(115);
+          expect(Number(communityFeePending1.toString())).to.eq(115);
 
           expect(await pool.totalFeeGrowth1Token()).to.eq((563n * 2n ** 128n) / expandTo18Decimals(2));
         });
@@ -2602,11 +2581,8 @@ describe('AlgebraPool', () => {
           await pool.burn(minTick, maxTick, 0, '0x');
 
           const [communityFeePending0, communityFeePending1] = await pool.getCommunityFeePending();
-          expect(Number(communityFeePending0.toString())).to.eq(0);
-          expect(Number(communityFeePending1.toString())).to.eq(0);
-
-          expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(134);
-          expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(209);
+          expect(Number(communityFeePending0.toString())).to.eq(134);
+          expect(Number(communityFeePending1.toString())).to.eq(209);
 
           expect(await pool.totalFeeGrowth0Token()).to.eq((655n * 2n ** 128n) / expandTo18Decimals(2));
           expect(await pool.totalFeeGrowth1Token()).to.eq((1025n * 2n ** 128n) / expandTo18Decimals(2));
@@ -2664,7 +2640,7 @@ describe('AlgebraPool', () => {
       await swapExact0For1(expandTo18Decimals(1), wallet.address);
       const communityFees = await  pool.getCommunityFeePending();
 
-      expect(communityFees[0]).to.be.eq(expandTo18Decimals(1) * 5n * 5n/ 10000n);
+      expect(communityFees[0]).to.be.eq((expandTo18Decimals(1) * 5n * 5n * 2n) / 10000n);
     })
 
     it('emits an event with dynamic fee on swap', async () => {

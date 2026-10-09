@@ -62,6 +62,7 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
   function flash(address, uint256, uint256, bytes calldata) external pure override { revert notAllowed(); }
   function sync() external pure override { revert notAllowed(); }
   function skim() external pure override { revert notAllowed(); }
+  function claimCommunityFee() external pure override returns (uint128, uint128) { revert notAllowed(); }
   function getReserves() external pure override returns (uint128, uint128) { revert notAllowed(); }
   function positions(bytes32) external pure override returns (uint256, uint256, uint256, uint128, uint128) { revert notAllowed(); }
   function tickTreeRoot() external pure override returns (uint32) { revert notAllowed(); }
