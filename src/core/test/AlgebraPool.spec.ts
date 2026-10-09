@@ -672,38 +672,6 @@ describe('AlgebraPool', () => {
         });
       });
 
-      it('community fees accumulate as expected during swap', async () => {
-        await pool.setCommunityFee(170);
-
-        await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, expandTo18Decimals(1));
-        await swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address);
-        await swapExact1For0(expandTo18Decimals(1) / 100n, wallet.address);
-
-        // nothing is sent until the vault claims
-        expect(await token0.balanceOf(vaultAddress)).to.eq(0);
-        const [communityFeePending0, communityFeePending1] = await pool.getCommunityFeePending();
-        expect(communityFeePending0.toString()).to.eq('8500000000000');
-        expect(communityFeePending1.toString()).to.eq('850000000000');
-
-        const vault = await ethers.getContractAt('AlgebraCommunityVault', vaultAddress);
-        await vault.claimCommunityFees([pool]);
-        expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('8500000000000');
-        expect((await token1.balanceOf(vaultAddress)).toString()).to.eq('850000000000');
-      });
-
-      it('positions are protected before community fee is turned on', async () => {
-        await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, expandTo18Decimals(1));
-        await swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address);
-        await swapExact1For0(expandTo18Decimals(1) / 100n, wallet.address);
-
-        expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(0);
-        expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0);
-
-        await pool.setCommunityFee(170);
-        expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(0);
-        expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0);
-      });
-
       it('poke is not happened on uninitialized position', async () => {
         await mint(other.address, minTick + tickSpacing, maxTick - tickSpacing, expandTo18Decimals(1));
         await swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address);
@@ -1995,45 +1963,38 @@ describe('AlgebraPool', () => {
       expect(token0FeesNext).to.eq(0);
       expect(token1FeesNext).to.eq(0);
 
-      expect(await token0.balanceOf(vaultAddress)).to.eq(0);
-      const [communityFeePending0] = await pool.getCommunityFeePending();
-      expect(communityFeePending0).to.be.eq('170000000000000');
-      expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0);
+      expect(await pool.getCommunityFeePending()).to.deep.eq([170000000000000n, 0n]);
 
       await pool.burn(minTick, maxTick, 0, '0x'); // poke to update fees
       await expect(pool.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128))
         .to.emit(token0, 'Transfer')
         .withArgs(await pool.getAddress(), wallet.address, '414999999999999');
-      expect(await token0.balanceOf(vaultAddress)).to.eq(0);
 
       // collecting by LPs does not touch the community fee
-      const [communityFeePending0After] = await pool.getCommunityFeePending();
-      expect(communityFeePending0After).to.be.eq('170000000000000');
-      expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0);
+      expect(await pool.getCommunityFeePending()).to.deep.eq([170000000000000n, 0n]);
     });
 
     it('community fee pending increases after swap', async () => {
       await pool.setCommunityFee(170);
       await swapExact0For1(expandTo18Decimals(1), wallet.address);
 
-      async function checkFees(cb: any, zto: boolean) {
-        const pendingFeesBefore = await pool.getCommunityFeePending();
-        await cb(expandTo18Decimals(1));
-        const pendingFeesAfter = await pool.getCommunityFeePending();
-
-        if (zto) {
-          expect(pendingFeesAfter[0]).to.be.gt(pendingFeesBefore[0]);
-          expect(pendingFeesAfter[1]).to.eq(pendingFeesBefore[1]);
-        } else {
-          expect(pendingFeesAfter[1]).to.be.gt(pendingFeesBefore[1]);
-          expect(pendingFeesAfter[0]).to.eq(pendingFeesBefore[0]);
-        }
+      // 17% of the 0.05% fee on the input, in the input token only
+      const communityFee = 85000000000000n;
+      async function checkFees(swap: SwapFunction, zto: boolean, label: string) {
+        const before = await pool.getCommunityFeePending();
+        await swap(expandTo18Decimals(1), wallet.address);
+        const after = await pool.getCommunityFeePending();
+        const expected = zto ? [communityFee, 0n] : [0n, communityFee];
+        expect([after[0] - before[0], after[1] - before[1]], label).to.deep.eq(expected);
       }
 
-      await checkFees(async (amount: any) => swapExact0For1(amount, wallet.address), true);
-      await checkFees(async (amount: any) => swapExact1For0(amount, wallet.address), false);
-      await checkFees(async (amount: any) => swapExact0For1SupportingFee(amount, wallet.address), true);
-      await checkFees(async (amount: any) => swapExact1For0SupportingFee(amount, wallet.address), false);
+      await checkFees(swapExact0For1, true, 'exactIn 0 -> 1');
+      await checkFees(swapExact1For0, false, 'exactIn 1 -> 0');
+      await checkFees(swapExact0For1SupportingFee, true, 'payment in advance 0 -> 1');
+      await checkFees(swapExact1For0SupportingFee, false, 'payment in advance 1 -> 0');
+
+      // nothing is sent until the vault claims
+      expect([await token0.balanceOf(vaultAddress), await token1.balanceOf(vaultAddress)]).to.deep.eq([0n, 0n]);
     });
 
     describe('#claimCommunityFee', () => {
@@ -2057,7 +2018,8 @@ describe('AlgebraPool', () => {
         expect(pending1).to.be.gt(0);
         const [reserve0, reserve1] = await pool.getReserves();
 
-        await expect(vault.claimCommunityFees([pool]))
+        // anyone can make the vault claim
+        await expect(vault.connect(other).claimCommunityFees([pool]))
           .to.emit(pool, 'CommunityFeeTransfer')
           .withArgs(vaultAddress, pending0, pending1);
 
@@ -2098,23 +2060,54 @@ describe('AlgebraPool', () => {
         await pool.setCommunityVault(other.address);
 
         await expect(vault.claimCommunityFees([pool])).to.be.revertedWithCustomError(pool, 'notAllowed');
+        expect(await pool.connect(other).claimCommunityFee.staticCall()).to.deep.eq([pending0, pending1]);
         await expect(pool.connect(other).claimCommunityFee())
           .to.emit(pool, 'CommunityFeeTransfer')
           .withArgs(other.address, pending0, pending1);
       });
 
+      it('sends a fee pending in one token only', async () => {
+        for (const zeroToOne of [true, false]) {
+          const label = zeroToOne ? 'token0' : 'token1';
+          await vault.claimCommunityFees([pool]);
+          await (zeroToOne ? swapExact0For1 : swapExact1For0)(expandTo18Decimals(1), wallet.address);
+          const [pending0, pending1] = await pool.getCommunityFeePending();
+          const [feeToken, otherToken, fee] = zeroToOne ? [token0, token1, pending0] : [token1, token0, pending1];
+          expect(fee, label).to.be.gt(0);
+          expect(zeroToOne ? pending1 : pending0, label).to.eq(0);
+
+          const tx = await vault.claimCommunityFees([pool]);
+          await expect(tx).to.emit(pool, 'CommunityFeeTransfer').withArgs(vaultAddress, pending0, pending1);
+          await expect(tx).to.changeTokenBalances(feeToken, [vault, pool], [fee, -fee]);
+          await expect(tx).to.not.emit(otherToken, 'Transfer');
+        }
+      });
+
+      it('sends only the pending fees and leaves an excess on the balance in the pool', async () => {
+        const [pending0, pending1] = await pool.getCommunityFeePending();
+        const [reserve0, reserve1] = await pool.getReserves();
+        await token0.transfer(pool, 1000);
+        await token1.transfer(pool, 1000);
+
+        await vault.claimCommunityFees([pool]);
+
+        expect(await token0.balanceOf(vaultAddress)).to.eq(pending0);
+        expect(await token1.balanceOf(vaultAddress)).to.eq(pending1);
+        expect(await pool.getReserves()).to.deep.eq([reserve0 - pending0, reserve1 - pending1]);
+        expect(await token0.balanceOf(pool)).to.eq(reserve0 - pending0 + 1000n);
+        expect(await token1.balanceOf(pool)).to.eq(reserve1 - pending1 + 1000n);
+      });
+
       it('fees stay pending while there is no vault', async () => {
         const pending = await pool.getCommunityFeePending();
         await pool.setCommunityVault(ZeroAddress);
-        // turning the vault off also turns the community fee off
-        expect((await pool.globalState()).communityFee).to.eq(0);
 
         await swapExact0For1(expandTo18Decimals(1), wallet.address);
         expect(await pool.getCommunityFeePending()).to.deep.eq(pending);
 
         await pool.setCommunityVault(vaultAddress);
         await vault.claimCommunityFees([pool]);
-        expect(await token0.balanceOf(vaultAddress)).to.eq(pending[0]);
+        expect([await token0.balanceOf(vaultAddress), await token1.balanceOf(vaultAddress)]).to.deep.eq(pending);
       });
     });
   });
@@ -2363,6 +2356,30 @@ describe('AlgebraPool', () => {
         expect(await token1.balanceOf(vaultAddress)).to.eq(expected[1]);
       });
     }
+
+    it('a community fee that would take the reserve over max uint 128 reverts, so the pending fee stays within the reserve', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await pool.setCommunityFee(1000);
+      await token0.approve(swapTarget, MaxUint256);
+      await token1.approve(swapTarget, MaxUint256);
+      await flash(0, 0, wallet.address, 1, 1);
+
+      for (const token of [0, 1]) {
+        const label = `token${token}`;
+        const pay = (amount: bigint) => flash(0, 0, wallet.address, token == 0 ? amount : 0n, token == 1 ? amount : 0n);
+        const reserve = (await pool.getReserves())[token];
+        const pending = (await pool.getCommunityFeePending())[token];
+
+        await expect(pay(MaxUint128 - reserve + 1n), label).to.be.revertedWithoutReason();
+        expect((await pool.getReserves())[token], label).to.eq(reserve);
+        expect((await pool.getCommunityFeePending())[token], label).to.eq(pending);
+
+        // a fee that fills the reserve exactly is still taken
+        await pay(MaxUint128 - reserve);
+        expect((await pool.getReserves())[token], label).to.eq(MaxUint128);
+        expect((await pool.getCommunityFeePending())[token], label).to.eq(pending + MaxUint128 - reserve);
+      }
+    });
 
     describe('after liquidity added', () => {
       let balanceToken0: bigint;
@@ -3601,6 +3618,7 @@ describe('AlgebraPool', () => {
       ).deploy()) as any as TestAlgebraReentrantCallee;
 
       await pool.setPlugin(reentrant);
+      await pool.setCommunityVault(reentrant);
       await factory.grantRole(await factory.POOLS_ADMINISTRATOR_ROLE(), reentrant);
       // the tests happen in solidity
       await expect(reentrant.swapToReenter(pool)).to.be.revertedWith('Unable to reenter');
@@ -3639,10 +3657,16 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, minTick, maxTick, 1);
       const [reserve0before, reserve1before] = await pool.getReserves();
 
+      const vaultBefore = [await token0.balanceOf(vaultAddress), await token1.balanceOf(vaultAddress)];
       await flash(0, 0, wallet.address, MaxUint128, MaxUint128);
       await flash(0, 0, wallet.address, 1, 1);
 
       await pool.burn(minTick, maxTick, 0, '0x');
+      // what the pool holds over max uint 128 goes to the vault
+      expect(await token0.balanceOf(pool)).to.eq(MaxUint128);
+      expect(await token0.balanceOf(vaultAddress)).to.eq(vaultBefore[0] + reserve0before + 1n);
+      expect(await token1.balanceOf(pool)).to.eq(MaxUint128);
+      expect(await token1.balanceOf(vaultAddress)).to.eq(vaultBefore[1] + reserve1before + 1n);
       const [totalFeeGrowth0Token, totalFeeGrowth1Token] = await Promise.all([
         pool.totalFeeGrowth0Token(),
         pool.totalFeeGrowth1Token(),
@@ -3667,10 +3691,15 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, minTick, maxTick, 1);
       const [reserve0before] = await pool.getReserves();
 
+      const vaultBefore = [await token0.balanceOf(vaultAddress), await token1.balanceOf(vaultAddress)];
       await flash(0, 0, wallet.address, MaxUint128, 0);
       await flash(0, 0, wallet.address, 1, 0);
 
       await pool.burn(minTick, maxTick, 0, '0x');
+      // what the pool holds over max uint 128 goes to the vault
+      expect(await token0.balanceOf(pool)).to.eq(MaxUint128);
+      expect(await token0.balanceOf(vaultAddress)).to.eq(vaultBefore[0] + reserve0before + 1n);
+      expect(await token1.balanceOf(vaultAddress)).to.eq(vaultBefore[1]);
       const [totalFeeGrowth0Token, totalFeeGrowth1Token] = await Promise.all([
         pool.totalFeeGrowth0Token(),
         pool.totalFeeGrowth1Token(),
@@ -3695,10 +3724,15 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, minTick, maxTick, 1);
       const [, reserve1before] = await pool.getReserves();
 
+      const vaultBefore = [await token0.balanceOf(vaultAddress), await token1.balanceOf(vaultAddress)];
       await flash(0, 0, wallet.address, 0, MaxUint128);
       await flash(0, 0, wallet.address, 0, 1);
 
       await pool.burn(minTick, maxTick, 0, '0x');
+      // what the pool holds over max uint 128 goes to the vault
+      expect(await token0.balanceOf(vaultAddress)).to.eq(vaultBefore[0]);
+      expect(await token1.balanceOf(pool)).to.eq(MaxUint128);
+      expect(await token1.balanceOf(vaultAddress)).to.eq(vaultBefore[1] + reserve1before + 1n);
       const [totalFeeGrowth0Token, totalFeeGrowth1Token] = await Promise.all([
         pool.totalFeeGrowth0Token(),
         pool.totalFeeGrowth1Token(),
@@ -3716,6 +3750,23 @@ describe('AlgebraPool', () => {
       // fees burned
       expect(amount0).to.eq(0);
       expect(amount1).to.eq(MaxUint128 - 1n);
+    });
+
+    it('burns what the pool holds over max uint 128 when there is no vault', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, minTick, maxTick, 1);
+      await pool.setCommunityVault(ZeroAddress);
+      const [reserve0before] = await pool.getReserves();
+      const burnedBefore = await token0.balanceOf(ZeroAddress);
+
+      await flash(0, 0, wallet.address, MaxUint128, 0);
+      await flash(0, 0, wallet.address, 1, 0);
+      await pool.burn(minTick, maxTick, 0, '0x');
+
+      // the test token accepts the zero address, so the pool keeps working
+      expect(await token0.balanceOf(pool)).to.eq(MaxUint128);
+      expect(await token0.balanceOf(ZeroAddress)).to.eq(burnedBefore + reserve0before + 1n);
+      expect((await pool.getReserves())[0]).to.eq(MaxUint128);
     });
 
     it('overflow max uint 128 after poke burns fees owed to 0', async () => {

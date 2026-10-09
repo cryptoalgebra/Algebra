@@ -1,8 +1,9 @@
-import { Wallet, getCreateAddress, ZeroAddress } from 'ethers';
+import { Wallet, getCreateAddress, MaxUint256, ZeroAddress } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory, AlgebraCommunityVault, TestERC20 } from '../typechain';
 import { expect } from './shared/expect';
+import { encodePriceSqrt } from './shared/utilities';
 
 describe('AlgebraCommunityVault', () => {
   let wallet: Wallet, other: Wallet, third: Wallet;
@@ -155,16 +156,29 @@ describe('AlgebraCommunityVault', () => {
     it('claims from several pools of this vault', async () => {
       const token2 = await (await ethers.getContractFactory('TestERC20')).deploy(2n ** 255n);
       const pools = [await createPool(await token0.getAddress(), await token1.getAddress()), await createPool(await token0.getAddress(), await token2.getAddress())];
-      for (const pool of pools) expect(await pool.communityVault()).to.eq(await vault.getAddress());
+      const callee = await (await ethers.getContractFactory('TestAlgebraCallee')).deploy();
+      for (const token of [token0, token1, token2]) await token.approve(callee, MaxUint256);
 
-      await expect(vault.claimCommunityFees(pools)).to.not.be.reverted;
-    });
+      // each pool gets a flash payment in both of its tokens, all of it kept as the community fee
+      const payments = [100n, 200n];
+      for (const [i, pool] of pools.entries()) {
+        expect(await pool.communityVault()).to.eq(await vault.getAddress());
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await pool.setCommunityFee(1000);
+        await callee.flash(pool, wallet.address, 0, 0, payments[i], payments[i]);
+        expect(await pool.getCommunityFeePending()).to.deep.eq([payments[i], payments[i]]);
+      }
 
-    it('reverts for a pool with another vault', async () => {
-      const pool = await createPool(await token0.getAddress(), await token1.getAddress());
-      await pool.setCommunityVault(other.address);
-
-      await expect(vault.claimCommunityFees([pool])).to.be.revertedWithCustomError(pool, 'notAllowed');
+      const tx = await vault.claimCommunityFees(pools);
+      for (const [i, pool] of pools.entries()) {
+        await expect(tx)
+          .to.emit(pool, 'CommunityFeeTransfer')
+          .withArgs(await vault.getAddress(), payments[i], payments[i]);
+        expect(await pool.getCommunityFeePending()).to.deep.eq([0n, 0n]);
+      }
+      await expect(tx).to.changeTokenBalance(token0, vault, payments[0] + payments[1]);
+      await expect(tx).to.changeTokenBalance(token1, vault, payments[0]);
+      await expect(tx).to.changeTokenBalance(token2, vault, payments[1]);
     });
   });
 });

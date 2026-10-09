@@ -15,14 +15,55 @@ describe('echidna pool harnesses', () => {
   const payment = expandTo18Decimals(10);
 
   describe('PoolMockEchidna', () => {
+    const deployReservesSuite = async () =>
+      (await (await ethers.getContractFactory('PropReservesEchidnaTest')).deploy()) as any as PropReservesEchidnaTest;
+
     it('initializes through its own extension, at a price folded into the valid range', async () => {
-      const suite = (await (await ethers.getContractFactory('PropReservesEchidnaTest')).deploy()) as any as PropReservesEchidnaTest;
+      const suite = await deployReservesSuite();
       await suite.initializeWrapped(0);
 
       const { price, lastFee } = await suite.globalState();
       expect(price).to.eq(MIN_SQRT_RATIO);
       expect(lastFee).to.eq(100);
       expect(await suite.tickSpacing()).to.eq(1);
+    });
+
+    it('turns the community fee on with a vault of its own, at a fee folded into the valid range', async () => {
+      const suite = await deployReservesSuite();
+      await suite.setCommunityFeeWrapped(1001 + 250);
+      expect(await suite.communityVault()).to.eq('0x000000000000000000000000000000000000dEaD');
+      expect((await suite.globalState()).communityFee).to.eq(250);
+
+      // the same fee again is skipped instead of reverting, and a vault set before is kept
+      await suite.setCommunityFeeWrapped(250);
+      await suite.setCommunityVault('0x0000000000000000000000000000000000000001');
+      await suite.setCommunityFeeWrapped(0);
+      expect(await suite.communityVault()).to.eq('0x0000000000000000000000000000000000000001');
+      expect((await suite.globalState()).communityFee).to.eq(0);
+    });
+
+    it('claims the community fee as its own vault and puts the vault back', async () => {
+      const suite = await deployReservesSuite();
+      await suite.initializeWrapped(2n ** 96n);
+      await suite.mintWrapped(-600, 600, liquidity, payment, payment);
+      // there is no vault to claim for yet
+      await expect(suite.claimCommunityFeeWrapped()).to.be.revertedWithoutReason();
+
+      const vault = '0x000000000000000000000000000000000000dEaD';
+      await suite.setCommunityFeeWrapped(100);
+      await suite.swap(suite, true, expandTo18Decimals(1) / 100n, encodePriceSqrt(99, 100), '0x');
+      const [pending0, pending1] = await suite.getCommunityFeePending();
+      expect(pending0).to.be.gt(0);
+      const [reserve0, reserve1] = await suite.getReserves();
+
+      await expect(suite.claimCommunityFeeWrapped())
+        .to.emit(suite, 'CommunityFeeTransfer')
+        .withArgs(await suite.getAddress(), pending0, pending1);
+      expect(await suite.communityVault()).to.eq(vault);
+      expect(await suite.getCommunityFeePending()).to.deep.eq([0n, 0n]);
+      expect(await suite.getReserves()).to.deep.eq([reserve0 - pending0, reserve1 - pending1]);
+      expect(await suite.echidna_check_balance0_reserve0()).to.eq(true);
+      expect(await suite.echidna_check_balance1_reserve1()).to.eq(true);
     });
   });
 
