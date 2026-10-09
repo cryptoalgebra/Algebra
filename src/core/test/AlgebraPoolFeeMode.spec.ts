@@ -85,10 +85,9 @@ describe('AlgebraPool fee mode', () => {
     await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));
   }
 
-  // the accrued fee is either sent to the vault straight away or held as pending, so both are summed up
+  // the accrued fee stays pending until the vault claims it
   async function collectedCommunityFee() {
-    const [pending0, pending1] = await pool.getCommunityFeePending();
-    return [pending0 + (await token0.balanceOf(vaultAddress)), pending1 + (await token1.balanceOf(vaultAddress))];
+    return pool.getCommunityFeePending();
   }
 
   describe('#setFeeMode', () => {
@@ -333,7 +332,7 @@ describe('AlgebraPool fee mode', () => {
 
       expect(paid0Before - (await token0.balanceOf(wallet.address))).to.eq(1000750625547368n);
       expect((await pool.globalState()).price).to.eq(encodePriceSqrt(999, 1000));
-      expect(await pool.getReserves()).to.deep.eq([2001000750625547368n, 1999000199987478107n]);
+      expect(await pool.getReserves()).to.deep.eq([2001000750625547368n, 1999000249999984361n]);
 
       expect(await pool.totalFeeGrowth1Token()).to.eq(76582683016917109323800278743567n);
       expect(await pool.totalFeeGrowth0Token()).to.eq(0);
@@ -390,29 +389,21 @@ describe('AlgebraPool fee mode', () => {
       expect(fee0).to.eq(0);
     });
 
-    it('sends both slots to the vault after the window when the mode changed in between', async () => {
+    it('the vault claims both slots when the mode changed in between', async () => {
       await initializeWithLiquidity(FEE_MODE_DEFAULT);
       await pool.setCommunityFee(100);
 
-      // nothing has been transferred yet, so the first swap pays the vault at once and restarts the window
+      // the fee is in the input token, then in token0 after the mode change
       await swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address);
-      expect(await token1.balanceOf(vaultAddress)).to.eq(5000000000000n);
-
       await pool.setFeeMode(FEE_MODE_TOKEN0);
       await swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address);
+      expect(await pool.getCommunityFeePending()).to.deep.eq([4329205794030n, 5000000000000n]);
 
-      // the window has not elapsed, so the other slot fills up instead
-      let [pending0, pending1] = await pool.getCommunityFeePending();
-      expect(pending0).to.eq(4329205794030n);
-      expect(pending1).to.eq(0);
+      const vault = await ethers.getContractAt('AlgebraCommunityVault', vaultAddress);
+      await vault.claimCommunityFees([pool]);
 
-      await pool.advanceTime(8 * 60 * 60);
-      await swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address);
-
-      [pending0, pending1] = await pool.getCommunityFeePending();
-      expect(pending0).to.eq(0);
-      expect(pending1).to.eq(0);
-      expect(await token0.balanceOf(vaultAddress)).to.eq(8281950726387n);
+      expect(await pool.getCommunityFeePending()).to.deep.eq([0n, 0n]);
+      expect(await token0.balanceOf(vaultAddress)).to.eq(4329205794030n);
       expect(await token1.balanceOf(vaultAddress)).to.eq(5000000000000n);
     });
   });
@@ -517,12 +508,9 @@ describe('AlgebraPool fee mode', () => {
 
       await poolPlugin.setAmountOutDecrease(outputAfterFee);
       const tx = await swapExact0For1(amount, wallet.address);
-      await expect(tx).to.changeTokenBalances(
-        token1,
-        [wallet, poolPlugin, vaultAddress],
-        [0, outputAfterFee, 4761904761904n]
-      );
-      await expect(tx).to.changeTokenBalances(token0, [wallet, poolPlugin, vaultAddress], [-amount, 0, 0]);
+      await expect(tx).to.changeTokenBalances(token1, [wallet, poolPlugin], [0, outputAfterFee]);
+      await expect(tx).to.changeTokenBalances(token0, [wallet, poolPlugin], [-amount, 0]);
+      expect(await pool.getCommunityFeePending()).to.deep.eq([0n, 4761904761904n]);
     });
   });
 });

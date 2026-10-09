@@ -5,9 +5,10 @@ import './libraries/SafeTransfer.sol';
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/vault/IAlgebraCommunityVault.sol';
+import './interfaces/pool/IAlgebraPoolPermissionedActions.sol';
 
 /// @title Algebra community fee vault
-/// @notice Community fee from pools is sent here, if it is enabled
+/// @notice Community fee from pools is claimed here, if it is enabled
 /// @dev Role system is used to withdraw tokens
 /// @dev Version: Algebra Integral 1.3
 contract AlgebraCommunityVault is IAlgebraCommunityVault {
@@ -32,6 +33,16 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
 
   constructor(address _factory) {
     factory = _factory;
+  }
+
+  /// @inheritdoc IAlgebraCommunityVault
+  function claimCommunityFees(address[] calldata pools) external override {
+    uint256 poolsLength = pools.length;
+    unchecked {
+      for (uint256 i; i < poolsLength; ++i) {
+        IAlgebraPoolPermissionedActions(pools[i]).claimCommunityFee();
+      }
+    }
   }
 
   /// @inheritdoc IAlgebraCommunityVault
@@ -60,11 +71,5 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
     require(newCommunityFeeReceiver != communityFeeReceiver);
     communityFeeReceiver = newCommunityFeeReceiver;
     emit CommunityFeeReceiver(newCommunityFeeReceiver);
-  }
-
-  /// @inheritdoc IAlgebraCommunityVaultFeeHandler
-  // Can be extended in derived contracts if additional logic is needed
-  function handleCommunityFee(address, address, uint256, uint256) external override {
-    // solhint-disable-next-line no-empty-blocks
   }
 }
