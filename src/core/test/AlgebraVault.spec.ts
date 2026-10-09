@@ -149,4 +149,26 @@ describe('AlgebraCommunityVault', () => {
       );
     });
   });
+
+  describe('#claimCommunityFees', async () => {
+    async function createPool(tokenA: string, tokenB: string) {
+      await factory.createPool(tokenA, tokenB, '0x');
+      return ethers.getContractAt('AlgebraPool', await factory.poolByPair(tokenA, tokenB));
+    }
+
+    it('claims from several pools of this vault', async () => {
+      const token2 = await (await ethers.getContractFactory('TestERC20')).deploy(2n ** 255n);
+      const pools = [await createPool(await token0.getAddress(), await token1.getAddress()), await createPool(await token0.getAddress(), await token2.getAddress())];
+      for (const pool of pools) expect(await pool.communityVault()).to.eq(await vault.getAddress());
+
+      await expect(vault.claimCommunityFees(pools)).to.not.be.reverted;
+    });
+
+    it('reverts for a pool with another vault', async () => {
+      const pool = await createPool(await token0.getAddress(), await token1.getAddress());
+      await pool.setCommunityVault(other.address);
+
+      await expect(vault.claimCommunityFees([pool])).to.be.revertedWithCustomError(pool, 'notAllowed');
+    });
+  });
 });

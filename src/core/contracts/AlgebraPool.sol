@@ -611,4 +611,19 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _skimReserves(msg.sender);
     _unlock();
   }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function claimCommunityFee() external override returns (uint128 amount0, uint128 amount1) {
+    if (msg.sender != communityVault) revert notAllowed();
+    _lock();
+    (amount0, amount1) = (communityFeePending0, communityFeePending1);
+    if (amount0 | amount1 != 0) {
+      (communityFeePending0, communityFeePending1) = (0, 0);
+      if (amount0 > 0) _transfer(token0, msg.sender, amount0);
+      if (amount1 > 0) _transfer(token1, msg.sender, amount1);
+      _changeReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
+      emit CommunityFeeTransfer(msg.sender, amount0, amount1);
+    }
+    _unlock();
+  }
 }
