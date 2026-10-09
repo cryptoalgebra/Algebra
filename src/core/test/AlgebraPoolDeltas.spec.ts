@@ -20,7 +20,8 @@ const BEFORE_SWAP = 1;
 const AFTER_SWAP = 1 << 1;
 const DYNAMIC_FEE = 1 << 7;
 const AFTER_SWAP_CALCULATION = 1 << 9;
-const DELTA_CONFIG = BEFORE_SWAP | AFTER_SWAP | AFTER_SWAP_CALCULATION;
+const AMOUNT_DELTAS = 1 << 10;
+const DELTA_CONFIG = BEFORE_SWAP | AFTER_SWAP | AFTER_SWAP_CALCULATION | AMOUNT_DELTAS;
 
 const FEE_MODES = [0, 1, 2];
 const FEES = [0, 1, 3000, 500000, 999999];
@@ -685,6 +686,31 @@ describe('AlgebraPool amount deltas', () => {
           expect(r.after.plugin[1] - r.before.plugin[1]).to.eq(0n, kind);
         }
         expect(await env.plugin.afterSwapCalculationCalls()).to.eq(0n);
+      });
+
+      it(`every amount delta needs the amount deltas flag, ${dirName(zeroToOne)}`, async () => {
+        const env = await loadFixture(fullRangeFixture);
+        await env.pool.setPluginConfig((DELTA_CONFIG | DYNAMIC_FEE) & ~AMOUNT_DELTAS);
+        const amount = expandTo18Decimals(1) / 10n;
+        const cases: [Kind, Deltas][] = [
+          ['exactIn', deltas({ inDecrease: absolute(1n) })],
+          ['exactIn', deltas({ outDecrease: absolute(1n) })],
+          ['exactOut', deltas({ inIncrease: absolute(1n) })],
+          ['payInAdvance', deltas({ inDecrease: absolute(1n) })],
+          ['payInAdvance', deltas({ outDecrease: absolute(1n) })],
+        ];
+        for (const [kind, d] of cases) {
+          await setDeltas(env, d);
+          await expect(send(env, kind, zeroToOne, amount)).to.be.revertedWithCustomError(
+            env.pool,
+            'amountDeltasDisabled',
+          );
+        }
+
+        // the hooks still work without deltas
+        await setDeltas(env, deltas());
+        for (const kind of ['exactIn', 'exactOut', 'payInAdvance'] as Kind[])
+          checkAccounting(await execute(env, kind, zeroToOne, amount), kind, zeroToOne, amount, deltas());
       });
 
       it(`the pool is locked during afterSwapCalculation, ${dirName(zeroToOne)}`, async () => {
