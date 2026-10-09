@@ -2571,11 +2571,29 @@ describe('AlgebraPool', () => {
       const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
       poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
       await pool.setPlugin(poolPlugin);
-      await pool.setPluginConfig(1023);
+      await pool.setPluginConfig(2047); // all hooks, the dynamic fee and the amount deltas
       await pool.initialize(encodePriceSqrt(1, 1));
       // with the dynamic fee the plugin sets the fee of every swap, so keep the pool fee
       await poolPlugin.setOverrideFee((await pool.globalState()).lastFee);
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+    });
+
+    it('the amount deltas require the flag', async () => {
+      await pool.setPluginConfig(2047 & ~(1 << 10));
+      await poolPlugin.setAmountInDecrease(expandTo18Decimals(1) / 100n);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.revertedWithCustomError(pool, 'amountDeltasDisabled');
+
+      await poolPlugin.setAmountInDecrease(0);
+      await poolPlugin.setAmountOutDecrease(1);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.revertedWithCustomError(pool, 'amountDeltasDisabled');
+
+      await poolPlugin.setAmountOutDecrease(0);
+      await poolPlugin.setAmountInIncrease(1);
+      await expect(swap0ForExact1(expandTo18Decimals(1) / 100n, wallet.address)).to.be.revertedWithCustomError(pool, 'amountDeltasDisabled');
+
+      // zero deltas do not need the flag
+      await poolPlugin.setAmountInIncrease(0);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.not.be.reverted;
     });
 
     it('can decrease amountIn using beforeSwap hook', async () => {
@@ -3866,6 +3884,18 @@ describe('AlgebraPool', () => {
       it('emits an event when changed', async () => {
         await pool.setPlugin(other.address);
         await expect(pool.setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1);
+      });
+      it('the amount deltas need a hook that returns them', async () => {
+        await pool.setPlugin(other.address);
+        const AMOUNT_DELTAS = 1 << 10;
+        await expect(pool.setPluginConfig(AMOUNT_DELTAS)).to.be.revertedWithCustomError(pool, 'invalidNewPluginConfig');
+        // every hook except beforeSwap and afterSwapCalculation
+        await expect(pool.setPluginConfig(AMOUNT_DELTAS | (1023 & ~1 & ~(1 << 9) & ~(1 << 7)))).to.be.revertedWithCustomError(
+          pool,
+          'invalidNewPluginConfig'
+        );
+        await expect(pool.setPluginConfig(AMOUNT_DELTAS | 1)).to.not.be.reverted;
+        await expect(pool.setPluginConfig(AMOUNT_DELTAS | (1 << 9))).to.not.be.reverted;
       });
     });
 

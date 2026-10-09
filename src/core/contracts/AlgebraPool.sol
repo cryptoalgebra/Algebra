@@ -466,8 +466,11 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         if (overrideFee >= Constants.FEE_DENOMINATOR) revert invalidOverrideFee();
         fee = overrideFee;
       } else if (overrideFee > 0) revert dynamicFeeDisabled();
-      // amountInDecrease is only valid for exactIn (amount > 0) and must be less than amount
-      if (amountInDecrease != 0 && (amount < 0 || amountInDecrease >= uint256(amount))) revert invalidAmountInDecrease();
+      if (amountInDecrease != 0) {
+        if (!pluginConfig.hasFlag(Plugins.AMOUNT_DELTAS_FLAG)) revert amountDeltasDisabled();
+        // amountInDecrease is only valid for exactIn (amount > 0) and must be less than amount
+        if (amount < 0 || amountInDecrease >= uint256(amount)) revert invalidAmountInDecrease();
+      }
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
   }
@@ -481,7 +484,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     int256 amount1,
     bytes memory data
   ) internal returns (uint256 amountInIncrease, uint256 amountOutDecrease) {
-    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_CALCULATION_FLAG)) {
+    uint16 pluginConfig = globalState.pluginConfig;
+    if (pluginConfig.hasFlag(Plugins.AFTER_SWAP_CALCULATION_FLAG)) {
       if (_isPlugin()) return (0, 0);
       bytes4 selector;
       (selector, amountInIncrease, amountOutDecrease) = IAlgebraPlugin(plugin).afterSwapCalculation(
@@ -494,6 +498,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         amount1,
         data
       );
+      if ((amountInIncrease | amountOutDecrease) != 0 && !pluginConfig.hasFlag(Plugins.AMOUNT_DELTAS_FLAG)) revert amountDeltasDisabled();
       // cannot increase input amount if it's exactIn; must fit in int256 to prevent overflow
       if (amountInIncrease > 0 && (amount > 0 || amountInIncrease > uint256(type(int256).max))) revert invalidAmountInIncrease();
       if (amountOutDecrease > 0) {

@@ -62,12 +62,15 @@ interface IAlgebraPoolErrors {
   error invalidOverrideFee();
   /// @notice Emitted if an attempt is made to change the plugin configuration, but the plugin is not connected
   error pluginIsNotConnected();
-  /// @notice Emitted if new plugin config enables the dynamic fee without the beforeSwap hook
+  /// @notice Emitted if new plugin config enables the dynamic fee without the beforeSwap hook,
+  /// or the amount deltas without the beforeSwap or afterSwapCalculation hook
   error invalidNewPluginConfig();
   /// @notice Emitted if a plugin returns invalid selector after hook call
   /// @param expectedSelector The expected selector
   error invalidHookResponse(bytes4 expectedSelector);
 
+  /// @notice Emitted if plugin returns non-zero amount deltas, but they are disabled in the plugin config
+  error amountDeltasDisabled();
   /// @notice Emitted if plugin returns non-zero amountInDecrease for exactOut swap
   error invalidAmountInDecrease();
   /// @notice Emitted if plugin returns invalid amountOutDecrease (exactOut or exceeds output amount)

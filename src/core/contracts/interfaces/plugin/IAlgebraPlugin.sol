@@ -72,7 +72,7 @@ interface IAlgebraPlugin {
   /// @param withPaymentInAdvance The flag indicating whether the `swapWithPaymentInAdvance` method was called
   /// @param data Data that passed through the callback
   /// @return amountInDecrease The part of the input that goes to the plugin instead of being swapped (exactIn only).
-  /// It is charged in full even if the swap is executed partially
+  /// It is charged in full even if the swap is executed partially. Must be zero if the amount deltas are disabled
   /// @return selector The function selector for the hook
   /// @return feeOverride The fee for this swap if the dynamic fee is enabled, zero meaning a zero fee, not the pool fee.
   /// Must be zero if the dynamic fee is disabled
@@ -98,7 +98,8 @@ interface IAlgebraPlugin {
   /// @param data Data that passed through the callback
   /// @return selector The function selector for the hook
   /// @return amountInIncrease The amount to increase input (for exactOut case), goes to the plugin
-  /// @return amountOutDecrease The amount to decrease output (for exactIn case), goes to the plugin
+  /// @return amountOutDecrease The amount to decrease output (for exactIn case), goes to the plugin.
+  /// Both amounts must be zero if the amount deltas are disabled
   function afterSwapCalculation(
     address sender,
     address recipient,
