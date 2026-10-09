@@ -94,7 +94,7 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
 
   function setFeeMode(uint8 newFeeMode) external override onlyUnlocked {
     _checkIfAdministrator();
-    if (newFeeMode > Constants.MAX_FEE_MODE || newFeeMode == globalState.feeMode) revert invalidNewFeeMode();
+    if (newFeeMode > Constants.MAX_FEE_MODE || newFeeMode == feeMode) revert invalidNewFeeMode();
     _setFeeMode(newFeeMode);
   }
 

@@ -69,7 +69,7 @@ contract PoolMockEchidna is AlgebraPool {
 
   function setFeeModeWrapped(uint8 newFeeMode) public {
     newFeeMode = newFeeMode % (Constants.MAX_FEE_MODE + 1);
-    if (newFeeMode == globalState.feeMode) return;
+    if (newFeeMode == feeMode) return;
     IAlgebraPool(this).setFeeMode(newFeeMode);
   }
 

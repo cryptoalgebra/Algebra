@@ -8,7 +8,7 @@ import './PoolMockEchidna.sol';
 /// legitimately move the other accumulator
 contract PropFeeTokenIsolationEchidnaTest is PoolMockEchidna {
   constructor() {
-    globalState.feeMode = Constants.FEE_MODE_TOKEN0;
+    feeMode = Constants.FEE_MODE_TOKEN0;
   }
 
   /// @dev An excess balance of the other token would bump its accumulator through `_updateReserves`
