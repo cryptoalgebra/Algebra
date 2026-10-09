@@ -31,7 +31,7 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   int256 public seenCalc1;
   int256 public seenAfterSwap0;
   int256 public seenAfterSwap1;
-  uint256 public seenTotalSwapFeeAmount;
+  uint256 public seenFeeAmount;
   uint256 public afterSwapCalculationCalls;
 
   function setInDecrease(uint256 value, bool isShare, uint256 addend) external {
@@ -108,10 +108,10 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint160,
     int256 amount0,
     int256 amount1,
-    uint256 totalSwapFeeAmount,
+    uint256 feeAmount,
     bytes calldata
   ) external override returns (bytes4) {
-    (seenAfterSwap0, seenAfterSwap1, seenTotalSwapFeeAmount) = (amount0, amount1, totalSwapFeeAmount);
+    (seenAfterSwap0, seenAfterSwap1, seenFeeAmount) = (amount0, amount1, feeAmount);
     return IAlgebraPlugin.afterSwap.selector;
   }
 
@@ -139,7 +139,7 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     return IAlgebraPlugin.afterFlash.selector;
   }
 
-  function afterCross(bool, uint256, uint256, int24, int128) external pure override returns (bytes4) {
+  function afterCross(bool, uint256, uint256, int24, int128, uint128) external pure override returns (bytes4) {
     return IAlgebraPlugin.afterCross.selector;
   }
 }

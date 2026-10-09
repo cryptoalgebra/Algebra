@@ -92,7 +92,8 @@ contract MockPlugin is IAlgebraPlugin {
         uint256,
         uint256,
         int24,
-        int128
+        int128,
+        uint128
     ) external pure returns (bytes4) {
         return IAlgebraPlugin.afterCross.selector;
     }

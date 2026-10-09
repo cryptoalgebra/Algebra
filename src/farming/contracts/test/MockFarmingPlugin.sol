@@ -77,7 +77,7 @@ contract MockFarmingPlugin is IAlgebraPlugin {
         return (IAlgebraPlugin.afterSwapCalculation.selector, 0, 0);
     }
 
-    function afterCross(bool, uint256, uint256, int24, int128)
+    function afterCross(bool, uint256, uint256, int24, int128, uint128)
         external view override onlyPool returns (bytes4) {
         return IAlgebraPlugin.afterCross.selector;
     }

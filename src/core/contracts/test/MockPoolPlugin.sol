@@ -66,7 +66,8 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   );
   event BeforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes data);
   event AfterFlash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data);
-  event AfterCross(bool zeroToOne, uint256 swapStepAmount, uint256 feeStepAmount, int24 tick, int128 liquidityDelta);
+  event AfterSwapFee(uint256 feeAmount);
+  event AfterCross(bool zeroToOne, uint256 swapStepAmount, uint256 feeStepAmount, int24 tick, int128 liquidityDelta, uint128 liquidity);
 
   function defaultPluginConfig() external view override returns (uint16) {}
 
@@ -199,10 +200,11 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
-    uint256,
+    uint256 feeAmount,
     bytes calldata data
   ) external override returns (bytes4) {
     emit AfterSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    emit AfterSwapFee(feeAmount);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_SWAP_FLAG)) return IAlgebraPlugin.afterSwap.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
@@ -265,9 +267,10 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint256 swapStepAmount,
     uint256 feeStepAmount,
     int24 tick,
-    int128 liquidityDelta
+    int128 liquidityDelta,
+    uint128 liquidity
   ) external override returns (bytes4) {
-    emit AfterCross(zeroToOne, swapStepAmount, feeStepAmount, tick, liquidityDelta);
+    emit AfterCross(zeroToOne, swapStepAmount, feeStepAmount, tick, liquidityDelta, liquidity);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_CROSS_FLAG)) return IAlgebraPlugin.afterCross.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
