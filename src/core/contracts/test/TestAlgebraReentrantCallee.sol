@@ -83,7 +83,7 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(bytes4(reason) == desiredSelector);
     }
 
-    // try to reenter setCommunityFeeVault
+    // try to reenter setCommunityVault
     try IAlgebraPool(msg.sender).setCommunityVault(address(this)) {} catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
@@ -100,6 +100,13 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
 
     // try to reenter skim
     try IAlgebraPool(msg.sender).skim() {} catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
+    // try to reenter claimCommunityFee. The callee is the community vault here, so a missing lock would let it succeed
+    try IAlgebraPool(msg.sender).claimCommunityFee() {
+      revert('claimCommunityFee was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
 

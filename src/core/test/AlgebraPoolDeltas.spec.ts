@@ -134,7 +134,7 @@ async function snapshot(env: Env) {
     recipient: env.other.address,
     plugin: await env.plugin.getAddress(),
     pool: await env.pool.getAddress(),
-    // the community fee can be sent here during the swap
+    // the community fee stays pending in the pool, so nothing may reach the vault during the swap
     vault: await env.pool.communityVault(),
   };
   const out: Record<string, bigint[]> = {};
@@ -209,9 +209,10 @@ function checkAccounting(r: Result, kind: Kind, zeroToOne: boolean, amount: bigi
   expect(change('plugin', i)).to.eq(amountInDecrease + amountInIncrease, 'plugin input');
   expect(change('plugin', o)).to.eq(amountOutDecrease, 'plugin output');
 
-  // the deltas never touch the pool: together with the community fee sent to the vault it moves exactly by the swap math amounts
-  expect(change('pool', i) + change('vault', i)).to.eq(calcIn, 'pool input');
-  expect(change('pool', o) + change('vault', o)).to.eq(calcOut, 'pool output');
+  // the deltas never touch the pool: it moves exactly by the swap math amounts
+  expect(change('pool', i)).to.eq(calcIn, 'pool input');
+  expect(change('pool', o)).to.eq(calcOut, 'pool output');
+  expect([change('vault', 0), change('vault', 1)]).to.deep.eq([0n, 0n], 'vault');
   expect(change('reserves', 0)).to.eq(change('pool', 0), 'reserve0 change');
   expect(change('reserves', 1)).to.eq(change('pool', 1), 'reserve1 change');
   expect(r.after.reserves[0]).to.eq(r.after.pool[0], 'reserve0 == balance0');
@@ -413,15 +414,13 @@ describe('AlgebraPool amount deltas', () => {
           const amount = expandTo18Decimals(1) / 100n;
           const amountInDecrease = amount / 100n;
 
-          // the community fee is either pending or already sent to the vault
           const accrue = async (env: Env, swapAmount: bigint) => {
             if ((await env.pool.communityVault()) === ethers.ZeroAddress) await env.pool.setCommunityVault(env.vault);
             await env.pool.setCommunityFee(250);
             const before = await env.pool.getCommunityFeePending();
             const r = await execute(env, 'exactIn', zeroToOne, swapAmount);
             const after = await env.pool.getCommunityFeePending();
-            const sent = [r.after.vault[0] - r.before.vault[0], r.after.vault[1] - r.before.vault[1]];
-            return { r, accrued: [after[0] - before[0] + sent[0], after[1] - before[1] + sent[1]] };
+            return { r, accrued: [after[0] - before[0], after[1] - before[1]] };
           };
 
           const inMode = async () => {

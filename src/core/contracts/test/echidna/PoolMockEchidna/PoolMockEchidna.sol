@@ -104,6 +104,25 @@ contract PoolMockEchidna is AlgebraPool {
     IAlgebraPool(this).setFeeMode(newFeeMode);
   }
 
+  /// @dev The fuzzer barely calls the setters delegated to the extension, so without this the vault stays unset and
+  /// the community fee off. Any vault will do, the claim below stands in for it
+  function setCommunityFeeWrapped(uint16 newCommunityFee) public {
+    if (communityVault == address(0)) IAlgebraPool(this).setCommunityVault(address(0xdEaD));
+    newCommunityFee = newCommunityFee % (Constants.MAX_COMMUNITY_FEE + 1);
+    if (newCommunityFee == globalState.communityFee) return;
+    IAlgebraPool(this).setCommunityFee(newCommunityFee);
+  }
+
+  /// @dev Only the vault may claim and the fuzzer never sends from it, so the pool acts as its own vault for this call.
+  /// The mock `_transfer` takes the claimed fees off the balance whoever the recipient is
+  function claimCommunityFeeWrapped() public {
+    address vault = communityVault;
+    require(vault != address(0));
+    communityVault = address(this);
+    IAlgebraPool(this).claimCommunityFee();
+    communityVault = vault;
+  }
+
   function hasRoleOrOwner(bytes32, address) public pure returns (bool) {
     return true;
   }

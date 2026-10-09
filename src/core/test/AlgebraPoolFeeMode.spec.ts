@@ -85,11 +85,6 @@ describe('AlgebraPool fee mode', () => {
     await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));
   }
 
-  // the accrued fee stays pending until the vault claims it
-  async function collectedCommunityFee() {
-    return pool.getCommunityFeePending();
-  }
-
   describe('#setFeeMode', () => {
     it('is off by default', async () => {
       expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_DEFAULT);
@@ -302,7 +297,7 @@ describe('AlgebraPool fee mode', () => {
 
       expect(await pool.totalFeeGrowth1Token()).to.eq(7291765005448875806996267838374155n);
       expect(await pool.totalFeeGrowth0Token()).to.eq(0);
-      const [fee0, fee1] = await collectedCommunityFee();
+      const [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee1).to.eq(4761904761904n);
       expect(fee0).to.eq(0);
     });
@@ -315,7 +310,7 @@ describe('AlgebraPool fee mode', () => {
 
       expect(await pool.totalFeeGrowth0Token()).to.eq(7291765005448875806996267838374155n);
       expect(await pool.totalFeeGrowth1Token()).to.eq(0);
-      const [fee0, fee1] = await collectedCommunityFee();
+      const [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee0).to.eq(4761904761904n);
       expect(fee1).to.eq(0);
     });
@@ -336,7 +331,7 @@ describe('AlgebraPool fee mode', () => {
 
       expect(await pool.totalFeeGrowth1Token()).to.eq(76582683016917109323800278743567n);
       expect(await pool.totalFeeGrowth0Token()).to.eq(0);
-      const [fee0, fee1] = await collectedCommunityFee();
+      const [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee1).to.eq(50012506254n);
       expect(fee0).to.eq(0);
     });
@@ -349,13 +344,13 @@ describe('AlgebraPool fee mode', () => {
 
       // token1 in, token0 out: the fee token is the output token here
       await swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address);
-      let [fee0, fee1] = await collectedCommunityFee();
+      let [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee0).to.eq(4761904761904n);
       expect(fee1).to.eq(0);
 
       // and back with token0 in, where it is the input token
       await swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address);
-      [fee0, fee1] = await collectedCommunityFee();
+      [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee0).to.eq(4761904761904n + 5000000000000n); // the fee on the input is the larger one
       expect(fee1).to.eq(0);
     });
@@ -366,13 +361,13 @@ describe('AlgebraPool fee mode', () => {
 
       // token0 in, token1 out: the fee token is the output token here
       await swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address);
-      let [fee0, fee1] = await collectedCommunityFee();
+      let [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee1).to.eq(4761904761904n);
       expect(fee0).to.eq(0);
 
       // and back with token1 in, where it is the input token
       await swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address);
-      [fee0, fee1] = await collectedCommunityFee();
+      [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee1).to.eq(4761904761904n + 5000000000000n); // the fee on the input is the larger one
       expect(fee0).to.eq(0);
     });
@@ -384,7 +379,7 @@ describe('AlgebraPool fee mode', () => {
       await swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address);
 
       // the fee comes off the input here, so it is larger than for the same swap with the fee on the output
-      const [fee0, fee1] = await collectedCommunityFee();
+      const [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee1).to.eq(5000000000000n);
       expect(fee0).to.eq(0);
     });

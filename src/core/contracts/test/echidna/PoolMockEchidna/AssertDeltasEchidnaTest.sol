@@ -7,8 +7,8 @@ import '../../MockDeltaPlugin.sol';
 /// @notice Checks that plugin amount deltas never leak into the pool: the pool moves exactly by the swap math amounts,
 /// the plugin gets exactly the deltas and the caller never pays more than requested on exactIn
 /// @dev The pool is initialized and the plugin is connected in the constructor, so every sequence starts with a working
-/// pool. The fee mode, the community fee and the vault can be changed by the inherited setters: a payment to the vault
-/// is told apart from the swapper's and the plugin's, and the community fee of a swap may land only in its fee token
+/// pool. The fee mode, the community fee and the vault can be changed by the inherited setters: the vault must get
+/// nothing during a swap, and the community fee of a swap may land only in its fee token
 contract AssertDeltasEchidnaTest is PoolMockEchidna {
   MockDeltaPlugin internal deltaPlugin;
 
@@ -147,14 +147,14 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
     assert(deltaPlugin.seenCalcAmountRequired() == amountRequired);
     assert(deltaPlugin.seenWithPaymentInAdvance() == withPaymentInAdvance);
 
-    // the pool, together with what it sent to the vault, moves exactly by the swap math amounts and stays in sync
-    assert(int256(_balanceOf(tokenIn) + sentToVault[tokenIn]) - int256(balanceBefore[tokenIn]) == calcIn);
-    assert(int256(_balanceOf(tokenOut) + sentToVault[tokenOut]) - int256(balanceBefore[tokenOut]) == calcOut);
+    // the pool moves exactly by the swap math amounts and stays in sync, the community fee stays pending in it
+    assert(int256(_balanceOf(tokenIn)) - int256(balanceBefore[tokenIn]) == calcIn);
+    assert(int256(_balanceOf(tokenOut)) - int256(balanceBefore[tokenOut]) == calcOut);
     assert(balance0 == reserve0 && balance1 == reserve1);
+    assert(sentToVault[0] == 0 && sentToVault[1] == 0);
 
     // the community fee of the swap stays in its fee token
-    uint256 otherTokenFee = (feeToken == 0 ? communityFeePending1 : communityFeePending0) + sentToVault[1 - feeToken];
-    assert(otherTokenFee == otherTokenFeePendingBefore);
+    assert((feeToken == 0 ? communityFeePending1 : communityFeePending0) == otherTokenFeePendingBefore);
 
     // the plugin sees what the caller paid and received
     assert(deltaPlugin.seenAfterSwap0() == amount0 && deltaPlugin.seenAfterSwap1() == amount1);

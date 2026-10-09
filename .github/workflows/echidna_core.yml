@@ -61,6 +61,7 @@ jobs:
     strategy:
       matrix:
         testName:
+          - AssertDeltasEchidnaTest
           - AssertFeeModeSwapEchidnaTest
           - AssertSwapEchidnaTest
 

@@ -97,6 +97,10 @@ describe('AlgebraPoolExtension', () => {
       await expect(extension.skim()).to.be.revertedWithCustomError(extension, 'notAllowed');
     });
 
+    it('claimCommunityFee reverts', async () => {
+      await expect(extension.claimCommunityFee()).to.be.revertedWithCustomError(extension, 'notAllowed');
+    });
+
     it('swapWithPaymentInAdvance reverts', async () => {
       await expect(
         extension.swapWithPaymentInAdvance(wallet.address, wallet.address, true, 100, 0n, '0x')
