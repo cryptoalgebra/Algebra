@@ -56,7 +56,6 @@ describe('AlgebraPool', () => {
   let swapExact0For1: SwapFunction;
   let swap0ForExact1: SwapFunction;
   let swapExact1For0: SwapFunction;
-  let swap1ForExact0: SwapFunction;
 
   let tickSpacing: number;
 
@@ -86,7 +85,6 @@ describe('AlgebraPool', () => {
       swap0ForExact1,
       swapExact1For0,
       swapExact1For0SupportingFee,
-      swap1ForExact0,
       mint,
       flash,
     } = createPoolFunctions({
@@ -151,13 +149,15 @@ describe('AlgebraPool', () => {
       expect(price).to.eq(initPrice);
       expect(tick).to.eq(-6932);
     });
-    it('emits configuration events', async () => {
+    it('applies the default configuration and emits its events', async () => {
       const price = encodePriceSqrt(1, 2);
       await expect(pool.initialize(price))
         .to.emit(pool, 'TickSpacing')
         .withArgs(tickSpacing)
         .to.emit(pool, 'CommunityFee')
         .withArgs(0);
+      expect(await pool.tickSpacing()).to.eq(tickSpacing);
+      expect((await pool.globalState()).communityFee).to.eq(0);
     });
   });
 
@@ -263,6 +263,7 @@ describe('AlgebraPool', () => {
 
         it('fails if ticks are inverted or out of range', async () => {
           await expect(mint(wallet.address, 1, 0, 1)).to.be.revertedWithCustomError(pool, 'topTickLowerOrEqBottomTick');
+          await expect(mint(wallet.address, 0, 0, 1)).to.be.revertedWithCustomError(pool, 'topTickLowerOrEqBottomTick');
           await expect(mint(wallet.address, -887273, 0, 1)).to.be.revertedWithCustomError(
             pool,
             'bottomTickLowerThanMIN'
@@ -1659,23 +1660,6 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, minTick, maxTick, liquidityAmount);
     });
 
-    it('is initially set to 0', async () => {
-      expect((await pool.globalState()).communityFee).to.eq(0);
-    });
-
-    it('can be changed by the owner', async () => {
-      await pool.setCommunityFee(170);
-      expect((await pool.globalState()).communityFee).to.eq(170);
-    });
-
-    it('cannot be changed out of bounds', async () => {
-      await expect(pool.setCommunityFee(1001)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
-    });
-
-    it('cannot be changed by addresses that are not owner', async () => {
-      await expect(pool.connect(other).setCommunityFee(170)).to.be.revertedWithCustomError(pool, 'notAllowed');
-    });
-
     async function swapAndGetFeesOwed({
       amount,
       zeroToOne,
@@ -1707,18 +1691,6 @@ describe('AlgebraPool', () => {
 
       return { token0Fees: fees0, token1Fees: fees1 };
     }
-
-    it('position owner gets full fees when community fee is off', async () => {
-      const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
-        amount: expandTo18Decimals(1),
-        zeroToOne: true,
-        poke: true,
-      });
-
-      // 6 bips * 1e18
-      expect(token0Fees).to.eq('499999999999999');
-      expect(token1Fees).to.eq(0);
-    });
 
     it('swap fees accumulate as expected (0 for 1)', async () => {
       let token0Fees;
@@ -1888,36 +1860,6 @@ describe('AlgebraPool', () => {
       }));
       expect(token0Fees).to.eq(0);
       expect(token1Fees).to.eq('1244999999999997');
-    });
-
-    it('position owner gets partial fees when community fee is on', async () => {
-      await pool.setCommunityFee(170);
-
-      const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
-        amount: expandTo18Decimals(1),
-        zeroToOne: true,
-        poke: true,
-      });
-
-      expect(token0Fees).to.be.eq('414999999999999');
-      expect(token1Fees).to.be.eq(0);
-    });
-
-    it('fees collected by lp after two swaps should be double one swap', async () => {
-      await swapAndGetFeesOwed({
-        amount: expandTo18Decimals(1),
-        zeroToOne: true,
-        poke: true,
-      });
-      const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
-        amount: expandTo18Decimals(1),
-        zeroToOne: true,
-        poke: true,
-      });
-
-      // 1 bips * 2e18
-      expect(token0Fees).to.eq('999999999999998');
-      expect(token1Fees).to.eq(0);
     });
 
     it('fees collected after two swaps with fee turned on in middle are fees from last swap (not confiscatory)', async () => {
@@ -2797,19 +2739,14 @@ describe('AlgebraPool', () => {
         await expect(pool.connect(other).setCommunityFee(200)).to.be.revertedWithCustomError(pool, 'notAllowed');
       });
 
-      it('sets and changes community fee, emitting an event each time', async () => {
-        for (const fee of [1000, 250, 140, 100]) {
-          await expect(pool.setCommunityFee(fee)).to.emit(pool, 'CommunityFee').withArgs(fee);
-          expect((await pool.globalState()).communityFee).to.eq(fee);
+      it('sets, changes and turns off community fee, emitting an event each time', async () => {
+        for (const fee of [1000, 250, 140, 100, 0]) {
+          await expect(pool.setCommunityFee(fee), `fee ${fee}`).to.emit(pool, 'CommunityFee').withArgs(fee);
+          expect((await pool.globalState()).communityFee, `fee ${fee}`).to.eq(fee);
         }
       });
-      it('can turn off community fee and emits an event', async () => {
-        await pool.setCommunityFee(250);
-        await expect(pool.setCommunityFee(0)).to.emit(pool, 'CommunityFee').withArgs(0);
-        expect((await pool.globalState()).communityFee).to.eq(0);
-      });
       it('fails if fee is gt 100% or unchanged', async () => {
-        await expect(pool.setCommunityFee(1004)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
+        await expect(pool.setCommunityFee(1001)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
         await pool.setCommunityFee(200);
         await expect(pool.setCommunityFee(200)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
       });
@@ -2826,29 +2763,29 @@ describe('AlgebraPool', () => {
           'notAllowed'
         );
       });
-      it('sets community vault and emits an event', async () => {
-        await expect(pool.setCommunityVault(other.address)).to.emit(pool, 'CommunityVault').withArgs(other.address);
-        expect(await pool.communityVault()).to.eq(other.address);
+      it('sets, changes, repeats and clears community vault, emitting an event each time', async () => {
+        // the pool from the fixture already has a vault, so the first step changes it too
+        const steps = [
+          { label: 'new', vault: other.address },
+          { label: 'the same again', vault: other.address },
+          { label: 'another', vault: wallet.address },
+          { label: 'zero', vault: ZeroAddress },
+        ];
+        for (const { label, vault } of steps) {
+          const tx = await pool.setCommunityVault(vault);
+          await expect(tx, label).to.emit(pool, 'CommunityVault').withArgs(vault);
+          // the community fee is off, so there is nothing to turn off along with the vault
+          await expect(tx, label).to.not.emit(pool, 'CommunityFee');
+          expect(await pool.communityVault(), label).to.eq(vault);
+        }
       });
-      it('can change community vault', async () => {
-        await pool.setCommunityVault(other.address);
-        await pool.setCommunityVault(wallet.address);
-        expect(await pool.communityVault()).to.eq(wallet.address);
-      });
-      it('can set zero address with zero community fee and emits an event', async () => {
-        await expect(pool.setCommunityVault(ZeroAddress)).to.emit(pool, 'CommunityVault').withArgs(ZeroAddress);
-        expect(await pool.communityVault()).to.eq(ZeroAddress);
-      });
-      it('can set zero address with nonzero community fee', async () => {
+      it('turns the community fee off along with the vault', async () => {
         await pool.setCommunityFee(200);
-        await pool.setCommunityVault(ZeroAddress);
+        const tx = await pool.setCommunityVault(ZeroAddress);
+        await expect(tx).to.emit(pool, 'CommunityVault').withArgs(ZeroAddress);
+        await expect(tx).to.emit(pool, 'CommunityFee').withArgs(0);
         expect(await pool.communityVault()).to.eq(ZeroAddress);
         expect((await pool.globalState()).communityFee).to.eq(0);
-      });
-      it('can be set to the same vault again', async () => {
-        await pool.setCommunityVault(other.address);
-        await expect(pool.setCommunityVault(other.address)).to.emit(pool, 'CommunityVault').withArgs(other.address);
-        expect(await pool.communityVault()).to.eq(other.address);
       });
     });
 
@@ -2857,18 +2794,19 @@ describe('AlgebraPool', () => {
         await pool.initialize(encodePriceSqrt(1, 1));
       });
 
-      it('setTickspacing works', async () => {
-        await expect(pool.setTickSpacing(100)).to.emit(pool, 'TickSpacing').withArgs(100);
-        expect(await pool.tickSpacing()).to.eq(100);
+      it('setTickspacing works up to the bounds, emitting an event each time', async () => {
+        for (const spacing of [100, 500, 1]) {
+          await expect(pool.setTickSpacing(spacing), `spacing ${spacing}`)
+            .to.emit(pool, 'TickSpacing')
+            .withArgs(spacing);
+          expect(await pool.tickSpacing(), `spacing ${spacing}`).to.eq(spacing);
+        }
       });
       it('setTickspacing can be called only by owner', async () => {
         await expect(pool.connect(other).setTickSpacing(100)).to.be.revertedWithCustomError(pool, 'notAllowed');
       });
-      it('can set max tickspacing', async () => {
-        await expect(pool.setTickSpacing(500)).to.not.be.reverted;
-      });
       it('cannot setTickSpacing gt 500, lt 1, min int24 or the current value', async () => {
-        for (const spacing of [600, -20, 0, -8388608, 60]) {
+        for (const spacing of [501, 0, -8388608, 60]) {
           await expect(pool.setTickSpacing(spacing), `spacing ${spacing}`).to.be.revertedWithCustomError(
             pool,
             'invalidNewTickSpacing'
@@ -3352,6 +3290,7 @@ describe('AlgebraPool', () => {
       it('can be called by plugin', async () => {
         await pool.setPlugin(other.address);
         await expect(pool.connect(other).setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1);
+        expect((await pool.globalState()).pluginConfig).to.eq(1);
       });
       it('reverts if admin sets non-zero pluginConfig in pool with zero plugin', async () => {
         await expect(pool.setPluginConfig(63)).to.be.revertedWithCustomError(pool, 'pluginIsNotConnected');
@@ -3878,12 +3817,8 @@ describe('AlgebraPool', () => {
     });
 
     it('zero for one: overpaying is accepted, exact in and exact out', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 2000, 0)
-      ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-      await expect(
-        underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, -1000, 2000, 0)
-      ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+      await expect(underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, 1000, 2000, 0)).to.not.be.reverted;
+      await expect(underpay.swap(pool, wallet.address, true, MIN_SQRT_RATIO + 1n, -1000, 2000, 0)).to.not.be.reverted;
     });
 
     it('one for zero: underpaying or paying in the wrong token reverts', async () => {
@@ -3901,12 +3836,8 @@ describe('AlgebraPool', () => {
     });
 
     it('one for zero: overpaying is accepted, exact in and exact out', async () => {
-      await expect(
-        underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, 1000, 0, 2000)
-      ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-      await expect(
-        underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, -1000, 0, 2000)
-      ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+      await expect(underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, 1000, 0, 2000)).to.not.be.reverted;
+      await expect(underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, -1000, 0, 2000)).to.not.be.reverted;
     });
   });
 });

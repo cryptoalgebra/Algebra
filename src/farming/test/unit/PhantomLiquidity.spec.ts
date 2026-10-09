@@ -580,7 +580,9 @@ describe('unit/PhantomLiquidity', () => {
     });
 
     it('sets the global default when pool is the zero address', async () => {
-      await context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 500);
+      await expect(context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 500))
+        .to.emit(context.eternalFarming, 'PoolFarmingBuffer')
+        .withArgs(ZERO_ADDRESS, 500);
       expect(await context.eternalFarming.defaultFarmingBuffer()).to.eq(500);
     });
 
@@ -603,7 +605,8 @@ describe('unit/PhantomLiquidity', () => {
     });
 
     it('accepts exactly 7 days and rejects one second more', async () => {
-      await expect(context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 7 * 86_400)).to.not.be.reverted;
+      await context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 7 * 86_400);
+      expect(await context.eternalFarming.defaultFarmingBuffer()).to.eq(7 * 86_400);
       await expect(context.eternalFarming.connect(admin).setFarmingBuffer(ZERO_ADDRESS, 7 * 86_400 + 1)).to.be.revertedWithCustomError(
         context.eternalFarming as AlgebraEternalFarming,
         'farmingBufferTooLong'
@@ -683,6 +686,7 @@ describe('unit/PhantomLiquidity', () => {
 
       await expect(context.farmingCenter.connect(lpUser0).collectRewards(farmIncentiveKey, mintResult.tokenId))
         .to.emit(context.eternalFarming, 'RewardsCollected')
+        .withArgs(mintResult.tokenId, incentiveId, (r: bigint) => r > 0n, (br: bigint) => br > 0n)
         .and.to.not.emit(context.eternalFarming, 'RewardsForfeited');
     });
   });
@@ -832,6 +836,15 @@ describe('unit/PhantomLiquidity', () => {
         })
       )
         .to.emit(context.eternalFarming, 'FarmEnded')
+        .withArgs(
+          tokenId,
+          incentiveId,
+          await context.rewardToken.getAddress(),
+          await context.bonusRewardToken.getAddress(),
+          lpUser0.address,
+          (r: bigint) => r > 0n,
+          (br: bigint) => br > 0n
+        )
         .and.to.not.emit(context.eternalFarming, 'RewardsForfeited');
 
       // the whole history since entry is safely credited to the victim, not the attacker
@@ -950,6 +963,7 @@ describe('unit/PhantomLiquidity', () => {
 
       await expect(context.farmingCenter.connect(lpUser0).collectRewards(farmIncentiveKey, tokenId))
         .to.emit(context.eternalFarming, 'RewardsForfeited')
+        .withArgs(tokenId, incentiveId, lpUser0.address, (r: bigint) => r > 0n, (br: bigint) => br > 0n)
         .and.to.not.emit(context.eternalFarming, 'RewardsCollected');
     });
 
@@ -959,6 +973,7 @@ describe('unit/PhantomLiquidity', () => {
 
       await expect(context.farmingCenter.connect(lpUser0).collectRewards(farmIncentiveKey, tokenId))
         .to.emit(context.eternalFarming, 'RewardsCollected')
+        .withArgs(tokenId, incentiveId, (r: bigint) => r > 0n, (br: bigint) => br > 0n)
         .and.to.not.emit(context.eternalFarming, 'RewardsForfeited');
     });
   });

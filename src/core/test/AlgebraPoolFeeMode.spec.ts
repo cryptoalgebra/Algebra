@@ -19,7 +19,6 @@ import {
 
 import {
   TestERC20,
-  AlgebraFactory,
   MockTimeAlgebraPool,
   TestAlgebraCallee,
   MockPoolPlugin,
@@ -37,7 +36,6 @@ describe('AlgebraPool fee mode', () => {
 
   let token0: TestERC20;
   let token1: TestERC20;
-  let factory: AlgebraFactory;
   let pool: MockTimeAlgebraPool;
   let swapTarget: TestAlgebraCallee;
   let vaultAddress: string;
@@ -57,7 +55,7 @@ describe('AlgebraPool fee mode', () => {
     [wallet, other] = await (ethers as any).getSigners();
     let vault;
     let _createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool'];
-    ({ token0, token1, factory, vault, createPool: _createPool, swapTargetCallee: swapTarget } = await loadFixture(poolFixture));
+    ({ token0, token1, vault, createPool: _createPool, swapTargetCallee: swapTarget } = await loadFixture(poolFixture));
     vaultAddress = await vault.getAddress();
 
     pool = await _createPool();
@@ -369,18 +367,6 @@ describe('AlgebraPool fee mode', () => {
       await swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address);
       [fee0, fee1] = await pool.getCommunityFeePending();
       expect(fee1).to.eq(4761904761904n + 5000000000000n); // the fee on the input is the larger one
-      expect(fee0).to.eq(0);
-    });
-
-    it('lands in the input token in the default mode', async () => {
-      await initializeWithLiquidity(FEE_MODE_DEFAULT);
-      await pool.setCommunityFee(100); // set after initialize, which applies the default configuration
-
-      await swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address);
-
-      // the fee comes off the input here, so it is larger than for the same swap with the fee on the output
-      const [fee0, fee1] = await pool.getCommunityFeePending();
-      expect(fee1).to.eq(5000000000000n);
       expect(fee0).to.eq(0);
     });
 

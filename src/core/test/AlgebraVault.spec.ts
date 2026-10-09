@@ -6,7 +6,7 @@ import { expect } from './shared/expect';
 import { encodePriceSqrt } from './shared/utilities';
 
 describe('AlgebraCommunityVault', () => {
-  let wallet: Wallet, other: Wallet, third: Wallet;
+  let wallet: Wallet, other: Wallet;
   let factory: AlgebraFactory;
   let vault: AlgebraCommunityVault;
 
@@ -45,7 +45,7 @@ describe('AlgebraCommunityVault', () => {
   };
 
   before('create fixture loader', async () => {
-    [wallet, other, third] = await (ethers as any).getSigners();
+    [wallet, other] = await (ethers as any).getSigners();
   });
 
   beforeEach('add tokens to vault', async () => {
@@ -65,7 +65,9 @@ describe('AlgebraCommunityVault', () => {
 
       it('withdraw works', async () => {
         let balanceBefore = await token0.balanceOf(communityFeeReceiver);
-        await vault.withdraw(token0, AMOUNT);
+        await expect(vault.withdraw(token0, AMOUNT))
+          .to.emit(vault, 'TokensWithdrawal')
+          .withArgs(await token0.getAddress(), communityFeeReceiver, AMOUNT);
         let balanceAfter = await token0.balanceOf(communityFeeReceiver);
         expect(balanceAfter - balanceBefore).to.eq(AMOUNT);
       });
@@ -73,7 +75,7 @@ describe('AlgebraCommunityVault', () => {
       it('withdrawTokens works', async () => {
         let balance0Before = await token0.balanceOf(communityFeeReceiver);
         let balance1Before = await token1.balanceOf(communityFeeReceiver);
-        await vault.withdrawTokens([
+        const tx = await vault.withdrawTokens([
           {
             token: token0,
             amount: AMOUNT,
@@ -83,6 +85,10 @@ describe('AlgebraCommunityVault', () => {
             amount: AMOUNT,
           },
         ]);
+        for (const token of [token0, token1])
+          await expect(tx)
+            .to.emit(vault, 'TokensWithdrawal')
+            .withArgs(await token.getAddress(), communityFeeReceiver, AMOUNT);
         let balance0After = await token0.balanceOf(communityFeeReceiver);
         let balance1After = await token1.balanceOf(communityFeeReceiver);
         expect(balance0After - balance0Before).to.eq(AMOUNT);
@@ -129,7 +135,9 @@ describe('AlgebraCommunityVault', () => {
 
   describe('#FactoryOwner permissioned actions', async () => {
     it('can change communityFeeReceiver', async () => {
-      await vault.changeCommunityFeeReceiver(other.address);
+      await expect(vault.changeCommunityFeeReceiver(other.address))
+        .to.emit(vault, 'CommunityFeeReceiver')
+        .withArgs(other.address);
       expect(await vault.communityFeeReceiver()).to.be.eq(other.address);
     });
 
