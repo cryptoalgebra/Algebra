@@ -46,7 +46,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
   struct FeesAmount {
     uint256 communityFeeAmount;
     bool inToken0; // Whether the amounts above are in token0
-    uint256 totalSwapFeeAmount; // Total swap fee earned by LPs (before community fee deduction)
+    uint256 feeAmount; // The swap fee (before community fee deduction) not passed to the plugin in afterCross yet
   }
 
   /// @param fee The fee applied to this swap, see `_beforeSwap`
@@ -123,7 +123,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
         if (currentLiquidity > 0) cache.totalFeeGrowthFeeToken += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
-        fees.totalSwapFeeAmount += stepFeeAmount;
+        fees.feeAmount += stepFeeAmount;
 
         // min or max tick can not be crossed due to limitSqrtPrice check
         if (currentPrice == step.nextTickPrice) {
@@ -146,7 +146,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
             (liquidityDelta, , cache.nextInitializedTick) = ticks.cross(step.nextTick, feeGrowth0, feeGrowth1);
             (currentTick, cache.prevInitializedTick) = (step.nextTick, step.nextTick);
           }
-          _afterCross(zeroToOne, step.input, stepFeeAmount, step.nextTick, liquidityDelta);
+          // the step input without the fee, as the fee may be in the output token
+          if (_afterCross(zeroToOne, cache.feeOnInput ? step.input - stepFeeAmount : step.input, stepFeeAmount, step.nextTick, liquidityDelta, currentLiquidity))
+            fees.feeAmount = 0; // the plugin has got the fee up to this tick
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         } else if (currentPrice != step.stepSqrtPrice) {
           currentTick = TickMath.getTickAtSqrtRatio(currentPrice); // the price has changed but hasn't reached the target
@@ -175,13 +177,15 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 stepSwapAmount,
     uint256 stepFeeAmount,
     int24 tick,
-    int128 liquidityDelta
-  ) internal {
+    int128 liquidityDelta,
+    uint128 liquidity
+  ) internal returns (bool called) {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_CROSS_FLAG)) {
-      if (msg.sender == plugin) return;
-      IAlgebraPlugin(plugin).afterCross(zeroToOne, stepSwapAmount, stepFeeAmount, tick, liquidityDelta).shouldReturn(
+      if (msg.sender == plugin) return false;
+      IAlgebraPlugin(plugin).afterCross(zeroToOne, stepSwapAmount, stepFeeAmount, tick, liquidityDelta, liquidity).shouldReturn(
         IAlgebraPlugin.afterCross.selector
       );
+      return true;
     }
   }
 }
