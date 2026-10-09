@@ -1278,18 +1278,24 @@ describe('NonfungiblePositionManager', () => {
         computePoolAddress(await factory.poolDeployer(), [await tokens[0].getAddress(), await tokens[1].getAddress()]),
         wallet
       );
-      await expect(
-        exit({
-          nft: nft.connect(other),
-          tokenId,
-          liquidity: 100,
-          amount0Min: 0,
-          amount1Min: 0,
-          recipient: wallet.address,
-        })
-      )
+      const tx = await exit({
+        nft: nft.connect(other),
+        tokenId,
+        liquidity: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        recipient: wallet.address,
+      });
+      const bottomTick = getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
+      const topTick = getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
+      await expect(tx)
         .to.emit(pool, 'Burn')
-        .to.emit(pool, 'Collect');
+        .withArgs(await nft.getAddress(), bottomTick, topTick, 100, 99, 99);
+      await expect(tx)
+        .to.emit(pool, 'Collect')
+        .withArgs(await nft.getAddress(), wallet.address, bottomTick, topTick, 99, 99);
+      // the last action burns the position token
+      await expect(tx).to.emit(nft, 'Transfer').withArgs(other.address, ZERO_ADDRESS, tokenId);
     });
 
     it('gas [ @skip-on-coverage ]', async () => {
@@ -1767,11 +1773,15 @@ describe('NonfungiblePositionManager', () => {
     });
 
     describe('#setLiquidityLockPeriod', () => {
-      it('can be set by admin', async () => {
-        await expect(nft.setLiquidityLockPeriod(LOCK_PERIOD))
-          .to.emit(nft, 'LiquidityLockPeriodChanged')
-          .withArgs(0, LOCK_PERIOD);
-        expect(await nft.liquidityLockPeriod()).to.eq(LOCK_PERIOD);
+      it('can be set by admin up to MAX_LIQUIDITY_LOCK_PERIOD, emitting an event each time', async () => {
+        let previous = 0;
+        for (const period of [LOCK_PERIOD, 600]) {
+          await expect(nft.setLiquidityLockPeriod(period), `period ${period}`)
+            .to.emit(nft, 'LiquidityLockPeriodChanged')
+            .withArgs(previous, period);
+          expect(await nft.liquidityLockPeriod(), `period ${period}`).to.eq(period);
+          previous = period;
+        }
       });
 
       it('cannot be set by non-admin', async () => {
@@ -1780,11 +1790,6 @@ describe('NonfungiblePositionManager', () => {
 
       it('cannot exceed MAX_LIQUIDITY_LOCK_PERIOD (10 minutes)', async () => {
         await expect(nft.setLiquidityLockPeriod(601)).to.be.revertedWith('LOCK_PERIOD_TOO_LONG');
-      });
-
-      it('can be set to exactly MAX_LIQUIDITY_LOCK_PERIOD', async () => {
-        await nft.setLiquidityLockPeriod(600);
-        expect(await nft.liquidityLockPeriod()).to.eq(600);
       });
 
       it('does nothing if lock setting is permanently disabled', async () => {

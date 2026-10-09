@@ -428,16 +428,25 @@ describe('AlgebraFactory', () => {
       await expect(factory.transferOwnership(wallet.address)).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('renounceOwner works correct and emits event', async () => {
-      await factory.startRenounceOwnership();
-      await ethers.provider.send('evm_increaseTime', [86500]);
-      await expect(factory.renounceOwnership()).to.emit(factory, 'RenounceOwnershipFinish');
-      expect(await factory.owner()).to.eq(ZERO_ADDRESS);
-    });
+    it('renounceOwner works only once the delay has passed, emitting an event at the start and at the finish', async () => {
+      // RENOUNCE_OWNERSHIP_DELAY is private, one day
+      const delay = 24n * 60n * 60n;
+      const start = BigInt(await time.latest()) + 1n;
+      await time.setNextBlockTimestamp(start);
+      await expect(factory.startRenounceOwnership())
+        .to.emit(factory, 'RenounceOwnershipStart')
+        .withArgs(start, start + delay);
+      expect(await factory.renounceOwnershipStartTimestamp()).to.eq(start);
 
-    it('renounceOwner cannot be used before delay', async () => {
-      await factory.startRenounceOwnership();
+      await time.setNextBlockTimestamp(start + delay - 1n);
       await expect(factory.renounceOwnership()).to.be.revertedWithoutReason();
+
+      await time.setNextBlockTimestamp(start + delay);
+      await expect(factory.renounceOwnership())
+        .to.emit(factory, 'RenounceOwnershipFinish')
+        .withArgs(start + delay);
+      expect(await factory.owner()).to.eq(ZERO_ADDRESS);
+      expect(await factory.renounceOwnershipStartTimestamp()).to.eq(0);
     });
 
     it('startRenounceOwner cannot be used twice in a row', async () => {
@@ -447,7 +456,9 @@ describe('AlgebraFactory', () => {
 
     it('stopRenounceOwnership works correct and emits event', async () => {
       await factory.startRenounceOwnership();
-      await expect(factory.stopRenounceOwnership()).to.emit(factory, 'RenounceOwnershipStop');
+      const stop = BigInt(await time.latest()) + 1n;
+      await time.setNextBlockTimestamp(stop);
+      await expect(factory.stopRenounceOwnership()).to.emit(factory, 'RenounceOwnershipStop').withArgs(stop);
       expect(await factory.renounceOwnershipStartTimestamp()).to.eq(0);
     });
 
@@ -477,7 +488,7 @@ describe('AlgebraFactory', () => {
     });
 
     it('fails if new community fee is greater than max fee or equals the current one', async () => {
-      await expect(factory.setDefaultCommunityFee(1100)).to.be.revertedWithoutReason();
+      await expect(factory.setDefaultCommunityFee(1001)).to.be.revertedWithoutReason();
       await expect(factory.setDefaultCommunityFee(0)).to.be.revertedWithoutReason();
     });
 
@@ -486,15 +497,13 @@ describe('AlgebraFactory', () => {
       await expect(factory.setDefaultCommunityFee(60)).to.be.revertedWithoutReason();
     });
 
-    it('works correct and emits event', async () => {
-      await expect(factory.setDefaultCommunityFee(60)).to.emit(factory, 'DefaultCommunityFee').withArgs(60);
-      expect(await factory.defaultCommunityFee()).to.eq(60);
-    });
-
-    it('can set to zero and emits event', async () => {
-      await factory.setDefaultCommunityFee(60);
-      await expect(factory.setDefaultCommunityFee(0)).to.emit(factory, 'DefaultCommunityFee').withArgs(0);
-      expect(await factory.defaultCommunityFee()).to.eq(0);
+    it('sets and turns off the default community fee, emitting an event each time', async () => {
+      for (const fee of [1000, 60, 0]) {
+        await expect(factory.setDefaultCommunityFee(fee), `fee ${fee}`)
+          .to.emit(factory, 'DefaultCommunityFee')
+          .withArgs(fee);
+        expect(await factory.defaultCommunityFee(), `fee ${fee}`).to.eq(fee);
+      }
     });
   });
 
@@ -504,7 +513,7 @@ describe('AlgebraFactory', () => {
     });
 
     it('fails if new default fee greater than max fee', async () => {
-      await expect(factory.setDefaultFee(51000)).to.be.revertedWithoutReason();
+      await expect(factory.setDefaultFee(50001)).to.be.revertedWithoutReason();
     });
 
     it('fails if new default fee eq current', async () => {
@@ -512,9 +521,11 @@ describe('AlgebraFactory', () => {
       await expect(factory.setDefaultFee(fee)).to.be.revertedWithoutReason();
     });
 
-    it('works correct and emits event', async () => {
-      await expect(factory.setDefaultFee(60)).to.emit(factory, 'DefaultFee').withArgs(60);
-      expect(await factory.defaultFee()).to.eq(60);
+    it('sets the default fee up to the max, emitting an event each time', async () => {
+      for (const fee of [60, 50000]) {
+        await expect(factory.setDefaultFee(fee), `fee ${fee}`).to.emit(factory, 'DefaultFee').withArgs(fee);
+        expect(await factory.defaultFee(), `fee ${fee}`).to.eq(fee);
+      }
     });
   });
 
@@ -526,14 +537,18 @@ describe('AlgebraFactory', () => {
     });
 
     it('fails if new default tickspacing is out of range or equals the current one', async () => {
-      await expect(factory.setDefaultTickspacing(1100)).to.be.revertedWithoutReason();
-      await expect(factory.setDefaultTickspacing(-1100)).to.be.revertedWithoutReason();
+      await expect(factory.setDefaultTickspacing(501)).to.be.revertedWithoutReason();
+      await expect(factory.setDefaultTickspacing(0)).to.be.revertedWithoutReason();
       await expect(factory.setDefaultTickspacing(60)).to.be.revertedWithoutReason();
     });
 
-    it('works correct and emits event', async () => {
-      await expect(factory.setDefaultTickspacing(50)).to.emit(factory, 'DefaultTickspacing').withArgs(50);
-      expect(await factory.defaultTickspacing()).to.eq(50);
+    it('sets the default tickspacing within the range, emitting an event each time', async () => {
+      for (const spacing of [50, 500, 1]) {
+        await expect(factory.setDefaultTickspacing(spacing), `spacing ${spacing}`)
+          .to.emit(factory, 'DefaultTickspacing')
+          .withArgs(spacing);
+        expect(await factory.defaultTickspacing(), `spacing ${spacing}`).to.eq(spacing);
+      }
     });
   });
 

@@ -1,4 +1,5 @@
 import { ethers } from 'hardhat';
+import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { Wallet } from 'ethers';
 import { loadFixture, impersonateAccount, stopImpersonatingAccount, setBalance } from '@nomicfoundation/hardhat-network-helpers';
 import { TestERC20, AlgebraEternalFarming, NftPosManagerMock, FarmingCenter } from '../../typechain';
@@ -172,6 +173,19 @@ describe('unit/FarmingCenter', () => {
   describe('#applyLiquidityDelta', () => {
     let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result;
     let tokenIdEternal: string;
+    let incentiveId: string;
+
+    // the position leaves the farm with its owner and both reward tokens, whatever it has earned by then
+    const farmEndedArgs = async () =>
+      [
+        tokenIdEternal,
+        incentiveId,
+        await context.rewardToken.getAddress(),
+        await context.bonusRewardToken.getAddress(),
+        lpUser0.address,
+        anyValue,
+        anyValue,
+      ] as const;
 
     beforeEach('setup', async () => {
       timestamps = makeTimestamps(await blockTimestamp());
@@ -200,6 +214,7 @@ describe('unit/FarmingCenter', () => {
         createIncentiveResult: createIncentiveResultEternal,
       });
       tokenIdEternal = mintResultEternal.tokenId;
+      incentiveId = await helpers.getIncentiveId(createIncentiveResultEternal);
     });
 
     it('cannot use if not nonfungiblePosManager', async () => {
@@ -207,6 +222,7 @@ describe('unit/FarmingCenter', () => {
     });
 
     it('works if liquidity decreased', async () => {
+      const liquidityBefore = (await context.nft.positions(tokenIdEternal)).liquidity;
       await expect(
         context.nft.connect(lpUser0).decreaseLiquidity({
           tokenId: tokenIdEternal,
@@ -215,7 +231,9 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
-      ).to.emit(context.eternalFarming, 'FarmEntered');
+      )
+        .to.emit(context.eternalFarming, 'FarmEntered')
+        .withArgs(tokenIdEternal, incentiveId, liquidityBefore - 100n);
     });
 
     it('works if liquidity decreased and incentive detached', async () => {
@@ -234,7 +252,9 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
-      ).to.emit(context.eternalFarming, 'FarmEnded');
+      )
+        .to.emit(context.eternalFarming, 'FarmEnded')
+        .withArgs(...(await farmEndedArgs()));
 
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
@@ -252,6 +272,7 @@ describe('unit/FarmingCenter', () => {
         })
       )
         .to.emit(context.eternalFarming, 'FarmEnded')
+        .withArgs(...(await farmEndedArgs()))
         .to.not.emit(context.nft, 'FarmingFailed');
 
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
@@ -305,7 +326,9 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
-      ).to.emit(context.eternalFarming, 'FarmEnded');
+      )
+        .to.emit(context.eternalFarming, 'FarmEnded')
+        .withArgs(...(await farmEndedArgs()));
 
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
@@ -356,7 +379,9 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
-      ).to.emit(context.eternalFarming, 'FarmEnded');
+      )
+        .to.emit(context.eternalFarming, 'FarmEnded')
+        .withArgs(...(await farmEndedArgs()));
 
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
@@ -365,16 +390,16 @@ describe('unit/FarmingCenter', () => {
       const _erc20Helper = new ERC20Helper();
       await _erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.tokens[0], context.tokens[1]], 100n, await context.nft.getAddress());
 
-      await expect(
-        context.nft.connect(lpUser0).increaseLiquidity({
-          tokenId: tokenIdEternal,
-          amount0Desired: 100,
-          amount1Desired: 100,
-          amount0Min: 0,
-          amount1Min: 0,
-          deadline: (await blockTimestamp()) + 1000,
-        })
-      ).to.emit(context.eternalFarming, 'FarmEntered');
+      const tx = await context.nft.connect(lpUser0).increaseLiquidity({
+        tokenId: tokenIdEternal,
+        amount0Desired: 100,
+        amount1Desired: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      });
+      const liquidityAfter = (await context.nft.positions(tokenIdEternal)).liquidity;
+      await expect(tx).to.emit(context.eternalFarming, 'FarmEntered').withArgs(tokenIdEternal, incentiveId, liquidityAfter);
     });
 
     it('works if liquidity removed completely', async () => {
@@ -387,7 +412,9 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
-      ).to.emit(context.eternalFarming, 'FarmEnded');
+      )
+        .to.emit(context.eternalFarming, 'FarmEnded')
+        .withArgs(...(await farmEndedArgs()));
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
 

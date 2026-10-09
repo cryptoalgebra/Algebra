@@ -609,7 +609,7 @@ const TEST_POOLS: PoolTestCase[] = [
 ];
 
 describe('AlgebraPool swap tests', () => {
-  let wallet: Wallet, other: Wallet;
+  let wallet: Wallet;
   const fixture = async () => {
     const { createPool, token0, token1, swapTargetCallee: swapTarget } = await loadFixture(poolFixture);
     const pool = await createPool();
@@ -630,7 +630,7 @@ describe('AlgebraPool swap tests', () => {
   };
 
   before('get signers', async () => {
-    [wallet, other] = await (ethers as any).getSigners();
+    [wallet] = await (ethers as any).getSigners();
   });
 
   for (const poolCase of TEST_POOLS) {
