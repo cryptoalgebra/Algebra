@@ -2,16 +2,16 @@
 
 exports[`SwapRouter bytecode size [ @skip-on-coverage ] 1`] = `12653`;
 
-exports[`SwapRouter swaps #exactInput multi-pool gas cost [ @skip-on-coverage ] 1`] = `220993`;
+exports[`SwapRouter swaps #exactInput multi-pool gas cost [ @skip-on-coverage ] 1`] = `221059`;
 
-exports[`SwapRouter swaps #exactInputSingle gas cost [ @skip-on-coverage ] 1`] = `129245`;
+exports[`SwapRouter swaps #exactInputSingle gas cost [ @skip-on-coverage ] 1`] = `129278`;
 
-exports[`SwapRouter swaps #exactInputSingleSupportingFeeOnTransferTokens gas cost [ @skip-on-coverage ] 1`] = `181178`;
+exports[`SwapRouter swaps #exactInputSingleSupportingFeeOnTransferTokens gas cost [ @skip-on-coverage ] 1`] = `181211`;
 
-exports[`SwapRouter swaps #exactOutput Native input WNativeToken gas cost [ @skip-on-coverage ] 1`] = `223737`;
+exports[`SwapRouter swaps #exactOutput Native input WNativeToken gas cost [ @skip-on-coverage ] 1`] = `223803`;
 
-exports[`SwapRouter swaps #exactOutput multi-pool gas cost [ @skip-on-coverage ] 1`] = `219890`;
+exports[`SwapRouter swaps #exactOutput multi-pool gas cost [ @skip-on-coverage ] 1`] = `219956`;
 
-exports[`SwapRouter swaps #exactOutput single-pool gas cost [ @skip-on-coverage ] 1`] = `135067`;
+exports[`SwapRouter swaps #exactOutput single-pool gas cost [ @skip-on-coverage ] 1`] = `135100`;
 
-exports[`SwapRouter swaps #exactOutputSingle gas cost [ @skip-on-coverage ] 1`] = `135325`;
+exports[`SwapRouter swaps #exactOutputSingle gas cost [ @skip-on-coverage ] 1`] = `135358`;

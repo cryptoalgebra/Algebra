@@ -1,3 +1,4 @@
+import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { ethers } from 'hardhat';
 import { AbiCoder, ContractTransactionReceipt, Wallet, MaxUint256, ZeroAddress, keccak256 } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
@@ -2557,11 +2558,29 @@ describe('AlgebraPool', () => {
       const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
       poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
       await pool.setPlugin(poolPlugin);
-      await pool.setPluginConfig(1023);
+      await pool.setPluginConfig(2047); // all hooks, the dynamic fee and the amount deltas
       await pool.initialize(encodePriceSqrt(1, 1));
       // with the dynamic fee the plugin sets the fee of every swap, so keep the pool fee
       await poolPlugin.setDynamicFee((await pool.globalState()).lastFee);
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+    });
+
+    it('the amount deltas require the flag', async () => {
+      await pool.setPluginConfig(2047 & ~(1 << 10));
+      await poolPlugin.setAmountInDecrease(expandTo18Decimals(1) / 100n);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.revertedWithCustomError(pool, 'amountDeltasDisabled');
+
+      await poolPlugin.setAmountInDecrease(0);
+      await poolPlugin.setAmountOutDecrease(1);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.revertedWithCustomError(pool, 'amountDeltasDisabled');
+
+      await poolPlugin.setAmountOutDecrease(0);
+      await poolPlugin.setAmountInIncrease(1);
+      await expect(swap0ForExact1(expandTo18Decimals(1) / 100n, wallet.address)).to.be.revertedWithCustomError(pool, 'amountDeltasDisabled');
+
+      // zero deltas do not need the flag
+      await poolPlugin.setAmountInIncrease(0);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.not.be.reverted;
     });
 
     it('swap works with max dynamic fee value', async () => {
@@ -3135,9 +3154,8 @@ describe('AlgebraPool', () => {
       });
 
       it('afterCross hook is called at each crossed tick with correct params (zeroToOne)', async () => {
-        await pool.setPluginConfig(511);
+        await pool.setPluginConfig(511 & ~128); // without the dynamic fee, so the pool fee is applied
         await pool.initialize(encodePriceSqrt(1, 1));
-        await poolPlugin.setDynamicFee((await pool.globalState()).lastFee); // keep the pool fee
 
         const liq1 = expandTo18Decimals(3);
         const liq2 = expandTo18Decimals(2);
@@ -3165,15 +3183,14 @@ describe('AlgebraPool', () => {
 
         await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
           .to.emit(poolPlugin, 'AfterCross')
-          .withArgs(true, input1, fee1, -60, -(liq1 - liq2))
+          .withArgs(true, input1, fee1, -60, -(liq1 - liq2), liq1)
           .to.emit(poolPlugin, 'AfterCross')
-          .withArgs(true, input2, fee2, -120, -(liq2 - liq3));
+          .withArgs(true, input2, fee2, -120, -(liq2 - liq3), liq2);
       });
 
       it('afterCross hook is called at each crossed tick with correct params (oneToZero)', async () => {
-        await pool.setPluginConfig(511);
+        await pool.setPluginConfig(511 & ~128); // without the dynamic fee, so the pool fee is applied
         await pool.initialize(encodePriceSqrt(1, 1));
-        await poolPlugin.setDynamicFee((await pool.globalState()).lastFee); // keep the pool fee
         const liq1 = expandTo18Decimals(3);
         const liq2 = expandTo18Decimals(2);
         const liq3 = expandTo18Decimals(1);
@@ -3200,15 +3217,14 @@ describe('AlgebraPool', () => {
 
         await expect(swapExact1For0(expandTo18Decimals(1), wallet.address))
           .to.emit(poolPlugin, 'AfterCross')
-          .withArgs(false, input1, fee1, 60, -(liq1 - liq2))
+          .withArgs(false, input1, fee1, 60, -(liq1 - liq2), liq1)
           .to.emit(poolPlugin, 'AfterCross')
-          .withArgs(false, input2, fee2, 120, -(liq2 - liq3));
+          .withArgs(false, input2, fee2, 120, -(liq2 - liq3), liq2);
       });
 
       it('afterCross hook receives feeStepAmount (not reduced by community fee)', async () => {
-        await pool.setPluginConfig(511);
+        await pool.setPluginConfig(511 & ~128); // without the dynamic fee, so the pool fee is applied
         await pool.initialize(encodePriceSqrt(1, 1));
-        await poolPlugin.setDynamicFee((await pool.globalState()).lastFee); // keep the pool fee
         await pool.setCommunityFee(500); // 50% community fee
 
         const liq = expandTo18Decimals(2);
@@ -3228,13 +3244,93 @@ describe('AlgebraPool', () => {
 
         await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
           .to.emit(poolPlugin, 'AfterCross')
-          .withArgs(true, expectedInput, expectedFee, -120, -(liq - liqBelow));
+          .withArgs(true, expectedInput, expectedFee, -120, -(liq - liqBelow), liq);
+      });
+
+      it('afterCross hook gets the step input without the fee when the fee is in the output token', async () => {
+        await pool.setPluginConfig(511 & ~128); // without the dynamic fee, so the pool fee is applied
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await pool.setFeeMode(2); // the fee in token1, the output of a zeroToOne swap
+
+        const liq1 = expandTo18Decimals(3);
+        const liq2 = expandTo18Decimals(2);
+        await mint(wallet.address, -60, 60, liq1);
+        await mint(wallet.address, -120, -60, liq2);
+
+        const tickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as any as TickMathTest;
+        const priceMath = (await (await ethers.getContractFactory('PriceMovementMathTest')).deploy()) as any as PriceMovementMathTest;
+        const [, input1, , fee1] = await priceMath.movePriceTowardsTargetWithFeeMode(
+          false, encodePriceSqrt(1, 1), await tickMath.getSqrtRatioAtTick(-60), liq1, expandTo18Decimals(1), 500
+        );
+
+        await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, input1, fee1, -60, -(liq1 - liq2), liq1);
+      });
+
+      it('afterSwap gets the fee after the last crossed tick if afterCross is enabled', async () => {
+        await pool.setPluginConfig(511 & ~128); // without the dynamic fee, so the pool fee is applied
+        await pool.initialize(encodePriceSqrt(1, 1));
+
+        const liq1 = expandTo18Decimals(3);
+        const liq2 = expandTo18Decimals(2);
+        const liq3 = expandTo18Decimals(1);
+        await mint(wallet.address, -60, 60, liq1);
+        await mint(wallet.address, -120, -60, liq2);
+        await mint(wallet.address, -180, -120, liq3);
+
+        const tickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as any as TickMathTest;
+        const priceMath = (await (await ethers.getContractFactory('PriceMovementMathTest')).deploy()) as any as PriceMovementMathTest;
+        const prices = [encodePriceSqrt(1, 1), ...(await Promise.all([-60, -120, -180].map((t) => tickMath.getSqrtRatioAtTick(t))))];
+        // the input that moves the price through each range, the swap stops in the middle of the last one
+        const steps = [];
+        for (const [i, liq] of [liq1, liq2, liq3].entries())
+          steps.push(await priceMath.movePriceTowardsTarget(prices[i], prices[i + 1], liq, expandTo18Decimals(1000), 500));
+        const lastStepInput = (steps[2][1] + steps[2][3]) / 2n;
+        const amount = steps[0][1] + steps[0][3] + steps[1][1] + steps[1][3] + lastStepInput;
+        const [, , , lastStepFee] = await priceMath.movePriceTowardsTarget(prices[2], prices[3], liq3, lastStepInput, 500);
+        const fees = [steps[0][3], steps[1][3], lastStepFee];
+
+        await expect(swapExact0For1(amount, wallet.address))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, anyValue, fees[0], -60, anyValue, anyValue)
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, anyValue, fees[1], -120, anyValue, anyValue)
+          .to.emit(poolPlugin, 'AfterSwapFee')
+          .withArgs(fees[2]);
+      });
+
+      it('afterSwap gets the whole fee if afterCross is disabled', async () => {
+        await pool.setPluginConfig(511 & ~128 & ~256); // without the dynamic fee and afterCross
+        await pool.initialize(encodePriceSqrt(1, 1));
+
+        const liq1 = expandTo18Decimals(3);
+        const liq2 = expandTo18Decimals(2);
+        const liq3 = expandTo18Decimals(1);
+        await mint(wallet.address, -60, 60, liq1);
+        await mint(wallet.address, -120, -60, liq2);
+        await mint(wallet.address, -180, -120, liq3);
+
+        const tickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as any as TickMathTest;
+        const priceMath = (await (await ethers.getContractFactory('PriceMovementMathTest')).deploy()) as any as PriceMovementMathTest;
+        const prices = [encodePriceSqrt(1, 1), ...(await Promise.all([-60, -120, -180].map((t) => tickMath.getSqrtRatioAtTick(t))))];
+        // the input that moves the price through each range, the swap stops in the middle of the last one
+        const steps = [];
+        for (const [i, liq] of [liq1, liq2, liq3].entries())
+          steps.push(await priceMath.movePriceTowardsTarget(prices[i], prices[i + 1], liq, expandTo18Decimals(1000), 500));
+        const lastStepInput = (steps[2][1] + steps[2][3]) / 2n;
+        const amount = steps[0][1] + steps[0][3] + steps[1][1] + steps[1][3] + lastStepInput;
+        const [, , , lastStepFee] = await priceMath.movePriceTowardsTarget(prices[2], prices[3], liq3, lastStepInput, 500);
+        const fees = [steps[0][3], steps[1][3], lastStepFee];
+
+        await expect(swapExact0For1(amount, wallet.address))
+          .to.emit(poolPlugin, 'AfterSwapFee')
+          .withArgs(fees[0] + fees[1] + fees[2]);
       });
 
       it('afterCross hook works correctly with zero-liquidity gap between ticks', async () => {
-        await pool.setPluginConfig(511);
+        await pool.setPluginConfig(511 & ~128); // without the dynamic fee, so the pool fee is applied
         await pool.initialize(encodePriceSqrt(1, 1));
-        await poolPlugin.setDynamicFee((await pool.globalState()).lastFee); // keep the pool fee
 
         const liq = expandTo18Decimals(1);
         await mint(wallet.address, -60, 60, liq); 
@@ -3252,9 +3348,9 @@ describe('AlgebraPool', () => {
 
         await expect(swapExact0For1(expandTo18Decimals(1), wallet.address))
           .to.emit(poolPlugin, 'AfterCross')
-          .withArgs(true, input1, fee1, -60, -liq)
+          .withArgs(true, input1, fee1, -60, -liq, liq)
           .to.emit(poolPlugin, 'AfterCross')
-          .withArgs(true, 0, 0, -180, liq);
+          .withArgs(true, 0, 0, -180, liq, 0); // the gap has no liquidity
       });
 
     });
@@ -3303,6 +3399,18 @@ describe('AlgebraPool', () => {
         // the config is uint16, so the flags above the first byte must survive
         await expect(pool.setPluginConfig(1023)).to.emit(pool, 'PluginConfig').withArgs(1023);
         expect((await pool.globalState()).pluginConfig).to.eq(1023);
+      });
+      it('the amount deltas need a hook that returns them', async () => {
+        await pool.setPlugin(other.address);
+        const AMOUNT_DELTAS = 1 << 10;
+        await expect(pool.setPluginConfig(AMOUNT_DELTAS)).to.be.revertedWithCustomError(pool, 'invalidNewPluginConfig');
+        // every hook except beforeSwap and afterSwapCalculation
+        await expect(pool.setPluginConfig(AMOUNT_DELTAS | (1023 & ~1 & ~(1 << 9) & ~(1 << 7)))).to.be.revertedWithCustomError(
+          pool,
+          'invalidNewPluginConfig'
+        );
+        await expect(pool.setPluginConfig(AMOUNT_DELTAS | 1)).to.not.be.reverted;
+        await expect(pool.setPluginConfig(AMOUNT_DELTAS | (1 << 9))).to.not.be.reverted;
       });
     });
 

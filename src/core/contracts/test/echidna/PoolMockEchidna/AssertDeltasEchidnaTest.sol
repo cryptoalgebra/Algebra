@@ -34,7 +34,7 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
   constructor() {
     deltaPlugin = new MockDeltaPlugin();
     _setPlugin(address(deltaPlugin));
-    _setPluginConfig(uint16(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.AFTER_SWAP_CALCULATION_FLAG | Plugins.DYNAMIC_FEE));
+    _setPluginConfig(uint16(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.AFTER_SWAP_CALCULATION_FLAG | Plugins.DYNAMIC_FEE | Plugins.AMOUNT_DELTAS_FLAG));
 
     globalState.price = uint160(Constants.Q96);
     globalState.tick = 0;
@@ -113,8 +113,8 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
     balanceBefore = [balance0, balance1];
     priceBefore = globalState.price;
 
-    uint8 feeMode = globalState.feeMode;
-    feeToken = (feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : feeMode == Constants.FEE_MODE_TOKEN0) ? 0 : 1;
+    uint8 _feeMode = feeMode;
+    feeToken = (_feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : _feeMode == Constants.FEE_MODE_TOKEN0) ? 0 : 1;
     otherTokenFeePendingBefore = feeToken == 0 ? communityFeePending1 : communityFeePending0;
     return _clampLimit(zeroToOne, limitSqrtPrice);
   }

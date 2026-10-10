@@ -89,7 +89,7 @@ contract MockSilentRevertPlugin is IAlgebraPlugin {
         return IAlgebraPlugin.afterFlash.selector;
     }
 
-    function afterCross(bool, uint256, uint256, int24, int128) external pure returns (bytes4) {
+    function afterCross(bool, uint256, uint256, int24, int128, uint128) external pure returns (bytes4) {
         return IAlgebraPlugin.afterCross.selector;
     }
 }

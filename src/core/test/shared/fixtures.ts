@@ -32,7 +32,7 @@ async function factoryFixture(): Promise<FactoryFixture> {
   await poolDeployerFactory.deploy(factory, await factory.poolExtension());
 
   const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
-  const vault = (await vaultFactory.deploy(factory)) as any as AlgebraCommunityVault;
+  const vault = (await vaultFactory.deploy(factory, deployer.address)) as any as AlgebraCommunityVault;
 
   const vaultFactoryStubFactory = await ethers.getContractFactory('AlgebraVaultFactoryStub');
   const vaultFactoryStub = await vaultFactoryStubFactory.deploy(vault);

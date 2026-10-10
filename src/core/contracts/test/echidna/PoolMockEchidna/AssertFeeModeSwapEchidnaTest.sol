@@ -49,7 +49,7 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
     _requireNoExcess();
     limitSqrtPrice = _clampLimit(zeroToOne, limitSqrtPrice);
 
-    uint8 feeMode = globalState.feeMode;
+    uint8 _feeMode = feeMode;
     (uint256 growth0Before, uint256 growth1Before) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
 
     IAlgebraPool(this).swap(address(this), zeroToOne, amountRequired, limitSqrtPrice, '');
@@ -57,8 +57,8 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
     bool growth0Changed = totalFeeGrowth0Token != growth0Before;
     bool growth1Changed = totalFeeGrowth1Token != growth1Before;
 
-    if (feeMode == Constants.FEE_MODE_TOKEN0) assert(!growth1Changed);
-    else if (feeMode == Constants.FEE_MODE_TOKEN1) assert(!growth0Changed);
+    if (_feeMode == Constants.FEE_MODE_TOKEN0) assert(!growth1Changed);
+    else if (_feeMode == Constants.FEE_MODE_TOKEN1) assert(!growth0Changed);
     else if (zeroToOne) assert(!growth1Changed);
     else assert(!growth0Changed);
   }
@@ -76,8 +76,8 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
     if (feeBefore != 0) IAlgebraPool(this).setFee(0);
     limitSqrtPrice = _clampLimit(zeroToOne, limitSqrtPrice);
 
-    uint8 feeMode = globalState.feeMode;
-    bool feeInToken0 = feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : feeMode == Constants.FEE_MODE_TOKEN0;
+    uint8 _feeMode = feeMode;
+    bool feeInToken0 = _feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : _feeMode == Constants.FEE_MODE_TOKEN0;
     bool remainderMayBecomeFee = amountRequired > 0 && feeInToken0 == zeroToOne;
 
     (uint256 growth0Before, uint256 growth1Before) = (totalFeeGrowth0Token, totalFeeGrowth1Token);

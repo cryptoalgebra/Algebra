@@ -72,7 +72,7 @@ interface IAlgebraPlugin {
   /// @param withPaymentInAdvance The flag indicating whether the `swapWithPaymentInAdvance` method was called
   /// @param data Data that passed through the callback
   /// @return amountInDecrease The part of the input that goes to the plugin instead of being swapped (exactIn only).
-  /// It is charged in full even if the swap is executed partially
+  /// It is charged in full even if the swap is executed partially. Must be zero if the amount deltas are disabled
   /// @return selector The function selector for the hook
   /// @return feeOverride The fee for this swap if the dynamic fee is enabled, zero meaning a zero fee, not the pool fee.
   /// Must be zero if the dynamic fee is disabled
@@ -98,7 +98,8 @@ interface IAlgebraPlugin {
   /// @param data Data that passed through the callback
   /// @return selector The function selector for the hook
   /// @return amountInIncrease The amount to increase input (for exactOut case), goes to the plugin
-  /// @return amountOutDecrease The amount to decrease output (for exactIn case), goes to the plugin
+  /// @return amountOutDecrease The amount to decrease output (for exactIn case), goes to the plugin.
+  /// Both amounts must be zero if the amount deltas are disabled
   function afterSwapCalculation(
     address sender,
     address recipient,
@@ -119,7 +120,8 @@ interface IAlgebraPlugin {
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param amount0 The amount of token0 paid by the caller (positive) or sent to the recipient (negative)
   /// @param amount1 The amount of token1 paid by the caller (positive) or sent to the recipient (negative)
-  /// @param totalSwapFeeAmount The total fee earned by LPs during the swap (before community/plugin fee deduction)
+  /// @param feeAmount The swap fee (before community fee deduction) not passed to the plugin in `afterCross`:
+  /// the whole fee if `afterCross` is disabled, otherwise the fee after the last crossed tick. In the fee token, see `feeMode`
   /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function afterSwap(
@@ -130,7 +132,7 @@ interface IAlgebraPlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
-    uint256 totalSwapFeeAmount,
+    uint256 feeAmount,
     bytes calldata data
   ) external returns (bytes4);
 
@@ -164,16 +166,18 @@ interface IAlgebraPlugin {
 
   /// @notice The hook called after crossing an initialized tick during a swap
   /// @param zeroToOne The direction of the swap
-  /// @param swapStepAmount The input amount of the swap step
-  /// @param feeStepAmount The fee amount of the swap step (before community/plugin fee deduction)
+  /// @param swapStepAmount The input amount of the swap step, without the fee
+  /// @param feeStepAmount The fee amount of the swap step (before community fee deduction), in the fee token, see `feeMode`
   /// @param tick The tick that was crossed
   /// @param liquidityDelta The liquidity delta at the crossed tick
+  /// @param liquidity The active liquidity of the swap step, before the tick is crossed
   /// @return bytes4 The function selector for the hook
   function afterCross(
     bool zeroToOne,
     uint256 swapStepAmount,
     uint256 feeStepAmount,
     int24 tick,
-    int128 liquidityDelta
+    int128 liquidityDelta,
+    uint128 liquidity
   ) external returns (bytes4);
 }

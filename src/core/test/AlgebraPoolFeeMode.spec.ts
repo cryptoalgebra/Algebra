@@ -85,18 +85,18 @@ describe('AlgebraPool fee mode', () => {
 
   describe('#setFeeMode', () => {
     it('is off by default', async () => {
-      expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_DEFAULT);
+      expect(await pool.feeMode()).to.eq(FEE_MODE_DEFAULT);
     });
 
     it('sets the mode and emits an event', async () => {
       await expect(pool.setFeeMode(FEE_MODE_TOKEN0)).to.emit(pool, 'FeeMode').withArgs(FEE_MODE_TOKEN0);
-      expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_TOKEN0);
+      expect(await pool.feeMode()).to.eq(FEE_MODE_TOKEN0);
 
       await expect(pool.setFeeMode(FEE_MODE_TOKEN1)).to.emit(pool, 'FeeMode').withArgs(FEE_MODE_TOKEN1);
-      expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_TOKEN1);
+      expect(await pool.feeMode()).to.eq(FEE_MODE_TOKEN1);
 
       await expect(pool.setFeeMode(FEE_MODE_DEFAULT)).to.emit(pool, 'FeeMode').withArgs(FEE_MODE_DEFAULT);
-      expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_DEFAULT);
+      expect(await pool.feeMode()).to.eq(FEE_MODE_DEFAULT);
     });
 
     it('rejects an unknown mode', async () => {
@@ -131,7 +131,7 @@ describe('AlgebraPool fee mode', () => {
     it('a mode set before initialize survives it and applies to the first swap', async () => {
       await pool.setFeeMode(FEE_MODE_TOKEN1);
       await pool.initialize(encodePriceSqrt(1, 1));
-      expect((await pool.globalState()).feeMode).to.eq(FEE_MODE_TOKEN1);
+      expect(await pool.feeMode()).to.eq(FEE_MODE_TOKEN1);
 
       // under the default mode this 0 -> 1 swap would accrue in token0
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));
@@ -470,7 +470,7 @@ describe('AlgebraPool fee mode', () => {
     beforeEach('connect a plugin', async () => {
       poolPlugin = (await (await ethers.getContractFactory('MockPoolPlugin')).deploy(pool)) as any as MockPoolPlugin;
       await pool.setPlugin(poolPlugin);
-      await pool.setPluginConfig(512); // AFTER_SWAP_CALCULATION
+      await pool.setPluginConfig(512 | 1024); // AFTER_SWAP_CALCULATION and AMOUNT_DELTAS
     });
 
     it('amountOutDecrease is capped by the output left after the fee', async () => {

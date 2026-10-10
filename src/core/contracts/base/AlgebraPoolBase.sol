@@ -31,7 +31,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @param pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
   /// @param communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
   /// @param unlocked  Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
-  /// @param feeMode The token in which the swap fee is collected, see `Constants.FEE_MODE_*`
   struct GlobalState {
     uint160 price;
     int24 tick;
@@ -39,7 +38,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     uint16 pluginConfig;
     uint16 communityFee;
     bool unlocked;
-    uint8 feeMode;
   }
 
   /// @inheritdoc IAlgebraPoolImmutables
@@ -90,6 +88,9 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   uint128 public override liquidity;
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
+  /// @inheritdoc IAlgebraPoolState
+  /// @dev Not in `globalState` to keep its interface as in 1.2, this slot is read on each swap anyway
+  uint8 public override feeMode;
   // shares one slot with TickStructure.tickTreeRoot
 
   /// @notice Check that the lower and upper ticks do not violate the boundaries of allowed ticks and are specified in the correct order
@@ -235,7 +236,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   }
 
   function _setFeeMode(uint8 _feeMode) internal {
-    globalState.feeMode = _feeMode;
+    feeMode = _feeMode;
     emit FeeMode(_feeMode);
   }
 

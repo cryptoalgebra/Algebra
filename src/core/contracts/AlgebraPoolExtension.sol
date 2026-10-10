@@ -94,7 +94,7 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
 
   function setFeeMode(uint8 newFeeMode) external override onlyUnlocked {
     _checkIfAdministrator();
-    if (newFeeMode > Constants.MAX_FEE_MODE || newFeeMode == globalState.feeMode) revert invalidNewFeeMode();
+    if (newFeeMode > Constants.MAX_FEE_MODE || newFeeMode == feeMode) revert invalidNewFeeMode();
     _setFeeMode(newFeeMode);
   }
 
@@ -116,6 +116,9 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
     if (msg.sender != _plugin) _checkIfAdministrator();
     // the dynamic fee is returned from the beforeSwap hook
     if (newConfig.hasFlag(Plugins.DYNAMIC_FEE) && !newConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) revert invalidNewPluginConfig();
+    // the amount deltas are returned from the beforeSwap and afterSwapCalculation hooks
+    if (newConfig.hasFlag(Plugins.AMOUNT_DELTAS_FLAG) && !newConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_CALCULATION_FLAG))
+      revert invalidNewPluginConfig();
     _setPluginConfig(newConfig);
   }
 

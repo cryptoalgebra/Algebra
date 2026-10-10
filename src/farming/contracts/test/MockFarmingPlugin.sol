@@ -76,7 +76,7 @@ contract MockFarmingPlugin is IAlgebraPlugin {
         return (IAlgebraPlugin.afterSwapCalculation.selector, 0, 0);
     }
 
-    function afterCross(bool, uint256, uint256, int24, int128)
+    function afterCross(bool, uint256, uint256, int24, int128, uint128)
         external view override onlyPool returns (bytes4) {
         return IAlgebraPlugin.afterCross.selector;
     }
@@ -111,7 +111,7 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     function isIncentiveConnected(address targetIncentive) external view returns (bool) {
         if (incentive != targetIncentive) return false;
         if (IAlgebraPool(pool).plugin() != address(this)) return false;
-        (, , , uint16 pluginConfig, , , ) = IAlgebraPoolState(pool).globalState();
+        (, , , uint16 pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
         if (!pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) return false;
         return true;
     }
@@ -121,7 +121,7 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     }
 
     function _updatePluginConfigInPool() internal {
-        (, , , uint16 currentPluginConfig, , , ) = IAlgebraPoolState(pool).globalState();
+        (, , , uint16 currentPluginConfig, , ) = IAlgebraPoolState(pool).globalState();
         uint16 newPluginConfig = defaultPluginConfig();
         if (currentPluginConfig != newPluginConfig) {
             IAlgebraPool(pool).setPluginConfig(newPluginConfig);
@@ -131,7 +131,7 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     function _updateVirtualPoolTick(bool zeroToOne) internal {
         address _incentive = incentive;
         if (_incentive != address(0)) {
-            (, int24 tick, , , , , ) = IAlgebraPoolState(pool).globalState();
+            (, int24 tick, , , , ) = IAlgebraPoolState(pool).globalState();
             IAlgebraVirtualPoolMock(_incentive).crossTo(tick, zeroToOne);
         }
     }

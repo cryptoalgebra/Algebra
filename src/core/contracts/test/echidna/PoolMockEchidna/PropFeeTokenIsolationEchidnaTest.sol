@@ -9,7 +9,7 @@ import './PoolMockEchidna.sol';
 /// a raw flash can pay its fee in token1, which then accrues there whatever the mode
 contract PropFeeTokenIsolationEchidnaTest is PoolMockEchidna {
   constructor() {
-    globalState.feeMode = Constants.FEE_MODE_TOKEN0;
+    feeMode = Constants.FEE_MODE_TOKEN0;
     exactPayments = true;
   }
 

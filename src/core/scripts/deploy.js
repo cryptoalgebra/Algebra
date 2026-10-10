@@ -24,7 +24,7 @@ async function main() {
   console.log('AlgebraFactory deployed to:', factory.target);
 
   const vaultFactory = await hre.ethers.getContractFactory('AlgebraCommunityVault');
-  const vault = await vaultFactory.deploy(factory);
+  const vault = await vaultFactory.deploy(factory, deployer.address);
 
   await vault.waitForDeployment();
 
@@ -41,16 +41,22 @@ async function main() {
   await setVaultTx.wait()
 
   // protocol fee settings
+  const algebraFeeRecipient = "0x6cbd743d9b97DA1855E64893D3226F8eDCa16e76"
   const partnerAddress = "0xDeaD1F5aF792afc125812E875A891b038f888258" // owner address, must be changed
+  const algebraFeeShare =  1000 // specified on algebraVault, 100% of community fee by default(3% of all fees)
   const defaultCommunityFee = 30 // 3% by default
-
 
   const setCommunityFeeTx = await factory.setDefaultCommunityFee(defaultCommunityFee)
   await setCommunityFeeTx.wait()
 
+  const changeAlgebraFeeReceiverTx = await vault.changeAlgebraFeeReceiver(algebraFeeRecipient)
+  await changeAlgebraFeeReceiverTx.wait()
 
   const changePartnerFeeReceiverTx = await vault.changeCommunityFeeReceiver(partnerAddress)
   await changePartnerFeeReceiverTx.wait()
+
+  await (await vault.proposeAlgebraFeeChange(algebraFeeShare)).wait()
+  await (await vault.acceptAlgebraFeeChangeProposal(algebraFeeShare)).wait()
 
   await (await factory.transferOwnership(partnerAddress)).wait()
 

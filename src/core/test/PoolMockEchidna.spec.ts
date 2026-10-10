@@ -78,7 +78,7 @@ describe('echidna pool harnesses', () => {
     });
 
     it('starts with the fee token pinned to token0', async () => {
-      expect((await suite.globalState()).feeMode).to.eq(1);
+      expect(await suite.feeMode()).to.eq(1);
       expect(await suite.echidna_check_other_token_never_accrues_fees()).to.be.true;
       expect(await suite.echidna_check_pending_fees_are_in_fee_token_only()).to.be.true;
     });
@@ -240,7 +240,7 @@ describe('echidna pool harnesses', () => {
 
     it('starts initialized, with the delta plugin connected and the dynamic fee on', async () => {
       const { price, tick, lastFee, pluginConfig } = await suite.globalState();
-      expect([price, tick, lastFee, pluginConfig]).to.deep.eq([2n ** 96n, 0n, 100n, BigInt(1 | 2 | 128 | 512)]);
+      expect([price, tick, lastFee, pluginConfig]).to.deep.eq([2n ** 96n, 0n, 100n, BigInt(1 | 2 | 128 | 512 | 1024)]);
       expect(await suite.tickSpacing()).to.eq(1);
     });
 
