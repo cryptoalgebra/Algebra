@@ -75,11 +75,6 @@ contract AlgebraPoolExtension is AlgebraPoolBase, ReentrancyGuard {
     if (!IAlgebraFactory(factory).hasRoleOrOwner(Constants.POOLS_ADMINISTRATOR_ROLE, msg.sender)) revert notAllowed();
   }
 
-  /// @dev using function to save bytecode
-  function _checkIfFactory() private view {
-    if (msg.sender != factory) revert notAllowed();
-  }
-
   // permissioned actions use reentrancy lock to prevent call from callback (to keep the correct order of events, etc.)
   
   function setCommunityFee(uint16 newCommunityFee) external override onlyUnlocked {
