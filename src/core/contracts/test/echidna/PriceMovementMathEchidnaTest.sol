@@ -116,11 +116,12 @@ contract PriceMovementMathEchidnaTest {
     assert(onOutput.feeAmount == 0);
   }
 
-  /// @notice On an exactIn swap, charging the fee on the output is never better for the trader
-  /// @dev Follows from the concavity of the curve: `g((1-f)x) >= (1-f)g(x)`.
-  /// There is deliberately no exactOut counterpart: the input needed for an output is convex, so both variants
-  /// are bounded below by the same quantity and the ordering is decided by rounding. See the unit tests
-  function checkFeeOnOutputIsNeverCheaperForTrader(
+  /// @notice On an exactIn swap, charging the fee on the output puts at least as much of the budget onto the curve
+  /// @dev The received amounts are not compared: concavity gives `g((1-f)x) >= (1-f)g(x)` only before rounding.
+  /// The rounded up input-side fee can keep the last wei of a dust input off the curve, and the price rounding
+  /// can outweigh the concavity when the curve is almost linear, so the output side may give slightly more.
+  /// Both are safe for the pool, see `checkPriceMovementIsBackedByInput`
+  function checkFeeOnOutputPutsMoreOntoCurve(
     uint160 sqrtPriceRaw,
     uint160 sqrtPriceTargetRaw,
     uint128 liquidity,
@@ -134,23 +135,7 @@ contract PriceMovementMathEchidnaTest {
     StepResult memory onInput = _run(true, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
     StepResult memory onOutput = _run(false, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
 
-    // a budget the input side rounds entirely into the fee never reaches the curve, and concavity says nothing there
-    require(onInput.amountIn > 0);
-
-    // over a price move this small the curve is linear to within the rounding of the delta helpers: the concavity
-    // gap goes to zero and the ordering is left to rounding, which flips it either way
-    uint256 priceMove = sqrtPriceTargetRaw <= sqrtPriceRaw ? sqrtPriceRaw - onInput.sqrtQ : onInput.sqrtQ - sqrtPriceRaw;
-    require(priceMove != 0 && priceMove * 1e9 >= sqrtPriceRaw);
-
-    // the input side rounds its fee up and loses under one wei of curve input, which at low liquidity can be worth
-    // several wei of output. So it is compared with the smallest budget that puts one wei more onto the curve
-    uint256 afterFee = FullMath.mulDiv(uint256(amountRemaining), DENOMINATOR - feePips, DENOMINATOR);
-    uint256 budgetPlusOne = FullMath.mulDivRoundingUp(afterFee + 1, DENOMINATOR, DENOMINATOR - feePips);
-    require(budgetPlusOne <= uint256(type(int256).max));
-    StepResult memory onInputPlusOne = _run(true, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, int256(budgetPlusOne), feePips);
-
-    assert(onOutput.received <= onInputPlusOne.received);
-    assert(onOutput.amountIn >= onInput.amountIn); // and it puts at least as much of the budget onto the curve
+    assert(onOutput.amountIn >= onInput.amountIn);
   }
 
   /// @notice The price only moves as far as the tokens that reached the curve justify

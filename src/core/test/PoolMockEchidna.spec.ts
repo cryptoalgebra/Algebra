@@ -268,10 +268,10 @@ describe('echidna pool harnesses', () => {
       await suite.setDynamicFeeWrapped(3000);
       await expect(suite.swapWithDeltasWrapped(true, amount, 0))
         .to.emit(suite, 'SwapFee')
-        .withArgs(await suite.getAddress(), 3000);
+        .withArgs(await suite.getAddress(), 3000, 0, 0);
       await expect(suite.swapWithPaymentInAdvanceDeltasWrapped(false, amount, 2n ** 160n - 1n))
         .to.emit(suite, 'SwapFee')
-        .withArgs(await suite.getAddress(), 3000);
+        .withArgs(await suite.getAddress(), 3000, 0, 0);
     });
 
     it('returns the leftovers of a payment in advance stopped by the price limit', async () => {

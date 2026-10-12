@@ -72,7 +72,7 @@ describe('PriceMovementMath with fee on output', () => {
         });
 
         it('never hands the trader more than the fee on the input would', async () => {
-          // forced by the concavity of the curve
+          // the concavity of the curve outweighs the rounding at these amounts, it does not for dust or an almost linear curve
           for (const fee of [1n, 600n, 3000n, 100_000n]) {
             const onInput = await run(true, price, far, liquidity, expandTo18Decimals(1), fee);
             const onOutput = await run(false, price, far, liquidity, expandTo18Decimals(1), fee);

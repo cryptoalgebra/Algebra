@@ -2625,7 +2625,9 @@ describe('AlgebraPool', () => {
       await poolPlugin.setDynamicFee(4000);
       await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.emit(pool, 'SwapFee').withArgs(
         await swapTarget.getAddress(),
-        4000
+        4000,
+        0,
+        0
       )
     })
 
@@ -3464,7 +3466,7 @@ describe('AlgebraPool', () => {
         await poolPlugin.setDynamicFee(0);
         await expect(swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address))
           .to.emit(pool, 'SwapFee')
-          .withArgs(await swapTarget.getAddress(), 0);
+          .withArgs(await swapTarget.getAddress(), 0, 0, 0);
         expect(await pool.totalFeeGrowth0Token()).to.eq(0);
       });
 
@@ -3474,7 +3476,7 @@ describe('AlgebraPool', () => {
         await poolPlugin.setDynamicFee(0);
         await expect(swapExact0For1SupportingFee(expandTo18Decimals(1) / 10n, wallet.address))
           .to.emit(pool, 'SwapFee')
-          .withArgs(await swapTarget.getAddress(), 0);
+          .withArgs(await swapTarget.getAddress(), 0, 0, 0);
         expect(await pool.totalFeeGrowth0Token()).to.eq(0);
       });
 
@@ -3497,7 +3499,7 @@ describe('AlgebraPool', () => {
         await poolPlugin.setDynamicFee(0);
         await token0.transfer(poolPlugin, expandTo18Decimals(1));
         const { lastFee } = await pool.globalState();
-        await expect(poolPlugin.swap()).to.emit(pool, 'SwapFee').withArgs(await poolPlugin.getAddress(), lastFee);
+        await expect(poolPlugin.swap()).to.emit(pool, 'SwapFee').withArgs(await poolPlugin.getAddress(), lastFee, 0, 0);
         expect(await pool.totalFeeGrowth0Token()).to.be.gt(0);
       });
 
@@ -3509,7 +3511,7 @@ describe('AlgebraPool', () => {
         const { lastFee } = await pool.globalState();
         await expect(swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address))
           .to.emit(pool, 'SwapFee')
-          .withArgs(await swapTarget.getAddress(), lastFee);
+          .withArgs(await swapTarget.getAddress(), lastFee, 0, 0);
       });
 
     });

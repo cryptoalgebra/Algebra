@@ -151,6 +151,7 @@ interface Result {
   before: Record<string, bigint[]>;
   after: Record<string, bigint[]>;
   event: bigint[];
+  swapFee: bigint[];
   callback: bigint[];
   seen: { amountRequired: bigint; withPaymentInAdvance: boolean; calc: bigint[]; afterSwap: bigint[] };
 }
@@ -163,11 +164,14 @@ async function execute(env: Env, kind: Kind, zeroToOne: boolean, amount: bigint,
   const poolAddress = (await env.pool.getAddress()).toLowerCase();
   const calleeAddress = (await env.swapTarget.getAddress()).toLowerCase();
   let event: bigint[] = [];
+  let swapFee: bigint[] = [];
   let callback: bigint[] = [];
   for (const log of receipt!.logs) {
     if (log.address.toLowerCase() === poolAddress) {
       const parsed = env.pool.interface.parseLog(log as any);
       if (parsed?.name === 'Swap') event = [parsed.args.amount0, parsed.args.amount1];
+      if (parsed?.name === 'SwapFee')
+        swapFee = [parsed.args.fee, parsed.args.pluginAmountIn, parsed.args.pluginAmountOut];
     } else if (log.address.toLowerCase() === calleeAddress) {
       const parsed = env.swapTarget.interface.parseLog(log as any);
       if (parsed?.name === 'SwapCallback') callback = [parsed.args.amount0Delta, parsed.args.amount1Delta];
@@ -180,7 +184,7 @@ async function execute(env: Env, kind: Kind, zeroToOne: boolean, amount: bigint,
     calc: [await env.plugin.seenCalc0(), await env.plugin.seenCalc1()],
     afterSwap: [await env.plugin.seenAfterSwap0(), await env.plugin.seenAfterSwap1()],
   };
-  return { before, after, event, callback, seen };
+  return { before, after, event, swapFee, callback, seen };
 }
 
 // the amounts calculated by the swap math and the deltas the plugin took, derived from what the hooks observed
@@ -227,6 +231,9 @@ function checkAccounting(r: Result, kind: Kind, zeroToOne: boolean, amount: bigi
   expect(r.event[1]).to.eq(expected[1], 'event amount1');
   expect(r.seen.afterSwap[0]).to.eq(expected[0], 'afterSwap amount0');
   expect(r.seen.afterSwap[1]).to.eq(expected[1], 'afterSwap amount1');
+  // SwapFee shows the plugin parts, so indexers can tell them from the swapped amounts
+  expect(r.swapFee[1]).to.eq(amountInDecrease + amountInIncrease, 'SwapFee pluginAmountIn');
+  expect(r.swapFee[2]).to.eq(amountOutDecrease, 'SwapFee pluginAmountOut');
 
   if (kind === 'payInAdvance') {
     // the whole amount is requested upfront, the leftovers are returned
@@ -725,12 +732,16 @@ describe('AlgebraPool amount deltas', () => {
 
       it(`SwapFee carries the dynamic fee with deltas, payment in advance, ${dirName(zeroToOne)}`, async () => {
         const env = await loadFixture(fullRangeFixture);
-        await setDeltas(env, deltas({ inDecrease: share(10_000n), outDecrease: share(10_000n) }));
+        const d = deltas({ inDecrease: share(10_000n), outDecrease: share(10_000n) });
+        await setDeltas(env, d);
         await env.plugin.setDynamicFee(3000);
+        const amount = expandTo18Decimals(1) / 10n;
 
-        await expect(send(env, 'payInAdvance', zeroToOne, expandTo18Decimals(1) / 10n))
-          .to.emit(env.pool, 'SwapFee')
-          .withArgs(await env.swapTarget.getAddress(), 3000);
+        const r = await execute(env, 'payInAdvance', zeroToOne, amount);
+        const { amountInDecrease, amountOutDecrease } = checkAccounting(r, 'payInAdvance', zeroToOne, amount, d);
+        expect(amountInDecrease).to.be.gt(0);
+        expect(amountOutDecrease).to.be.gt(0);
+        expect(r.swapFee).to.deep.eq([3000n, amountInDecrease, amountOutDecrease]);
       });
 
       it(`the plugin can be the recipient, ${dirName(zeroToOne)}`, async () => {

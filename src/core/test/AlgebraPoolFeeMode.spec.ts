@@ -279,7 +279,7 @@ describe('AlgebraPool fee mode', () => {
       await swapExact0For1(amount, wallet.address);
       const receivedOnOutput = (await token1.balanceOf(wallet.address)) - balanceBeforeOnOutput;
 
-      // forced by the concavity of the curve
+      // the concavity of the curve outweighs the rounding at these amounts, it does not for dust or an almost linear curve
       expect(receivedDefault).to.eq(95192742684349627n);
       expect(receivedOnOutput).to.eq(95190476190476190n);
       expect(receivedOnOutput).to.be.lt(receivedDefault);
