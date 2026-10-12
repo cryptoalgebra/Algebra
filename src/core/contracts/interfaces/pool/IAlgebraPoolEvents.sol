@@ -62,7 +62,9 @@ interface IAlgebraPoolEvents {
   /// @notice Emitted by the pool after any swaps
   /// @param sender The address that initiated the swap
   /// @param fee The fee applied to the swap: the one returned by the plugin if the dynamic fee is enabled, otherwise the pool fee
-  event SwapFee(address indexed sender, uint24 fee);
+  /// @param pluginAmountIn The part of the input sent to the plugin (amountInDecrease or amountInIncrease), included in the `Swap` amounts
+  /// @param pluginAmountOut The part of the output sent to the plugin (amountOutDecrease), excluded from the `Swap` amounts
+  event SwapFee(address indexed sender, uint24 fee, uint256 pluginAmountIn, uint256 pluginAmountOut);
 
   /// @notice Emitted by the pool for any flashes of token0/token1
   /// @param sender The address that initiated the swap call, and that received the callback
