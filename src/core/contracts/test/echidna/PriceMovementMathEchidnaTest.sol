@@ -116,11 +116,12 @@ contract PriceMovementMathEchidnaTest {
     assert(onOutput.feeAmount == 0);
   }
 
-  /// @notice On an exactIn swap, charging the fee on the output is never better for the trader
-  /// @dev Follows from the concavity of the curve: `g((1-f)x) >= (1-f)g(x)`.
-  /// There is deliberately no exactOut counterpart: the input needed for an output is convex, so both variants
-  /// are bounded below by the same quantity and the ordering is decided by rounding. See the unit tests
-  function checkFeeOnOutputIsNeverCheaperForTrader(
+  /// @notice On an exactIn swap, charging the fee on the output puts at least as much of the budget onto the curve
+  /// @dev The received amounts are not compared: concavity gives `g((1-f)x) >= (1-f)g(x)` only before rounding.
+  /// The rounded up input-side fee can keep the last wei of a dust input off the curve, and the price rounding
+  /// can outweigh the concavity when the curve is almost linear, so the output side may give slightly more.
+  /// Both are safe for the pool, see `checkPriceMovementIsBackedByInput`
+  function checkFeeOnOutputPutsMoreOntoCurve(
     uint160 sqrtPriceRaw,
     uint160 sqrtPriceTargetRaw,
     uint128 liquidity,
@@ -134,8 +135,7 @@ contract PriceMovementMathEchidnaTest {
     StepResult memory onInput = _run(true, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
     StepResult memory onOutput = _run(false, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
 
-    assert(onOutput.received <= onInput.received);
-    assert(onOutput.amountIn >= onInput.amountIn); // and it puts at least as much of the budget onto the curve
+    assert(onOutput.amountIn >= onInput.amountIn);
   }
 
   /// @notice The price only moves as far as the tokens that reached the curve justify
