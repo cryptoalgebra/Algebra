@@ -238,7 +238,7 @@ describe('echidna pool harnesses', () => {
       await suite.mintAroundCurrentTickWrapped(6000, liquidity, payment, payment);
     });
 
-    it('starts initialized, with the delta plugin connected and the dynamic fee on', async () => {
+    it('starts initialized, with the delta plugin connected, the dynamic fee and the amount deltas on', async () => {
       const { price, tick, lastFee, pluginConfig } = await suite.globalState();
       expect([price, tick, lastFee, pluginConfig]).to.deep.eq([2n ** 96n, 0n, 100n, BigInt(1 | 2 | 128 | 512 | 1024)]);
       expect(await suite.tickSpacing()).to.eq(1);

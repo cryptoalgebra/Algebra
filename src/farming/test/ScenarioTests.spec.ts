@@ -198,15 +198,6 @@ describe('Scenario tests', () => {
         expectRewardRatio((t1 - t0) * bonusRewardRate, r0.bonusReward + r1.bonusReward + r2.bonusReward, 1n);
       });
 
-      // it('no rewards accrue without swap activity', async () => {
-      //   await Time.setAndMine(await blockTimestamp() + 10_000);
-
-      //   const [r0, r1, r2] = await helpers.getRewardInfoBatch(incentiveKey, [mint0.tokenId, mint1.tokenId, mint2.tokenId]);
-
-      //   expect(r0.reward + r1.reward + r2.reward).to.equal(0n);
-      //   expect(r0.bonusReward + r1.bonusReward + r2.bonusReward).to.equal(0n);
-      // });
-
     });
 
 

@@ -114,18 +114,11 @@ describe('AlgebraPool fee mode', () => {
       await expect(pool.connect(other).setFeeMode(FEE_MODE_TOKEN0)).to.be.revertedWithCustomError(pool, 'notAllowed');
     });
 
-    it('does not change any other part of the global state', async () => {
+    it('does not change the global state', async () => {
       await pool.initialize(encodePriceSqrt(1, 1));
       const before = await pool.globalState();
       await pool.setFeeMode(FEE_MODE_TOKEN1);
-      const after = await pool.globalState();
-
-      expect(after.price).to.eq(before.price);
-      expect(after.tick).to.eq(before.tick);
-      expect(after.lastFee).to.eq(before.lastFee);
-      expect(after.pluginConfig).to.eq(before.pluginConfig);
-      expect(after.communityFee).to.eq(before.communityFee);
-      expect(after.unlocked).to.eq(before.unlocked);
+      expect(await pool.globalState()).to.deep.eq(before);
     });
 
     it('a mode set before initialize survives it and applies to the first swap', async () => {

@@ -376,9 +376,9 @@ describe('NFTDescriptor', () => {
     let minTick: number;
     let maxTick: number;
 
-    describe.skip('when tickspacing is 10', () => {
+    describe('when tickspacing is 10', () => {
       before(() => {
-        tickSpacing = TICK_SPACINGS[FeeAmount.LOW];
+        tickSpacing = 10;
         minTick = getMinTick(tickSpacing);
         maxTick = getMaxTick(tickSpacing);
       });
@@ -430,9 +430,9 @@ describe('NFTDescriptor', () => {
       });
     });
 
-    describe.skip('when tickspacing is 200', () => {
+    describe('when tickspacing is 200', () => {
       before(() => {
-        tickSpacing = TICK_SPACINGS[FeeAmount.HIGH];
+        tickSpacing = 200;
         minTick = getMinTick(tickSpacing);
         maxTick = getMaxTick(tickSpacing);
       });

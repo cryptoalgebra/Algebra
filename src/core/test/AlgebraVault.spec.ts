@@ -81,7 +81,7 @@ describe('AlgebraCommunityVault', () => {
           let balanceBefore = await token0.balanceOf(communityFeeReceiver);
 
           const _vault = vault.connect(third);
-          await expect(_vault.withdraw(token0, AMOUNT)).to.be.reverted;
+          await expect(_vault.withdraw(token0, AMOUNT)).to.be.revertedWith('only withdrawer');
 
           await _vault.connect(other).withdraw(token0, AMOUNT);
 
@@ -129,12 +129,38 @@ describe('AlgebraCommunityVault', () => {
           let balanceBefore = await token0.balanceOf(communityFeeReceiver);
           let balanceAlgebraBefore = await token0.balanceOf(algebraFeeReceiver);
 
-          await vault.withdraw(token0, AMOUNT);
+          const tx = await vault.withdraw(token0, AMOUNT);
+          await expect(tx)
+            .to.emit(vault, 'AlgebraTokensWithdrawal')
+            .withArgs(await token0.getAddress(), algebraFeeReceiver, (AMOUNT * ALGEBRA_FEE) / 1000n);
+          await expect(tx)
+            .to.emit(vault, 'TokensWithdrawal')
+            .withArgs(await token0.getAddress(), communityFeeReceiver, AMOUNT - (AMOUNT * ALGEBRA_FEE) / 1000n);
           let balanceAfter = await token0.balanceOf(communityFeeReceiver);
           let balanceAlgebraAfter = await token0.balanceOf(algebraFeeReceiver);
 
           expect(balanceAfter - balanceBefore).to.eq(AMOUNT - (AMOUNT * ALGEBRA_FEE) / 1000n);
           expect(balanceAlgebraAfter - balanceAlgebraBefore).to.eq((AMOUNT * ALGEBRA_FEE) / 1000n);
+        });
+
+        it('rounds the algebra fee up', async () => {
+          // 10% of 15 is 1.5, Algebra gets 2
+          const tx = await vault.withdraw(token0, 15);
+          await expect(tx).to.changeTokenBalances(token0, [algebraFeeReceiver, communityFeeReceiver], [2, 13]);
+          await expect(tx)
+            .to.emit(vault, 'AlgebraTokensWithdrawal')
+            .withArgs(await token0.getAddress(), algebraFeeReceiver, 2);
+        });
+
+        it('a 100% algebra fee sends the whole amount to Algebra', async () => {
+          await vault.connect(other).proposeAlgebraFeeChange(1000);
+          await vault.acceptAlgebraFeeChangeProposal(1000);
+
+          const tx = await vault.withdraw(token0, AMOUNT);
+          await expect(tx).to.changeTokenBalances(token0, [algebraFeeReceiver, communityFeeReceiver], [AMOUNT, 0]);
+          await expect(tx)
+            .to.emit(vault, 'TokensWithdrawal')
+            .withArgs(await token0.getAddress(), communityFeeReceiver, 0);
         });
 
         it('algebra fee manager can withdraw', async () => {
@@ -143,7 +169,7 @@ describe('AlgebraCommunityVault', () => {
 
           const _vault = vault.connect(third);
 
-          await expect(_vault.withdraw(token0, AMOUNT)).to.be.reverted;
+          await expect(_vault.withdraw(token0, AMOUNT)).to.be.revertedWith('only withdrawer');
 
           await _vault.connect(other).withdraw(token0, AMOUNT);
 
@@ -160,7 +186,7 @@ describe('AlgebraCommunityVault', () => {
           let balance0AlgebraBefore = await token0.balanceOf(algebraFeeReceiver);
           let balance1AlgebraBefore = await token1.balanceOf(algebraFeeReceiver);
 
-          await vault.withdrawTokens([
+          const tx = await vault.withdrawTokens([
             {
               token: token0,
               amount: AMOUNT,
@@ -170,6 +196,14 @@ describe('AlgebraCommunityVault', () => {
               amount: AMOUNT,
             },
           ]);
+          for (const token of [token0, token1]) {
+            await expect(tx)
+              .to.emit(vault, 'AlgebraTokensWithdrawal')
+              .withArgs(await token.getAddress(), algebraFeeReceiver, (AMOUNT * ALGEBRA_FEE) / 1000n);
+            await expect(tx)
+              .to.emit(vault, 'TokensWithdrawal')
+              .withArgs(await token.getAddress(), communityFeeReceiver, AMOUNT - (AMOUNT * ALGEBRA_FEE) / 1000n);
+          }
           let balance0After = await token0.balanceOf(communityFeeReceiver);
           let balance1After = await token1.balanceOf(communityFeeReceiver);
           let balance0AlgebraAfter = await token0.balanceOf(algebraFeeReceiver);
@@ -253,7 +287,9 @@ describe('AlgebraCommunityVault', () => {
 
     it('can accept fee change proposal', async () => {
       await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
-      await vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE);
+      await expect(vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE))
+        .to.emit(vault, 'AlgebraFee')
+        .withArgs(ALGEBRA_FEE);
       expect(await vault.algebraFee()).to.be.eq(ALGEBRA_FEE);
       expect(await vault.hasNewAlgebraFeeProposal()).to.be.eq(false);
     });
@@ -300,15 +336,21 @@ describe('AlgebraCommunityVault', () => {
     const ALGEBRA_FEE = 100n; // 10%
 
     it('can transfer AlgebraFeeManager role', async () => {
-      await vault.transferAlgebraFeeManagerRole(other.address);
-      await vault.connect(other).acceptAlgebraFeeManagerRole();
+      await expect(vault.transferAlgebraFeeManagerRole(other.address))
+        .to.emit(vault, 'PendingAlgebraFeeManager')
+        .withArgs(other.address);
+      await expect(vault.connect(other).acceptAlgebraFeeManagerRole())
+        .to.emit(vault, 'AlgebraFeeManager')
+        .withArgs(other.address);
       expect(await vault.algebraFeeManager()).to.be.eq(other.address);
     });
 
     it('only pending newAlgebraFeeManager can accept AlgebraFeeManager role', async () => {
       await vault.transferAlgebraFeeManagerRole(other.address);
-      await expect(vault.acceptAlgebraFeeManagerRole()).to.be.reverted;
+      await expect(vault.acceptAlgebraFeeManagerRole()).to.be.revertedWithoutReason();
       await expect(vault.connect(other).acceptAlgebraFeeManagerRole()).to.not.be.reverted;
+      // the pending manager is cleared, so the same address cannot accept again
+      await expect(vault.connect(other).acceptAlgebraFeeManagerRole()).to.be.revertedWithoutReason();
     });
 
     it('only AlgebraFeeManager can transfer AlgebraFeeManager role', async () => {
@@ -321,11 +363,13 @@ describe('AlgebraCommunityVault', () => {
       await expect(vault.connect(other).changeAlgebraFeeReceiver(other.address)).to.be.revertedWith(
         'only algebra fee manager'
       );
-      await expect(vault.changeAlgebraFeeReceiver(ZeroAddress)).to.be.reverted;
+      await expect(vault.changeAlgebraFeeReceiver(ZeroAddress)).to.be.revertedWithoutReason();
 
-      await vault.changeAlgebraFeeReceiver(other.address);
+      await expect(vault.changeAlgebraFeeReceiver(other.address))
+        .to.emit(vault, 'AlgebraFeeReceiver')
+        .withArgs(other.address);
       expect(await vault.algebraFeeReceiver()).to.be.eq(other.address);
-      await expect(vault.changeAlgebraFeeReceiver(other.address)).to.be.reverted;
+      await expect(vault.changeAlgebraFeeReceiver(other.address)).to.be.revertedWithoutReason();
     });
 
     it('can propose new fee and cancel proposal', async () => {
@@ -335,24 +379,27 @@ describe('AlgebraCommunityVault', () => {
       await expect(vault.connect(other).proposeAlgebraFeeChange(ALGEBRA_FEE)).to.be.revertedWith(
         'only algebra fee manager'
       );
-      await expect(vault.proposeAlgebraFeeChange(1001)).to.be.reverted;
+      await expect(vault.proposeAlgebraFeeChange(1001)).to.be.revertedWithoutReason();
 
-      await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
-      await expect(vault.proposeAlgebraFeeChange(ALGEBRA_FEE)).to.be.reverted;
+      await expect(vault.proposeAlgebraFeeChange(ALGEBRA_FEE))
+        .to.emit(vault, 'AlgebraFeeProposal')
+        .withArgs(ALGEBRA_FEE);
+      await expect(vault.proposeAlgebraFeeChange(ALGEBRA_FEE)).to.be.revertedWithoutReason();
       expect(await vault.proposedNewAlgebraFee()).to.be.eq(ALGEBRA_FEE);
       expect(await vault.hasNewAlgebraFeeProposal()).to.be.eq(true);
 
       await expect(vault.connect(other).cancelAlgebraFeeChangeProposal()).to.be.revertedWith(
         'only algebra fee manager'
       );
-      await vault.cancelAlgebraFeeChangeProposal();
+      await expect(vault.cancelAlgebraFeeChangeProposal()).to.emit(vault, 'CancelAlgebraFeeProposal');
 
       expect(await vault.proposedNewAlgebraFee()).to.be.eq(0);
       expect(await vault.hasNewAlgebraFeeProposal()).to.be.eq(false);
 
       await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
       await vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE);
-      await expect(vault.proposeAlgebraFeeChange(ALGEBRA_FEE)).to.be.reverted;
+      // the current fee cannot be proposed again
+      await expect(vault.proposeAlgebraFeeChange(ALGEBRA_FEE)).to.be.revertedWithoutReason();
     });
   });
 
