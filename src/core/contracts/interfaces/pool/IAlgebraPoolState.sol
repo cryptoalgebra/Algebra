@@ -13,7 +13,7 @@ interface IAlgebraPoolState {
   /// @return sqrtPrice The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value
   /// @return tick The current global tick of the pool. May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
   /// @return lastFee The pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). Not applied to swaps that get the fee from the dynamic fee plugin
-  /// @return pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
+  /// @return pluginConfig The current plugin config as bitmap. Each bit enables a hook or a feature (dynamic fee, amount deltas), see `Plugins`
   /// @return activeLiquidity  The currently in-range liquidity available to the pool
   /// @return nextTick The next initialized tick after current global tick
   /// @return previousTick The previous initialized tick before (or at) current global tick
@@ -38,7 +38,7 @@ interface IAlgebraPoolState {
   /// @return tick The current tick of the pool, i.e. according to the last tick transition that was run
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
   /// @return lastFee The pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). Not applied to swaps that get the fee from the dynamic fee plugin
-  /// @return pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
+  /// @return pluginConfig The current plugin config as bitmap. Each bit enables a hook or a feature (dynamic fee, amount deltas), see `Plugins`
   /// @return communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
   /// @return unlocked Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
   function globalState()
@@ -108,6 +108,7 @@ interface IAlgebraPoolState {
   /// @notice The fee for a swap with the given parameters: the one from the dynamic fee plugin if enabled, otherwise the pool fee
   /// @dev The parameters are the ones the `beforeSwap` hook gets. The dynamic fee may differ from the fee of the actual swap
   /// if the plugin changes its state in the `beforeSwap` hook, see the `SwapFee` event for the fee applied to each swap.
+  /// Swaps by the plugin itself (`sender` is the plugin) pay the pool fee, as the hook is not called for them.
   /// Reverts if the dynamic fee is enabled but the plugin does not implement `IAlgebraDynamicFeePlugin`
   /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
   /// @param sender The address that would call the swap

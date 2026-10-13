@@ -45,7 +45,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
   struct FeesAmount {
     uint256 communityFeeAmount;
-    bool inToken0; // Whether the amounts above are in token0
+    bool inToken0; // Whether the fee amounts are in token0
     uint256 feeAmount; // The swap fee (before community fee deduction) not passed to the plugin in afterCross yet
   }
 

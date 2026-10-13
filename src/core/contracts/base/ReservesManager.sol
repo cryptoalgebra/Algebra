@@ -71,8 +71,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
   /// @dev Community fee stays in the pool until the vault claims it
   /// @param deltaR0 Amount of token0 to add/subtract to/from reserve0, must not exceed uint128
   /// @param deltaR1 Amount of token1 to add/subtract to/from reserve1, must not exceed uint128
-  /// @param communityFee0 Amount of token0 to pay as communityFee, must not exceed uint128
-  /// @param communityFee1 Amount of token1 to pay as communityFee, must not exceed uint128
+  /// @param communityFee0 Amount of token0 to accumulate as communityFee, must not exceed uint128
+  /// @param communityFee1 Amount of token1 to accumulate as communityFee, must not exceed uint128
   function _changeReserves(
     int256 deltaR0,
     int256 deltaR1,

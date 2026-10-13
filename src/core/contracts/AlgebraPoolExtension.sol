@@ -13,8 +13,8 @@ import './interfaces/IAlgebraFactory.sol';
 import './interfaces/plugin/IAlgebraPlugin.sol';
 
 /// @title Algebra pool extension
-/// @notice Contains permissioned setter logic, called via delegatecall from pool
-/// @dev IMPORTANT: This extension is currently designed only for setters that do not require token0/token1 or other pool immutables.
+/// @notice Contains pool initialization and permissioned setter logic, called via delegatecall from pool
+/// @dev IMPORTANT: This extension is currently designed only for logic that does not require token0/token1 or other pool immutables.
 /// If additional logic that depends on token addresses needs to be moved here (e.g. flash),
 /// getDeployParameters must be updated to provide those values
 /// @dev Version: Algebra Integral 1.3

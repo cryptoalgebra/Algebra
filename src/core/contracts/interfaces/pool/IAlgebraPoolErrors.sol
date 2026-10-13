@@ -56,7 +56,7 @@ interface IAlgebraPoolErrors {
 
   /// @notice Emitted if an attempt is made to manually change the fee value, but dynamic fee is enabled
   error dynamicFeeActive();
-  /// @notice Emitted if an attempt is made by plugin to change the fee value, but dynamic fee is disabled
+  /// @notice Emitted if plugin returns non-zero overrideFee, but dynamic fee is disabled
   error dynamicFeeDisabled();
   /// @notice Emitted if plugin returns overrideFee that is >= 100% (FEE_DENOMINATOR)
   error invalidOverrideFee();
@@ -71,7 +71,7 @@ interface IAlgebraPoolErrors {
 
   /// @notice Emitted if plugin returns non-zero amount deltas, but they are disabled in the plugin config
   error amountDeltasDisabled();
-  /// @notice Emitted if plugin returns non-zero amountInDecrease for exactOut swap
+  /// @notice Emitted if plugin returns non-zero amountInDecrease for exactOut swap, or amountInDecrease >= amountRequired
   error invalidAmountInDecrease();
   /// @notice Emitted if plugin returns invalid amountOutDecrease (exactOut or exceeds output amount)
   error invalidAmountOutDecrease();

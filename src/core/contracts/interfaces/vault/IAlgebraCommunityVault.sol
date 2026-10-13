@@ -50,7 +50,7 @@ interface IAlgebraCommunityVault {
   function claimCommunityFees(address[] calldata pools) external;
 
   /// @notice Withdraw protocol fees from vault
-  /// @dev Can only be called by algebraFeeManager or communityFeeReceiver
+  /// @dev Can only be called by algebraFeeManager, factory owner or COMMUNITY_FEE_WITHDRAWER_ROLE role
   /// @param token The token address
   /// @param amount The amount of token
   function withdraw(address token, uint256 amount) external;
@@ -61,20 +61,20 @@ interface IAlgebraCommunityVault {
   }
 
   /// @notice Withdraw protocol fees from vault. Used to claim fees for multiple tokens
-  /// @dev Can be called by algebraFeeManager or communityFeeReceiver
+  /// @dev Can only be called by algebraFeeManager, factory owner or COMMUNITY_FEE_WITHDRAWER_ROLE role
   /// @param params Array of WithdrawTokensParams objects containing token addresses and amounts to withdraw
   function withdrawTokens(WithdrawTokensParams[] calldata params) external;
 
   // ### algebra factory owner permissioned actions ###
 
   /// @notice Accepts the proposed new Algebra fee
-  /// @dev Can only be called by the factory owner.
+  /// @dev Can only be called by factory owner or COMMUNITY_FEE_VAULT_ADMINISTRATOR role.
   /// The new value will also be used for previously accumulated tokens that have not yet been withdrawn
   /// @param newAlgebraFee New Algebra fee value
   function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external;
 
   /// @notice Change community fee receiver address
-  /// @dev Can only be called by the factory owner
+  /// @dev Can only be called by factory owner or COMMUNITY_FEE_VAULT_ADMINISTRATOR role
   /// @param newCommunityFeeReceiver New community fee receiver address
   function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external;
 

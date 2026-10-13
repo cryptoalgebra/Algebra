@@ -279,7 +279,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
 
         _transferToPlugin(token0, token1, pluginAmountIn, amountOutDecrease);
-        // reflect reserve change and pay communityFee
+        // reflect reserve change and accumulate communityFee
         if (fees.inToken0) _changeReserves(amount0 - int256(pluginAmountIn), amount1 - int256(amountOutDecrease), fees.communityFeeAmount, 0);
         else _changeReserves(amount0 - int256(pluginAmountIn), amount1 - int256(amountOutDecrease), 0, fees.communityFeeAmount);
       } else {
@@ -298,7 +298,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
 
         _transferToPlugin(token1, token0, pluginAmountIn, amountOutDecrease);
-        // reflect reserve change and pay communityFee
+        // reflect reserve change and accumulate communityFee
         if (fees.inToken0) _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(pluginAmountIn), fees.communityFeeAmount, 0);
         else _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(pluginAmountIn), 0, fees.communityFeeAmount);
       }
@@ -368,7 +368,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       // the pool keeps only the swapped amounts, the plugin deltas are not swapped
       // the fees are in the fee token, not necessarily the input one
       if (zeroToOne) {
-        // reflect reserve change and pay communityFee
+        // reflect reserve change and accumulate communityFee
         if (fees.inToken0) _changeReserves(amount0 - amountToSell, amount1, fees.communityFeeAmount, 0);
         else _changeReserves(amount0 - amountToSell, amount1, 0, fees.communityFeeAmount);
 
@@ -382,7 +382,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
         _transferToPlugin(token0, token1, amountInDecrease, amountOutDecrease);
       } else {
-        // reflect reserve change and pay communityFee
+        // reflect reserve change and accumulate communityFee
         if (fees.inToken0) _changeReserves(amount0, amount1 - amountToSell, fees.communityFeeAmount, 0);
         else _changeReserves(amount0, amount1 - amountToSell, 0, fees.communityFeeAmount);
 

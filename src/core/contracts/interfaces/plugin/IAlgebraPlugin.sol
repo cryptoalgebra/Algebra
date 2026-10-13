@@ -66,7 +66,8 @@ interface IAlgebraPlugin {
   /// @param sender The initial msg.sender for the swap call
   /// @param recipient The address to receive the output of the swap
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
-  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative).
+  /// In `swapWithPaymentInAdvance` it is the amount actually received by the pool
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param withPaymentInAdvance The flag indicating whether the `swapWithPaymentInAdvance` method was called
@@ -90,7 +91,8 @@ interface IAlgebraPlugin {
   /// @param sender The initial msg.sender for the swap call
   /// @param recipient The address to receive the output of the swap
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
-  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative).
+  /// In `swapWithPaymentInAdvance` it is the amount actually received by the pool
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param amount0 The swapped amount of token0, without plugin deltas
@@ -115,7 +117,8 @@ interface IAlgebraPlugin {
   /// @param sender The initial msg.sender for the swap call
   /// @param recipient The address to receive the output of the swap
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
-  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative).
+  /// In `swapWithPaymentInAdvance` it is the amount actually received by the pool
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param amount0 The amount of token0 paid by the caller (positive) or sent to the recipient (negative)
