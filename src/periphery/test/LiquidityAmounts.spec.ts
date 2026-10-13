@@ -134,11 +134,40 @@ describe('LiquidityAmounts', async () => {
     });
   });
 
-  describe('#getLiquidityForAmount1', () => {
+  describe('#getAmount1ForLiquidity', () => {
     it('gas [ @skip-on-coverage ]', async () => {
       const sqrtPriceAX96 = encodePriceSqrt(100, 110);
       const sqrtPriceBX96 = encodePriceSqrt(110, 100);
       await snapshotGasCost(liquidityFromAmounts.getGasCostOfGetAmount1ForLiquidity(sqrtPriceAX96, sqrtPriceBX96, 100));
+    });
+  });
+
+  describe('boundary order and overflow', () => {
+    const lower = encodePriceSqrt(100, 110);
+    const upper = encodePriceSqrt(110, 100);
+    const price = encodePriceSqrt(1, 1);
+
+    it('gives the same result when the two boundaries are passed in reverse', async () => {
+      const lib = liquidityFromAmounts;
+      // the values are pinned as well: a change applied to both orders would keep symmetry alone green
+      expect(await lib.getLiquidityForAmount0(lower, upper, 100)).to.eq(1048);
+      expect(await lib.getLiquidityForAmount0(upper, lower, 100)).to.eq(1048);
+      expect(await lib.getLiquidityForAmount1(lower, upper, 100)).to.eq(1048);
+      expect(await lib.getLiquidityForAmount1(upper, lower, 100)).to.eq(1048);
+      expect(await lib.getLiquidityForAmounts(price, lower, upper, 100, 200)).to.eq(2148);
+      expect(await lib.getLiquidityForAmounts(price, upper, lower, 100, 200)).to.eq(2148);
+      expect(await lib.getAmount0ForLiquidity(lower, upper, 2148)).to.eq(204);
+      expect(await lib.getAmount0ForLiquidity(upper, lower, 2148)).to.eq(204);
+      expect(await lib.getAmount1ForLiquidity(lower, upper, 2148)).to.eq(204);
+      expect(await lib.getAmount1ForLiquidity(upper, lower, 2148)).to.eq(204);
+      expect(await lib.getAmountsForLiquidity(price, lower, upper, 2148)).to.deep.eq([99n, 99n]);
+      expect(await lib.getAmountsForLiquidity(price, upper, lower, 2148)).to.deep.eq([99n, 99n]);
+    });
+
+    it('reverts when liquidity does not fit into uint128', async () => {
+      await expect(
+        liquidityFromAmounts.getLiquidityForAmount0(price, encodePriceSqrt(10001, 10000), 2n ** 200n)
+      ).to.be.revertedWithoutReason();
     });
   });
 

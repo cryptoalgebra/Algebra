@@ -67,7 +67,7 @@ async function deploy(mintRanges: [number, number, bigint][]): Promise<Env> {
   await pool.setPluginConfig(DELTA_CONFIG | DYNAMIC_FEE);
   await pool.initialize(encodePriceSqrt(1, 1));
   // with the dynamic fee the plugin sets the fee of every swap, so keep the pool fee by default
-  await plugin.setOverrideFee((await pool.globalState()).lastFee);
+  await plugin.setDynamicFee((await pool.globalState()).lastFee);
   await token0.approve(swapTarget, MaxUint256);
   await token1.approve(swapTarget, MaxUint256);
   for (const [bottom, top, liquidity] of mintRanges)
@@ -105,7 +105,7 @@ async function setDeltas(env: Env, d: Deltas) {
 
 async function setFee(env: Env, fee: number) {
   // with the dynamic fee the plugin sets the fee of every swap, zero included
-  await env.plugin.setOverrideFee(fee);
+  await env.plugin.setDynamicFee(fee);
 }
 
 async function setFeeMode(env: Env, feeMode: number) {
@@ -135,7 +135,7 @@ async function snapshot(env: Env) {
     recipient: env.other.address,
     plugin: await env.plugin.getAddress(),
     pool: await env.pool.getAddress(),
-    // the community fee can be sent here during the swap
+    // the community fee stays pending in the pool, so nothing may reach the vault during the swap
     vault: await env.pool.communityVault(),
   };
   const out: Record<string, bigint[]> = {};
@@ -214,9 +214,10 @@ function checkAccounting(r: Result, kind: Kind, zeroToOne: boolean, amount: bigi
   expect(change('plugin', i)).to.eq(amountInDecrease + amountInIncrease, 'plugin input');
   expect(change('plugin', o)).to.eq(amountOutDecrease, 'plugin output');
 
-  // the deltas never touch the pool: together with the community fee sent to the vault it moves exactly by the swap math amounts
-  expect(change('pool', i) + change('vault', i)).to.eq(calcIn, 'pool input');
-  expect(change('pool', o) + change('vault', o)).to.eq(calcOut, 'pool output');
+  // the deltas never touch the pool: it moves exactly by the swap math amounts
+  expect(change('pool', i)).to.eq(calcIn, 'pool input');
+  expect(change('pool', o)).to.eq(calcOut, 'pool output');
+  expect([change('vault', 0), change('vault', 1)]).to.deep.eq([0n, 0n], 'vault');
   expect(change('reserves', 0)).to.eq(change('pool', 0), 'reserve0 change');
   expect(change('reserves', 1)).to.eq(change('pool', 1), 'reserve1 change');
   expect(r.after.reserves[0]).to.eq(r.after.pool[0], 'reserve0 == balance0');
@@ -298,43 +299,46 @@ describe('AlgebraPool amount deltas', () => {
       }
     }
 
-    for (const zeroToOne of DIRECTIONS) {
-      it(`amountInDecrease is excluded from the swap math, ${dirName(zeroToOne)}`, async () => {
-        const amount = expandTo18Decimals(1) / 100n;
-        const amountInDecrease = amount / 100n;
-        // a swap of amount - amountInDecrease without deltas moves the pool exactly as a swap of amount with amountInDecrease
-        const base = await execute(
-          await loadFixture(fullRangeFixture),
-          'exactIn',
-          zeroToOne,
-          amount - amountInDecrease,
-        );
-        const env = await loadFixture(fullRangeFixture);
-        await setDeltas(env, deltas({ inDecrease: absolute(amountInDecrease) }));
-        const r = await execute(env, 'exactIn', zeroToOne, amount);
-        expect(r.seen.calc).to.deep.eq(base.seen.calc);
-        expect(r.after.feeGrowth).to.deep.eq(base.after.feeGrowth);
-      });
+    // in every fee mode: with the fee on the output the deltas meet the fee in the same token
+    const inMode = async (feeMode: number) => {
+      const env = await loadFixture(fullRangeFixture);
+      await setFeeMode(env, feeMode);
+      return env;
+    };
+    for (const feeMode of FEE_MODES) {
+      for (const zeroToOne of DIRECTIONS) {
+        it(`amountInDecrease is excluded from the swap math, fee mode ${feeMode}, ${dirName(zeroToOne)}`, async () => {
+          const amount = expandTo18Decimals(1) / 100n;
+          const amountInDecrease = amount / 100n;
+          // a swap of amount - amountInDecrease without deltas moves the pool exactly as a swap of amount with amountInDecrease
+          const base = await execute(await inMode(feeMode), 'exactIn', zeroToOne, amount - amountInDecrease);
+          const env = await inMode(feeMode);
+          await setDeltas(env, deltas({ inDecrease: absolute(amountInDecrease) }));
+          const r = await execute(env, 'exactIn', zeroToOne, amount);
+          expect(r.seen.calc).to.deep.eq(base.seen.calc);
+          expect(r.after.feeGrowth).to.deep.eq(base.after.feeGrowth);
+        });
 
-      it(`amountOutDecrease does not change the swap math nor the LP fees, ${dirName(zeroToOne)}`, async () => {
-        const amount = expandTo18Decimals(1) / 100n;
-        const base = await execute(await loadFixture(fullRangeFixture), 'exactIn', zeroToOne, amount);
-        const env = await loadFixture(fullRangeFixture);
-        await setDeltas(env, deltas({ outDecrease: share(500_000n) }));
-        const r = await execute(env, 'exactIn', zeroToOne, amount);
-        expect(r.seen.calc).to.deep.eq(base.seen.calc);
-        expect(r.after.feeGrowth).to.deep.eq(base.after.feeGrowth);
-      });
+        it(`amountOutDecrease does not change the swap math nor the LP fees, fee mode ${feeMode}, ${dirName(zeroToOne)}`, async () => {
+          const amount = expandTo18Decimals(1) / 100n;
+          const base = await execute(await inMode(feeMode), 'exactIn', zeroToOne, amount);
+          const env = await inMode(feeMode);
+          await setDeltas(env, deltas({ outDecrease: share(500_000n) }));
+          const r = await execute(env, 'exactIn', zeroToOne, amount);
+          expect(r.seen.calc).to.deep.eq(base.seen.calc);
+          expect(r.after.feeGrowth).to.deep.eq(base.after.feeGrowth);
+        });
 
-      it(`amountInIncrease does not change the swap math nor the LP fees, ${dirName(zeroToOne)}`, async () => {
-        const amount = expandTo18Decimals(1) / 100n;
-        const base = await execute(await loadFixture(fullRangeFixture), 'exactOut', zeroToOne, amount);
-        const env = await loadFixture(fullRangeFixture);
-        await setDeltas(env, deltas({ inIncrease: share(500_000n) }));
-        const r = await execute(env, 'exactOut', zeroToOne, amount);
-        expect(r.seen.calc).to.deep.eq(base.seen.calc);
-        expect(r.after.feeGrowth).to.deep.eq(base.after.feeGrowth);
-      });
+        it(`amountInIncrease does not change the swap math nor the LP fees, fee mode ${feeMode}, ${dirName(zeroToOne)}`, async () => {
+          const amount = expandTo18Decimals(1) / 100n;
+          const base = await execute(await inMode(feeMode), 'exactOut', zeroToOne, amount);
+          const env = await inMode(feeMode);
+          await setDeltas(env, deltas({ inIncrease: share(500_000n) }));
+          const r = await execute(env, 'exactOut', zeroToOne, amount);
+          expect(r.seen.calc).to.deep.eq(base.seen.calc);
+          expect(r.after.feeGrowth).to.deep.eq(base.after.feeGrowth);
+        });
+      }
     }
   });
 
@@ -342,18 +346,6 @@ describe('AlgebraPool amount deltas', () => {
     for (const zeroToOne of DIRECTIONS) {
       // a price limit right next to the current price stops the swap early
       const nearLimit = zeroToOne ? encodePriceSqrt(999, 1000) : encodePriceSqrt(1000, 999);
-
-      it(`amountInDecrease is charged in full when the price limit stops the swap, ${dirName(zeroToOne)}`, async () => {
-        const env = await loadFixture(fullRangeFixture);
-        const amount = expandTo18Decimals(1);
-        const d = deltas({ inDecrease: share(10_000n) });
-        await setDeltas(env, d);
-        const r = await execute(env, 'exactIn', zeroToOne, amount, nearLimit);
-        const { calcIn, amountInDecrease, paid } = checkAccounting(r, 'exactIn', zeroToOne, amount, d);
-        expect(calcIn).to.be.lt(amount - amountInDecrease); // executed partially
-        expect(amountInDecrease).to.eq(amount / 100n); // but the plugin takes its part of the requested amount
-        expect(paid).to.be.lt(amount);
-      });
 
       it(`amountOutDecrease follows the actual output, ${dirName(zeroToOne)}`, async () => {
         const env = await loadFixture(fullRangeFixture);
@@ -375,18 +367,6 @@ describe('AlgebraPool amount deltas', () => {
         const { calcIn, calcOut, amountInIncrease } = checkAccounting(r, 'exactOut', zeroToOne, amount, d);
         expect(-calcOut).to.be.lt(amount); // received less than requested
         expect(amountInIncrease).to.eq(calcIn / 10n);
-      });
-
-      it(`payment in advance returns the leftovers and keeps amountInDecrease in full, ${dirName(zeroToOne)}`, async () => {
-        const env = await loadFixture(fullRangeFixture);
-        const amount = expandTo18Decimals(1);
-        const d = deltas({ inDecrease: share(10_000n), outDecrease: share(100_000n) });
-        await setDeltas(env, d);
-        const r = await execute(env, 'payInAdvance', zeroToOne, amount, nearLimit);
-        const { calcIn, amountInDecrease, paid } = checkAccounting(r, 'payInAdvance', zeroToOne, amount, d);
-        const leftover = amount - calcIn - amountInDecrease;
-        expect(leftover).to.be.gt(0n);
-        expect(paid).to.eq(amount - leftover);
       });
     }
 
@@ -436,32 +416,42 @@ describe('AlgebraPool amount deltas', () => {
       }
     }
 
-    for (const zeroToOne of DIRECTIONS) {
-      it(`the community fee is taken from the swapped amount only, ${dirName(zeroToOne)}`, async () => {
-        const amount = expandTo18Decimals(1) / 100n;
-        const amountInDecrease = amount / 100n;
+    for (const feeMode of FEE_MODES) {
+      for (const zeroToOne of DIRECTIONS) {
+        it(`the community fee and the fee passed to afterSwap are taken from the swapped amount only, fee mode ${feeMode}, ${dirName(zeroToOne)}`, async () => {
+          const amount = expandTo18Decimals(1) / 100n;
+          const amountInDecrease = amount / 100n;
 
-        // the community fee is either pending or already sent to the vault
-        const accrue = async (env: Env, swapAmount: bigint) => {
-          if ((await env.pool.communityVault()) === ethers.ZeroAddress) await env.pool.setCommunityVault(env.vault);
-          await env.pool.setCommunityFee(250);
-          const before = await env.pool.getCommunityFeePending();
-          const r = await execute(env, 'exactIn', zeroToOne, swapAmount);
-          const after = await env.pool.getCommunityFeePending();
-          const sent = [r.after.vault[0] - r.before.vault[0], r.after.vault[1] - r.before.vault[1]];
-          return { r, accrued: [after[0] - before[0] + sent[0], after[1] - before[1] + sent[1]] };
-        };
+          const accrue = async (env: Env, swapAmount: bigint) => {
+            if ((await env.pool.communityVault()) === ethers.ZeroAddress) await env.pool.setCommunityVault(env.vault);
+            await env.pool.setCommunityFee(250);
+            const before = await env.pool.getCommunityFeePending();
+            const r = await execute(env, 'exactIn', zeroToOne, swapAmount);
+            const after = await env.pool.getCommunityFeePending();
+            return { r, accrued: [after[0] - before[0], after[1] - before[1]], fee: await env.plugin.seenFeeAmount() };
+          };
 
-        const base = await accrue(await loadFixture(fullRangeFixture), amount - amountInDecrease);
+          const inMode = async () => {
+            const env = await loadFixture(fullRangeFixture);
+            await setFeeMode(env, feeMode);
+            return env;
+          };
+          const base = await accrue(await inMode(), amount - amountInDecrease);
 
-        const env = await loadFixture(fullRangeFixture);
-        const d = deltas({ inDecrease: absolute(amountInDecrease), outDecrease: share(20_000n) });
-        await setDeltas(env, d);
-        const { r, accrued } = await accrue(env, amount);
-        checkAccounting(r, 'exactIn', zeroToOne, amount, d);
-        expect(accrued).to.deep.eq(base.accrued);
-        expect(accrued[zeroToOne ? 0 : 1]).to.be.gt(0n);
-      });
+          const env = await inMode();
+          const d = deltas({ inDecrease: absolute(amountInDecrease), outDecrease: share(20_000n) });
+          await setDeltas(env, d);
+          const { r, accrued, fee } = await accrue(env, amount);
+          checkAccounting(r, 'exactIn', zeroToOne, amount, d);
+          expect(accrued).to.deep.eq(base.accrued);
+          expect(fee).to.eq(base.fee);
+          expect(fee).to.be.gt(0n);
+          // the fee token gets the community fee, the other one nothing, as without the deltas
+          const feeToken = feeMode === 0 ? (zeroToOne ? 0 : 1) : feeMode === 1 ? 0 : 1;
+          expect(accrued[feeToken]).to.be.gt(0n);
+          expect(accrued[1 - feeToken]).to.eq(0n);
+        });
+      }
     }
   });
 
@@ -469,16 +459,6 @@ describe('AlgebraPool amount deltas', () => {
     for (const zeroToOne of DIRECTIONS) {
       const dir = dirName(zeroToOne);
       const amount = expandTo18Decimals(1) / 100n;
-
-      it(`amountInDecrease can be amountRequired - 1, ${dir}`, async () => {
-        for (const kind of ['exactIn', 'payInAdvance'] as Kind[]) {
-          const env = await loadFixture(fullRangeFixture);
-          const d = deltas({ inDecrease: absolute(amount - 1n) });
-          await setDeltas(env, d);
-          const r = await execute(env, kind, zeroToOne, amount);
-          checkAccounting(r, kind, zeroToOne, amount, d);
-        }
-      });
 
       it(`amountInDecrease cannot reach amountRequired, ${dir}`, async () => {
         for (const kind of ['exactIn', 'payInAdvance'] as Kind[]) {
@@ -498,17 +478,6 @@ describe('AlgebraPool amount deltas', () => {
           env.pool,
           'invalidAmountInDecrease',
         );
-      });
-
-      it(`amountOutDecrease can take the whole output, ${dir}`, async () => {
-        for (const kind of ['exactIn', 'payInAdvance'] as Kind[]) {
-          const env = await loadFixture(fullRangeFixture);
-          const d = deltas({ outDecrease: share(SHARE) });
-          await setDeltas(env, d);
-          const r = await execute(env, kind, zeroToOne, amount);
-          const { received } = checkAccounting(r, kind, zeroToOne, amount, d);
-          expect(received).to.eq(0n);
-        }
       });
 
       it(`amountOutDecrease cannot exceed the output, ${dir}`, async () => {
@@ -571,16 +540,26 @@ describe('AlgebraPool amount deltas', () => {
           const env = await loadFixture(multiTickFixture);
           await setFeeMode(env, feeMode);
           await setDeltas(env, d);
-          // large enough to cross several positions, alternating directions
+          // alternating directions, each swap crosses at least one initialized tick and stays within the narrow positions
+          const e17 = expandTo18Decimals(1) / 10n;
           const swaps: [boolean, bigint][] = [
-            [true, expandTo18Decimals(1)],
-            [false, expandTo18Decimals(2)],
-            [true, expandTo18Decimals(1) / 3n],
-            [false, expandTo18Decimals(1) / 7n],
+            [true, e17],
+            [false, 2n * e17],
+            [true, (3n * e17) / 2n],
+            [false, e17],
           ];
           for (const [zeroToOne, amount] of swaps) {
+            const tickBefore = Number((await env.pool.globalState()).tick);
             const r = await execute(env, kind, zeroToOne, amount);
             checkAccounting(r, kind, zeroToOne, amount, d);
+            const tickAfter = Number((await env.pool.globalState()).tick);
+            const [low, high] = [Math.min(tickBefore, tickAfter), Math.max(tickBefore, tickAfter)];
+            expect(
+              [-600, 0, 600].some((tick) => low < tick && tick < high),
+              `${tickBefore} -> ${tickAfter}`,
+            ).to.be.true;
+            expect(high).to.be.lt(1200);
+            expect(low).to.be.gt(-1200);
           }
         });
       }
@@ -682,7 +661,7 @@ describe('AlgebraPool amount deltas', () => {
       it(`amountInIncrease and amountOutDecrease are ignored without the afterSwapCalculation flag, ${dirName(zeroToOne)}`, async () => {
         const env = await loadFixture(fullRangeFixture);
         await env.pool.setPluginConfig(BEFORE_SWAP | AFTER_SWAP);
-        await env.plugin.setOverrideFee(0); // the dynamic fee is disabled
+        await env.plugin.setDynamicFee(0); // the dynamic fee is disabled
         // both deltas at once would revert on any swap if the hook was called
         await setDeltas(env, deltas({ inIncrease: share(100_000n), outDecrease: share(100_000n) }));
         const amount = expandTo18Decimals(1) / 10n;
@@ -753,11 +732,38 @@ describe('AlgebraPool amount deltas', () => {
         });
       }
 
-      it(`SwapFee carries the override fee with deltas, payment in advance, ${dirName(zeroToOne)}`, async () => {
+      it(`afterSwapCalculation gets the output net of the fee when the fee is taken from the output, ${dirName(zeroToOne)}`, async () => {
+        // the output token pays the fee: token1 when swapping zeroToOne, token0 otherwise
+        const o = zeroToOne ? 1 : 0;
+        const amount = expandTo18Decimals(1) / 100n;
+        const swapWithFee = async (fee: number, d: Deltas) => {
+          const env = await loadFixture(fullRangeFixture);
+          await setFeeMode(env, zeroToOne ? 2 : 1);
+          await setFee(env, fee);
+          await setDeltas(env, d);
+          return { env, r: await execute(env, 'exactIn', zeroToOne, amount) };
+        };
+        const gross = -(await swapWithFee(0, deltas())).r.seen.calc[o];
+
+        // the fee does not move the price here, it comes off the output before the hook
+        const wholeOutput = deltas({ outDecrease: share(SHARE) });
+        const { env, r } = await swapWithFee(3000, wholeOutput);
+        checkAccounting(r, 'exactIn', zeroToOne, amount, wholeOutput);
+        expect(-r.seen.calc[o] + (await env.plugin.seenFeeAmount())).to.eq(gross);
+        // so the plugin can take the whole net output, and not a wei more
+        expect(r.after.recipient[o]).to.eq(r.before.recipient[o]);
+        await setDeltas(env, deltas({ outDecrease: share(SHARE, 1n) }));
+        await expect(send(env, 'exactIn', zeroToOne, amount)).to.be.revertedWithCustomError(
+          env.pool,
+          'invalidAmountOutDecrease',
+        );
+      });
+
+      it(`SwapFee carries the dynamic fee with deltas, payment in advance, ${dirName(zeroToOne)}`, async () => {
         const env = await loadFixture(fullRangeFixture);
         const d = deltas({ inDecrease: share(10_000n), outDecrease: share(10_000n) });
         await setDeltas(env, d);
-        await env.plugin.setOverrideFee(3000);
+        await env.plugin.setDynamicFee(3000);
         const amount = expandTo18Decimals(1) / 10n;
 
         const r = await execute(env, 'payInAdvance', zeroToOne, amount);

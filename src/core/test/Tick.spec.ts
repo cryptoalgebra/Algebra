@@ -12,20 +12,16 @@ describe('Tick', () => {
   });
 
   describe('#getInnerFeeGrowth', () => {
-    it('returns all for two uninitialized ticks if tick is inside', async () => {
-      const { innerFeeGrowth0Token, innerFeeGrowth1Token } = await tickTest.getInnerFeeGrowth(-2, 2, 0, 15, 15);
-      expect(innerFeeGrowth0Token).to.eq(15);
-      expect(innerFeeGrowth1Token).to.eq(15);
-    });
-    it('returns 0 for two uninitialized ticks if tick is above', async () => {
-      const { innerFeeGrowth0Token, innerFeeGrowth1Token } = await tickTest.getInnerFeeGrowth(-2, 2, 4, 15, 15);
-      expect(innerFeeGrowth0Token).to.eq(0);
-      expect(innerFeeGrowth1Token).to.eq(0);
-    });
-    it('returns 0 for two uninitialized ticks if tick is below', async () => {
-      const { innerFeeGrowth0Token, innerFeeGrowth1Token } = await tickTest.getInnerFeeGrowth(-2, 2, -4, 15, 15);
-      expect(innerFeeGrowth0Token).to.eq(0);
-      expect(innerFeeGrowth1Token).to.eq(0);
+    it('for two uninitialized ticks returns all inside the range and 0 outside it', async () => {
+      for (const [tick, expected] of [
+        [0, 15],
+        [4, 0],
+        [-4, 0],
+      ]) {
+        const { innerFeeGrowth0Token, innerFeeGrowth1Token } = await tickTest.getInnerFeeGrowth(-2, 2, tick, 15, 15);
+        expect(innerFeeGrowth0Token, `tick ${tick}`).to.eq(expected);
+        expect(innerFeeGrowth1Token, `tick ${tick}`).to.eq(expected);
+      }
     });
 
     it('subtracts upper tick if below', async () => {
@@ -137,7 +133,7 @@ describe('Tick', () => {
     it('reverts on overflow liquidity gross', async () => {
       const maxLiquidityPerTick = await tickTest.maxLiquidityPerTick();
       await tickTest.update(0, 0, maxLiquidityPerTick - 1n, 0, 0, false);
-      await expect(tickTest.update(0, 0, 2, 0, 0, false)).to.be.reverted;
+      await expect(tickTest.update(0, 0, 2, 0, 0, false)).to.be.revertedWithCustomError(tickTest, 'liquidityOverflow');
     });
     it('assumes all growth happens below ticks lte current tick', async () => {
       await tickTest.update(1, 1, 1, 1, 2, false);

@@ -9,7 +9,7 @@ import {
   TestERC20,
   IAlgebraFactory,
 } from '../typechain';
-import { FeeAmount, MaxUint128, TICK_SPACINGS } from './shared/constants';
+import { FeeAmount, MaxUint128, TICK_SPACINGS, ZERO_ADDRESS } from './shared/constants';
 import { getMaxTick, getMinTick } from './shared/ticks';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
@@ -18,7 +18,6 @@ import completeFixture from './shared/completeFixture';
 import snapshotGasCost from './shared/snapshotGasCost';
 
 import { expect } from './shared/expect';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 describe('PositionValue', async () => {
   let wallets: any;
@@ -72,7 +71,6 @@ describe('PositionValue', async () => {
   });
 
   describe('#total', () => {
-    let tokenId: number;
     let sqrtRatioX96: bigint;
 
     beforeEach(async () => {
@@ -126,7 +124,7 @@ describe('PositionValue', async () => {
       expect(total[1]).to.equal(principal[1] + fees[1]);
     });
 
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(positionValue.totalGas(nft, 1, sqrtRatioX96));
     });
   });
@@ -179,7 +177,7 @@ describe('PositionValue', async () => {
       expect(principal.amount1).to.equal('99999999999999999999999');
     });
 
-    it('returns the correct values when range is below current price', async () => {
+    it('returns the correct values when range is above current price', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
@@ -239,7 +237,7 @@ describe('PositionValue', async () => {
       expect(principal.amount1).to.equal('99999999999999999999999');
     });
 
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
@@ -365,7 +363,7 @@ describe('PositionValue', async () => {
         expect(feeAmounts[1]).to.equal(feesFromCollect[1]);
       });
 
-      it('gas', async () => {
+      it('gas [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(positionValue.feesGas(nft, tokenId));
       });
     });
@@ -421,7 +419,7 @@ describe('PositionValue', async () => {
         expect(feeAmounts[1]).to.equal(feesFromCollect[1]);
       });
 
-      it('gas', async () => {
+      it('gas [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(positionValue.feesGas(nft, tokenId));
       });
     });
@@ -477,8 +475,60 @@ describe('PositionValue', async () => {
         expect(feeAmounts[1]).to.equal(feesFromCollect[1]);
       });
 
-      it('gas', async () => {
+      it('gas [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(positionValue.feesGas(nft, tokenId));
+      });
+    });
+
+    describe('when the fee is fixed to token0 after fees accrued in both tokens', () => {
+      it('returns what collect pays out, and the token1 side stays where the switch left it', async () => {
+        await nft.mint({
+          token0: await tokens[0].getAddress(),
+          token1: await tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
+          tickLower: TICK_SPACINGS[FeeAmount.MEDIUM] * -10,
+          tickUpper: TICK_SPACINGS[FeeAmount.MEDIUM] * 10,
+          recipient: wallets[0].address,
+          amount0Desired: expandTo18Decimals(10_000),
+          amount1Desired: expandTo18Decimals(10_000),
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 10,
+        });
+
+        await tokens[0].approve(router, MaxUint256);
+        await tokens[1].approve(router, MaxUint256);
+        const swap = async (tokenIn: TestERC20, tokenOut: TestERC20, amountIn: bigint) =>
+          router.exactInput({
+            recipient: wallets[0].address,
+            deadline: 1,
+            path: encodePath([await tokenIn.getAddress(), ZERO_ADDRESS, await tokenOut.getAddress()]),
+            amountIn,
+            amountOutMinimum: 0,
+          });
+
+        // token1 fees under the default mode, after the switch the token1 accumulator is frozen
+        await swap(tokens[1], tokens[0], expandTo18Decimals(1_000));
+        const token1Fees = [(await positionValue.fees(nft, 1))[1], (await positionValue.fees(nft, tokenId))[1]];
+        await pool.setFeeMode(1);
+
+        // up through tickUpper and back down through tickLower, every crossing snapshots the frozen side too
+        await swap(tokens[1], tokens[0], expandTo18Decimals(30_000));
+        await swap(tokens[0], tokens[1], expandTo18Decimals(80_000));
+        expect((await pool.globalState()).tick).to.be.lt(TICK_SPACINGS[FeeAmount.MEDIUM] * -10);
+
+        for (const [i, id] of [1, tokenId].entries()) {
+          const feesFromCollect = await nft.collect.staticCall({
+            tokenId: id,
+            recipient: wallets[0].address,
+            amount0Max: MaxUint128,
+            amount1Max: MaxUint128,
+          });
+          const feeAmounts = await positionValue.fees(nft, id);
+          expect(feeAmounts[0]).to.equal(feesFromCollect[0]);
+          expect(feeAmounts[1]).to.equal(feesFromCollect[1]);
+          expect(feeAmounts[1]).to.equal(token1Fees[i]);
+        }
       });
     });
   });

@@ -2,7 +2,7 @@ const fs = require('fs');
 
 const testContracts = fs.readdirSync("./contracts/test")
 const skipFiles = testContracts.map((x) => "test/" + x)
-skipFiles.push("libraries/NFTSVG.sol"); // TODO remove after fix of https://github.com/sc-forks/solidity-coverage/issues/751
+skipFiles.push("lens/QuoterV2.sol"); // stack too deep when instrumented, see hardhat.config.ts
 
 
 module.exports = {

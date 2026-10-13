@@ -21,8 +21,6 @@ import {
 //import WNativeToken from '../contracts/WNativeToken.json'
 import { getCreateAddress } from 'ethers';
 
-export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a';
-
 const wnativeFixture: () => Promise<{ wnative: IWNativeToken }> = async () => {
   const wnativeFactory = await ethers.getContractFactory(WNATIVE_ABI, WNATIVE_BYTECODE);
   const wnative = (await wnativeFactory.deploy()) as any as IWNativeToken;
@@ -42,7 +40,7 @@ const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
   const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as any as IAlgebraFactory;
 
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE);
-  const poolDeployer = await poolDeployerFactory.deploy(_factory, await _factory.poolExtension());
+  await poolDeployerFactory.deploy(_factory, await _factory.poolExtension());
 
   const pluginContractFactory = await ethers.getContractFactory('MockFarmingPluginFactory');
   const pluginFactory = await pluginContractFactory.deploy(_factory);

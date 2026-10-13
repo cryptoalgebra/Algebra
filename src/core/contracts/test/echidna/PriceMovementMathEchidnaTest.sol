@@ -49,7 +49,7 @@ contract PriceMovementMathEchidnaTest {
   ) public pure {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
-    require(feePips < 1e6);
+    feePips = feePips % 1_000_000; // folded rather than required: a raw draw is in range only six percent of the time
 
     StepResult memory r = _run(feeOnInput, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
 
@@ -129,7 +129,7 @@ contract PriceMovementMathEchidnaTest {
     uint24 feePips
   ) external pure {
     _requireReachablePrices(sqrtPriceRaw, sqrtPriceTargetRaw);
-    require(feePips < 1e6);
+    feePips = feePips % 1_000_000; // folded rather than required: a raw draw is in range only six percent of the time
     require(amountRemaining >= 0);
 
     StepResult memory onInput = _run(true, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);
@@ -150,7 +150,7 @@ contract PriceMovementMathEchidnaTest {
   ) external pure {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
-    require(feePips < 1e6);
+    feePips = feePips % 1_000_000; // folded rather than required: a raw draw is in range only six percent of the time
     require(liquidity > 0);
 
     StepResult memory r = _run(feeOnInput, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, feePips);

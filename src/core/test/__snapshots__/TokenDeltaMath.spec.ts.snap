@@ -12,6 +12,6 @@ exports[`TokenDeltaMath #getToken0Delta gas cost for amount0 where roundUp = fal
 
 exports[`TokenDeltaMath #getToken0Delta gas cost for amount0 where roundUp = true  [ @skip-on-coverage ] 1`] = `449`;
 
-exports[`TokenDeltaMath #getToken1Delta gas cost for amount0 where roundUp = false  [ @skip-on-coverage ] 1`] = `419`;
+exports[`TokenDeltaMath #getToken1Delta gas cost for amount1 where roundUp = false  [ @skip-on-coverage ] 1`] = `392`;
 
-exports[`TokenDeltaMath #getToken1Delta gas cost for amount0 where roundUp = true  [ @skip-on-coverage ] 1`] = `449`;
+exports[`TokenDeltaMath #getToken1Delta gas cost for amount1 where roundUp = true  [ @skip-on-coverage ] 1`] = `401`;

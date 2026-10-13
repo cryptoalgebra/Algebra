@@ -22,7 +22,7 @@ const tickSpacing = 60;
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
 
 describe('AlgebraPoolRouter', () => {
-  let wallet: Wallet, other: Wallet;
+  let wallet: Wallet;
 
   let token0: TestERC20;
   let token1: TestERC20;
@@ -43,7 +43,7 @@ describe('AlgebraPoolRouter', () => {
   let createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool'];
 
   before('create fixture loader', async () => {
-    [wallet, other] = await (ethers as any).getSigners();
+    [wallet] = await (ethers as any).getSigners();
   });
 
   beforeEach('deploy first fixture', async () => {
@@ -110,7 +110,7 @@ describe('AlgebraPoolRouter', () => {
 
       const method = ForExact0 ? swapForExact0Multi : swapForExact1Multi;
 
-      const [pool0Address, pool1Address, inputTokenAddress] = [
+      const [pool0Address, pool1Address] = [
         await pool0.getAddress(),
         await pool1.getAddress(),
         await inputToken.getAddress()

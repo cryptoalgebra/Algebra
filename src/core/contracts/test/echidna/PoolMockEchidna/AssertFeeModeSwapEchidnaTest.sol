@@ -7,6 +7,10 @@ import './PoolMockEchidna.sol';
 /// @dev A rounding error that is invisible within one step can compound across ticks into a swap that
 /// under-delivers or over-charges
 contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
+  constructor() {
+    trackPositions = true;
+  }
+
   /// @notice An exactOut swap either delivers the requested amount in full or stops because it ran out of room
   function swapExactOutWrapped(bool zeroToOne, uint128 amountOut, uint160 limitSqrtPrice) public {
     require(amountOut > 0);
@@ -42,6 +46,7 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
   /// @notice A swap only ever moves the accumulator of the fee token
   function swapAndCheckFeeTokenWrapped(bool zeroToOne, int128 amountRequired, uint160 limitSqrtPrice) public {
     require(amountRequired != 0);
+    _requireNoExcess();
     limitSqrtPrice = _clampLimit(zeroToOne, limitSqrtPrice);
 
     uint8 _feeMode = feeMode;
@@ -58,21 +63,72 @@ contract AssertFeeModeSwapEchidnaTest is PoolMockEchidna {
     else assert(!growth0Changed);
   }
 
-  /// @notice A zero fee rate leaves both accumulators and both pending balances untouched
+  /// @notice A zero fee rate leaves both accumulators and both pending balances untouched, except for an exactIn swap
+  /// with the fee on the input that stops short of its limit. That step books the input left over as the fee at any
+  /// rate: it is too small to move the sqrt price by one unit, and for token0 at a low price that can be any amount.
+  /// Then only the other token is checked
+  /// @dev The rate is zeroed here and put back afterwards. Requiring it instead left the body unreached unless the
+  /// sequence happened to call the inherited `setFee(0)` first, which the default rate of 100 made rare
   function swapWithoutFeeWrapped(bool zeroToOne, int128 amountRequired, uint160 limitSqrtPrice) public {
     require(amountRequired != 0);
-    require(globalState.lastFee == 0);
+    _requireNoExcess();
+    uint16 feeBefore = globalState.lastFee;
+    if (feeBefore != 0) IAlgebraPool(this).setFee(0);
     limitSqrtPrice = _clampLimit(zeroToOne, limitSqrtPrice);
+
+    uint8 _feeMode = feeMode;
+    bool feeInToken0 = _feeMode == Constants.FEE_MODE_DEFAULT ? zeroToOne : _feeMode == Constants.FEE_MODE_TOKEN0;
+    bool remainderMayBecomeFee = amountRequired > 0 && feeInToken0 == zeroToOne;
 
     (uint256 growth0Before, uint256 growth1Before) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
     (uint128 communityPending0Before, uint128 communityPending1Before) = (communityFeePending0, communityFeePending1);
 
     IAlgebraPool(this).swap(address(this), zeroToOne, amountRequired, limitSqrtPrice, '');
+    remainderMayBecomeFee = remainderMayBecomeFee && globalState.price != limitSqrtPrice;
 
-    assert(totalFeeGrowth0Token == growth0Before);
-    assert(totalFeeGrowth1Token == growth1Before);
-    assert(communityFeePending0 == communityPending0Before);
-    assert(communityFeePending1 == communityPending1Before);
+    if (!remainderMayBecomeFee || !feeInToken0) {
+      assert(totalFeeGrowth0Token == growth0Before);
+      assert(communityFeePending0 == communityPending0Before);
+    }
+    if (!remainderMayBecomeFee || feeInToken0) {
+      assert(totalFeeGrowth1Token == growth1Before);
+      assert(communityFeePending1 == communityPending1Before);
+    }
+
+    if (feeBefore != 0) IAlgebraPool(this).setFee(feeBefore);
+  }
+
+  error Drained();
+
+  /// @notice At any moment every position can be burned and collected in full, and what is left still covers the
+  /// pending community fee
+  /// @dev The raw `mint` is blacklisted in the config, so the tracked positions are all there are. The drain runs in a
+  /// self-call that always reverts, which leaves the pool as it was; only how it reverted is read
+  function checkSolvencyWrapped() public {
+    // hooks pointed at an address without code would fail the burns for a reason that has nothing to do with solvency
+    require(globalState.pluginConfig == 0 || plugin.code.length > 0);
+    try this.drainAndRevert() {} catch (bytes memory reason) {
+      assert(reason.length == 4 && bytes4(reason) == Drained.selector);
+    }
+  }
+
+  function drainAndRevert() external {
+    require(msg.sender == address(this));
+    for (uint256 i; i < trackedPositions.length; i++) {
+      PositionData memory p = trackedPositions[i];
+      uint256 positionLiquidity = getOrCreatePosition(address(this), p.bottomTick, p.topTick).liquidity;
+      if (positionLiquidity > 0) IAlgebraPool(this).burn(p.bottomTick, p.topTick, uint128(positionLiquidity), '');
+      IAlgebraPool(this).collect(address(this), p.bottomTick, p.topTick, type(uint128).max, type(uint128).max);
+    }
+    // an overpaid position would already have failed above, when the mock balance went below zero
+    if (balance0 >= communityFeePending0 && balance1 >= communityFeePending1) revert Drained();
+    revert();
+  }
+
+  /// @dev A swap sweeps any earlier overpayment, donation or flash fee into fee growth of its own token, which is
+  /// not the swap's fee. The first call that runs with liquidity in range settles it, and the checks run after that
+  function _requireNoExcess() private view {
+    require(balance0 == reserve0 && balance1 == reserve1);
   }
 
   function _clampLimit(bool zeroToOne, uint160 limitSqrtPrice) private view returns (uint160) {

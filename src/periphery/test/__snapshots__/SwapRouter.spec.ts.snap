@@ -2,7 +2,7 @@
 
 exports[`SwapRouter bytecode size [ @skip-on-coverage ] 1`] = `12653`;
 
-exports[`SwapRouter swaps #exactInput multi-pool gas cost [ @skip-on-coverage ] 1`] = `222563`;
+exports[`SwapRouter swaps #exactInput multi-pool gas cost [ @skip-on-coverage ] 1`] = `222551`;
 
 exports[`SwapRouter swaps #exactInputSingle gas cost [ @skip-on-coverage ] 1`] = `130030`;
 
@@ -10,7 +10,7 @@ exports[`SwapRouter swaps #exactInputSingleSupportingFeeOnTransferTokens gas cos
 
 exports[`SwapRouter swaps #exactOutput Native input WNativeToken gas cost [ @skip-on-coverage ] 1`] = `225307`;
 
-exports[`SwapRouter swaps #exactOutput multi-pool gas cost [ @skip-on-coverage ] 1`] = `221460`;
+exports[`SwapRouter swaps #exactOutput multi-pool gas cost [ @skip-on-coverage ] 1`] = `221448`;
 
 exports[`SwapRouter swaps #exactOutput single-pool gas cost [ @skip-on-coverage ] 1`] = `135852`;
 

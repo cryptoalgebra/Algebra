@@ -26,8 +26,9 @@ describe('Multicall', async () => {
   });
 
   it('silent revert handled correctly', async () => {
-    await expect(multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsSilently', [])])).to.be
-      .revertedWithoutReason;
+    await expect(
+      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsSilently', [])])
+    ).to.be.revertedWithoutReason();
   });
 
   it('custom error bubbles up', async () => {

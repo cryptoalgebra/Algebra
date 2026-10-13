@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, reset } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeAlgebraPool, AlgebraPool, MockPoolPlugin } from '../typechain';
 import { expect } from './shared/expect';
 
@@ -25,6 +25,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let wallet: Wallet, other: Wallet;
 
   before('create fixture loader', async () => {
+    // gas depends on deployed addresses, so start from a fresh chain regardless of earlier spec files
+    await reset();
     [wallet, other] = await (ethers as any).getSigners();
   });
 
@@ -87,15 +89,12 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       let swapExact0For1: SwapFunction;
       let swapExact1For0: SwapFunction;
       let swapToHigherPrice: SwapToPriceFunction;
-      let swapToLowerPrice: SwapToPriceFunction;
       let poolPlugin: MockPoolPlugin;
       let pool: MockTimeAlgebraPool;
       let mint: MintFunction;
 
       beforeEach('load the fixture', async () => {
-        ({ swapExact0For1, swapExact1For0, pool, mint, swapToHigherPrice, swapToLowerPrice } = await loadFixture(
-          gasTestFixture
-        ));
+        ({ swapExact0For1, swapExact1For0, pool, mint, swapToHigherPrice } = await loadFixture(gasTestFixture));
       });
 
       describe('#swapExact1For0', () => {
@@ -118,15 +117,15 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         });
       })
 
-      describe('#swapExact1For0 with override fee on', () => {
+      describe('#swapExact1For0 with dynamic fee', () => {
         beforeEach('load the fixture', async () => {
           const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
           poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
-          await poolPlugin.setOverrideFee(1000);
+          await poolPlugin.setDynamicFee(1000);
           await pool.setPlugin(poolPlugin);
           await pool.setPluginConfig(255);
 
-          await pool.advanceTime(86400);
+          await pool.advanceTime(1);
           await swapExact0For1(expandTo18Decimals(1), wallet.address);
           await pool.advanceTime(1);
           await swapToHigherPrice(startingPrice, wallet.address);
@@ -134,7 +133,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           expect((await pool.globalState()).price).to.eq(startingPrice);
         });
 
-        it('first swap in block with no tick movement, without transfer', async () => {
+        it('first swap in block with no tick movement', async () => {
           await swapExact1For0(10000, wallet.address)
           await pool.advanceTime(1)
           await snapshotGasCost(swapExact1For0(10000, wallet.address));
@@ -142,19 +141,24 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           expect((await pool.globalState()).tick).to.eq(startingTick);
         });
 
-        it('first swap in block with no tick movement, with transfer', async () => {
-          await pool.advanceTime(86400)
-          await snapshotGasCost(swapExact1For0(10000, wallet.address));
-          expect((await pool.globalState()).price).to.not.eq(startingPrice);
-          expect((await pool.globalState()).tick).to.eq(startingTick);
-        });
-
-        it('first swap in block moves tick, no initialized crossings, with transfer', async () => {
-          await pool.advanceTime(86400)
+        it('first swap in block moves tick, no initialized crossings', async () => {
+          await pool.advanceTime(1);
           await snapshotGasCost(swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address));
           expect((await pool.globalState()).tick).to.eq(startingTick + 1);
         });
       })
+
+      if (communityFee != 0) {
+        describe('#claimCommunityFee', () => {
+          it('claims the fees pending in both tokens', async () => {
+            const [pending0, pending1] = await pool.getCommunityFeePending();
+            expect(pending0).to.be.gt(0);
+            expect(pending1).to.be.gt(0);
+            const vault = await ethers.getContractAt('AlgebraCommunityVault', await pool.communityVault());
+            await snapshotGasCost(vault.claimCommunityFees([pool]));
+          });
+        });
+      }
 
       describe('#swapExact0For1', () => {
         it('first swap in block with no tick movement', async () => {

@@ -1,5 +1,6 @@
 import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
+import snapshotGasCost from './shared/snapshotGasCost';
 import { encodePriceSqrt, expandTo18Decimals, MIN_SQRT_RATIO, MAX_SQRT_RATIO } from './shared/utilities';
 import { PriceMovementMathTest } from '../typechain';
 
@@ -75,7 +76,7 @@ describe('PriceMovementMath with fee on output', () => {
           for (const fee of [1n, 600n, 3000n, 100_000n]) {
             const onInput = await run(true, price, far, liquidity, expandTo18Decimals(1), fee);
             const onOutput = await run(false, price, far, liquidity, expandTo18Decimals(1), fee);
-            expect(onOutput.amountOut, `fee ${fee}`).to.be.lte(onInput.amountOut);
+            expect(onOutput.amountOut, `fee ${fee}`).to.be.lt(onInput.amountOut);
           }
         });
       });
@@ -105,7 +106,8 @@ describe('PriceMovementMath with fee on output', () => {
 
           // the markup rides on top of the raw input, while on the output side there is none
           expect(onInput.feeAmount).to.eq(feeOfNet(onInput.amountIn, 600n));
-          expect(onOutput.amountIn + onOutput.feeAmount).to.not.eq(onOutput.amountIn + feeOfNet(onOutput.amountIn, 600n));
+          expect(onOutput.feeAmount).to.eq(feeOfGross(onOutput.amountOut + onOutput.feeAmount, 600n));
+          expect(onOutput.feeAmount).to.be.lt(feeOfNet(onOutput.amountIn, 600n));
         });
 
         it('costs the trader at least as much as the fee on the input would', async () => {
@@ -186,11 +188,15 @@ describe('PriceMovementMath with fee on output', () => {
     it('handles the smallest possible amounts', async () => {
       const liquidity = expandTo18Decimals(2);
       for (const fee of [1n, 600n, 999_999n]) {
+        // one wei of input buys nothing, so there is nothing to take a fee from either
         const exactIn = await run(false, encodePriceSqrt(1, 1), encodePriceSqrt(1, 100), liquidity, 1n, fee);
-        expect(exactIn.feeAmount, `exactIn fee ${fee}`).to.be.lte(exactIn.amountOut + exactIn.feeAmount);
+        expect(exactIn.amountIn, `exactIn fee ${fee}`).to.eq(1n);
+        expect(exactIn.amountOut, `exactIn fee ${fee}`).to.eq(0n);
+        expect(exactIn.feeAmount, `exactIn fee ${fee}`).to.eq(0n);
 
         const exactOut = await run(false, encodePriceSqrt(1, 1), encodePriceSqrt(1, 100), liquidity, -1n, fee);
-        expect(exactOut.amountOut, `exactOut fee ${fee}`).to.be.lte(1n);
+        expect(exactOut.amountOut, `exactOut fee ${fee}`).to.eq(1n);
+        expect(exactOut.feeAmount, `exactOut fee ${fee}`).to.eq(feeOfGross(exactOut.amountOut + exactOut.feeAmount, fee));
       }
     });
 
@@ -199,7 +205,8 @@ describe('PriceMovementMath with fee on output', () => {
       const fee = 999_999n;
 
       const { amountOut, feeAmount } = await run(false, encodePriceSqrt(1, 1), encodePriceSqrt(1, 100), liquidity, expandTo18Decimals(1), fee);
-      expect(amountOut).to.be.gte(0n); // the recipient is never left owing anything
+      // a millionth of the gross output still reaches the recipient rather than being rounded away
+      expect(amountOut).to.eq(666666666666n);
       expect(feeAmount).to.eq(feeOfGross(amountOut + feeAmount, fee));
     });
 
@@ -207,23 +214,40 @@ describe('PriceMovementMath with fee on output', () => {
       const liquidity = 2n ** 128n - 1n;
       const { amountIn, amountOut, feeAmount } = await run(false, encodePriceSqrt(1, 1), encodePriceSqrt(101, 100), liquidity, expandTo18Decimals(1), 600);
 
-      expect(amountIn).to.be.gt(0n);
+      // the price barely moves, so the whole budget goes in and almost all of it comes out
+      expect(amountIn).to.eq(expandTo18Decimals(1));
+      expect(amountOut).to.eq(999399997193336336n);
+      expect(feeAmount).to.eq(599999998314991n);
       expect(feeAmount).to.eq(feeOfGross(amountOut + feeAmount, 600n));
     });
 
     it('handles minimum liquidity', async () => {
-      const { amountIn, amountOut } = await run(false, encodePriceSqrt(1, 1), encodePriceSqrt(1, 100), 1n, expandTo18Decimals(1), 600);
-      expect(amountIn).to.be.gt(0n);
-      expect(amountOut).to.be.gte(0n);
+      const target = encodePriceSqrt(1, 100);
+      const { sqrtQ, amountIn, amountOut, feeAmount } = await run(false, encodePriceSqrt(1, 1), target, 1n, expandTo18Decimals(1), 600);
+      // ten wei carry the price all the way to the target, and nothing is released to take a fee from
+      expect([sqrtQ, amountIn, amountOut, feeAmount]).to.deep.eq([target, 10n, 0n, 0n]);
     });
 
     it('handles the extremes of the price range', async () => {
       const liquidity = expandTo18Decimals(2);
-      const down = await run(false, encodePriceSqrt(1, 1), MIN_SQRT_RATIO + 1n, liquidity, expandTo18Decimals(1), 600);
-      expect(down.sqrtQ).to.be.gte(MIN_SQRT_RATIO + 1n);
+      // a budget large enough to run into either end of the range, so the step stops right on it
+      const budget = 10n ** 40n;
 
-      const up = await run(false, encodePriceSqrt(1, 1), MAX_SQRT_RATIO - 1n, liquidity, expandTo18Decimals(1), 600);
-      expect(up.sqrtQ).to.be.lte(MAX_SQRT_RATIO - 1n);
+      const down = await run(false, encodePriceSqrt(1, 1), MIN_SQRT_RATIO + 1n, liquidity, budget, 600);
+      expect([down.sqrtQ, down.amountIn, down.amountOut, down.feeAmount]).to.deep.eq([
+        MIN_SQRT_RATIO + 1n,
+        36892101406145203270088161127389164126n,
+        1998799999999999999n,
+        1200000000000000n,
+      ]);
+
+      const up = await run(false, encodePriceSqrt(1, 1), MAX_SQRT_RATIO - 1n, liquidity, budget, 600);
+      expect([up.sqrtQ, up.amountIn, up.amountOut, up.feeAmount]).to.deep.eq([
+        MAX_SQRT_RATIO - 1n,
+        36892101422195407058628068004439378417n,
+        1998799999999999999n,
+        1200000000000000n,
+      ]);
     });
 
     it('reverts on the amount that cannot be negated', async () => {
@@ -297,5 +321,66 @@ describe('PriceMovementMath with fee on output', () => {
       expect(onInput.amountIn + onInput.feeAmount).to.eq(2n);
       expect(onOutput.amountIn).to.eq(1n);
     });
+  });
+
+  // the cases the fee-on-input table has had all along, measured here for the other mode
+  describe('the degenerate cases of the fee on the input side', () => {
+    it('moves to the target for free when liquidity is 0', async () => {
+      const target = encodePriceSqrt(101, 100);
+      const { sqrtQ, amountIn, amountOut, feeAmount } = await run(false, encodePriceSqrt(1, 1), target, 0n, expandTo18Decimals(1), 600);
+      expect([sqrtQ, amountIn, amountOut, feeAmount]).to.deep.eq([target, 0n, 0n, 0n]);
+    });
+
+    it('handles a price collision in exactOut', async () => {
+      // this scenario isn't possible in pool
+      const { amountIn, amountOut, feeAmount } = await run(false, 1524785991n, 1524785992n, 4369999n, -2n, 39875);
+      expect(amountIn).to.eq(1n);
+      expect(amountOut).to.eq(2n);
+      expect(feeAmount).to.eq(1n);
+    });
+
+    it('handles intermediate insufficient liquidity in the zero for one exact output case', async () => {
+      const sqrtP = 20282409603651670423947251286016n;
+      // virtual reserves of one are only 4, so the step releases nothing and charges no fee
+      const { amountIn, amountOut, sqrtQ, feeAmount } = await run(false, sqrtP, (sqrtP * 11n) / 10n, 1024n, -4n, 3000);
+      expect(amountOut).to.eq(0n);
+      expect(sqrtQ).to.eq((sqrtP * 11n) / 10n);
+      expect(amountIn).to.eq(26215n);
+      expect(feeAmount).to.eq(0n);
+    });
+
+    it('handles intermediate insufficient liquidity in the one for zero exact output case', async () => {
+      const sqrtP = 20282409603651670423947251286016n;
+      const { amountIn, amountOut, sqrtQ, feeAmount } = await run(false, sqrtP, (sqrtP * 9n) / 10n, 1024n, -263000n, 3000);
+      // the fee comes out of the released amount, so the trader gets 79 less than with the fee on the input
+      expect(amountOut).to.eq(26135n);
+      expect(sqrtQ).to.eq((sqrtP * 9n) / 10n);
+      expect(amountIn).to.eq(1n);
+      expect(feeAmount).to.eq(79n);
+    });
+
+    it('consumes a budget too small to move the price without booking a fee', async () => {
+      const { amountIn, amountOut, sqrtQ, feeAmount } = await run(false, 2413n, 79887613182836312n, 1985041575832132834610021537970n, 10n, 1872);
+      // the input side books the same 10 wei as a fee, here the whole of it counts as input instead
+      expect(amountIn).to.eq(10n);
+      expect(amountOut).to.eq(0n);
+      expect(feeAmount).to.eq(0n);
+      expect(sqrtQ).to.eq(2413n);
+    });
+  });
+
+  describe('gas  [ @skip-on-coverage ]', () => {
+    const liquidity = expandTo18Decimals(2);
+    const gas = (target: bigint, amount: bigint) =>
+      snapshotGasCost(math.getGasCostOfmovePriceTowardsTargetWithFeeMode(false, encodePriceSqrt(1, 1), target, liquidity, amount, 600));
+
+    it('swap one for zero exact in capped', async () => await gas(encodePriceSqrt(101, 100), expandTo18Decimals(1)));
+    it('swap zero for one exact in capped', async () => await gas(encodePriceSqrt(99, 100), expandTo18Decimals(1)));
+    it('swap one for zero exact out capped', async () => await gas(encodePriceSqrt(101, 100), -expandTo18Decimals(1)));
+    it('swap zero for one exact out capped', async () => await gas(encodePriceSqrt(99, 100), -expandTo18Decimals(1)));
+    it('swap one for zero exact in partial', async () => await gas(encodePriceSqrt(1010, 100), expandTo18Decimals(1) / 10000n));
+    it('swap zero for one exact in partial', async () => await gas(encodePriceSqrt(99, 1000), expandTo18Decimals(1) / 10000n));
+    it('swap one for zero exact out partial', async () => await gas(encodePriceSqrt(1010, 100), -1000n));
+    it('swap zero for one exact out partial', async () => await gas(encodePriceSqrt(99, 1000), -1000n));
   });
 });

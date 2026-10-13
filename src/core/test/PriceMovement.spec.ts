@@ -16,16 +16,28 @@ describe('PriceMovementMath', () => {
 
   describe('#movePriceTowardsTarget', () => {
     it('revert cases', async () => {
-      const price = encodePriceSqrt(1, 1);
       const priceTarget = encodePriceSqrt(101, 100);
       const liquidity = 2n ** 128n - 1n;
       const amount = expandTo18Decimals(1);
       const fee = 600;
 
-      expect(PriceMovementMath.movePriceTowardsTarget(0, priceTarget, liquidity, amount, fee)).to.be
-        .revertedWithoutReason;
+      await expect(
+        PriceMovementMath.movePriceTowardsTarget(0, priceTarget, liquidity, amount, fee)
+      ).to.be.revertedWithoutReason();
+    });
 
-      expect(PriceMovementMath.movePriceTowardsTarget(price, priceTarget, 0, amount, fee)).to.be.revertedWithoutReason;
+    it('moves to the target for free when liquidity is 0', async () => {
+      const price = encodePriceSqrt(1, 1);
+      const priceTarget = encodePriceSqrt(101, 100);
+
+      const { sqrtQ, amountIn, amountOut, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
+        price,
+        priceTarget,
+        0,
+        expandTo18Decimals(1),
+        600
+      );
+      expect([sqrtQ, amountIn, amountOut, feeAmount]).to.deep.eq([priceTarget, 0n, 0n, 0n]);
     });
 
     it('handles amountAvailable underflow', async () => {
@@ -123,7 +135,7 @@ describe('PriceMovementMath', () => {
 
       expect(amountIn).to.eq('340282366920938463463374607431203982080');
       expect(amountOut).to.eq('6276865796315986612967337485317294249402799158149117772694');
-      expect(feeAmount).to.eq('564229375'); // TODO lost precision
+      expect(feeAmount).to.eq('564229375'); // even at fee 0: short of the target, the leftover input is taken as fee
       expect(amountIn + feeAmount, 'entire amount is used').to.be.eq(amount);
       expect(sqrtQ).to.not.eq(priceTarget);
     });
@@ -429,7 +441,7 @@ describe('PriceMovementMath', () => {
             encodePriceSqrt(1, 1),
             encodePriceSqrt(1010, 100),
             expandTo18Decimals(2),
-            1000,
+            -1000,
             600
           )
         );
@@ -440,7 +452,7 @@ describe('PriceMovementMath', () => {
             encodePriceSqrt(1, 1),
             encodePriceSqrt(99, 1000),
             expandTo18Decimals(2),
-            1000,
+            -1000,
             600
           )
         );

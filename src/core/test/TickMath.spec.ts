@@ -1,12 +1,9 @@
-import { ethers } from 'hardhat'
-import { TickMathTest } from '../typechain'
-import { expect } from './shared/expect'
-import snapshotGasCost from './shared/snapshotGasCost'
-import { encodePriceSqrt, MIN_SQRT_RATIO, MAX_SQRT_RATIO } from './shared/utilities'
-import Decimal from 'decimal.js'
-
-const MIN_TICK = -887272
-const MAX_TICK = 887272
+import { ethers } from 'hardhat';
+import { TickMathTest } from '../typechain';
+import { expect } from './shared/expect';
+import snapshotGasCost from './shared/snapshotGasCost';
+import { encodePriceSqrt, MIN_SQRT_RATIO, MAX_SQRT_RATIO, MIN_TICK, MAX_TICK } from './shared/utilities';
+import Decimal from 'decimal.js';
 
 Decimal.config({ toExpNeg: -500, toExpPos: 500 })
 
@@ -23,7 +20,7 @@ describe('TickMath', () => {
       await expect(tickMath.getSqrtRatioAtTick(MIN_TICK - 1)).to.be.revertedWithCustomError(tickMath, 'tickOutOfRange');
     })
 
-    it('throws for too low', async () => {
+    it('throws for too high', async () => {
       await expect(tickMath.getSqrtRatioAtTick(MAX_TICK + 1)).to.be.revertedWithCustomError(tickMath, 'tickOutOfRange');
     })
 

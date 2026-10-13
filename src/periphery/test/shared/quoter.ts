@@ -1,9 +1,8 @@
 import { Wallet } from 'ethers';
 import { MockTimeNonfungiblePositionManager } from '../../typechain';
-import { FeeAmount, TICK_SPACINGS } from './constants';
+import { FeeAmount, TICK_SPACINGS, ZERO_ADDRESS } from './constants';
 import { encodePriceSqrt } from './encodePriceSqrt';
 import { getMaxTick, getMinTick } from './ticks';
-import { ZERO_ADDRESS } from '../CallbackValidation.spec';
 
 export async function createPool(
   nft: MockTimeNonfungiblePositionManager,

@@ -6,7 +6,7 @@ exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] sw
 
 exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out capped 1`] = `1485`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out partial 1`] = `2524`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out partial 1`] = `2774`;
 
 exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact in capped 1`] = `1653`;
 
@@ -14,4 +14,4 @@ exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] sw
 
 exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out capped 1`] = `1479`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out partial 1`] = `2649`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out partial 1`] = `2482`;

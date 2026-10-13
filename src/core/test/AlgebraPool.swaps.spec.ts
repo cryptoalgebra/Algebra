@@ -337,9 +337,91 @@ interface PoolTestCase {
   startingPrice: bigint;
   positions: Position[];
   swapTests?: SwapTestCase[];
+  feeMode?: number; // 1 collects the fee in token0 always, 2 in token1
 }
 
+// a slice of the table above for the pools that fix the fee token: exact in and exact out, each also with a price
+// limit that stops the swap early. Only the direction with the fee on the output, the other one is the default mode
+const FEE_TOKEN_SWAP_TESTS: SwapTestCase[] = [
+  {
+    zeroToOne: true,
+    exactOut: false,
+    amount0: expandTo18Decimals(1),
+    comissionOnTransaction: false,
+  },
+  {
+    zeroToOne: false,
+    exactOut: false,
+    amount1: expandTo18Decimals(1),
+    comissionOnTransaction: false,
+  },
+  {
+    zeroToOne: true,
+    exactOut: true,
+    amount1: expandTo18Decimals(1),
+  },
+  {
+    zeroToOne: false,
+    exactOut: true,
+    amount0: expandTo18Decimals(1),
+  },
+  {
+    zeroToOne: true,
+    exactOut: false,
+    amount0: expandTo18Decimals(1),
+    sqrtPriceLimit: encodePriceSqrt(50, 100),
+  },
+  {
+    zeroToOne: false,
+    exactOut: false,
+    amount1: expandTo18Decimals(1),
+    sqrtPriceLimit: encodePriceSqrt(200, 100),
+  },
+  {
+    zeroToOne: true,
+    exactOut: true,
+    amount1: expandTo18Decimals(1),
+    sqrtPriceLimit: encodePriceSqrt(50, 100),
+  },
+  {
+    zeroToOne: false,
+    exactOut: true,
+    amount0: expandTo18Decimals(1),
+    sqrtPriceLimit: encodePriceSqrt(200, 100),
+  },
+];
+
 const TEST_POOLS: PoolTestCase[] = [
+  {
+    description: '1:1 price, 2e18 max range liquidity, fee always in token0',
+    feeAmount: FeeAmount.MEDIUM,
+    tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
+    startingPrice: encodePriceSqrt(1, 1),
+    feeMode: 1,
+    positions: [
+      {
+        bottomTick: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        topTick: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        liquidity: expandTo18Decimals(2),
+      },
+    ],
+    swapTests: FEE_TOKEN_SWAP_TESTS.filter((swap) => !swap.zeroToOne),
+  },
+  {
+    description: '1:1 price, 2e18 max range liquidity, fee always in token1',
+    feeAmount: FeeAmount.MEDIUM,
+    tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
+    startingPrice: encodePriceSqrt(1, 1),
+    feeMode: 2,
+    positions: [
+      {
+        bottomTick: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        topTick: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        liquidity: expandTo18Decimals(2),
+      },
+    ],
+    swapTests: FEE_TOKEN_SWAP_TESTS.filter((swap) => swap.zeroToOne),
+  },
   {
     description: '1:1 price, 2e18 max range liquidity',
     feeAmount: FeeAmount.MEDIUM,
@@ -527,7 +609,7 @@ const TEST_POOLS: PoolTestCase[] = [
 ];
 
 describe('AlgebraPool swap tests', () => {
-  let wallet: Wallet, other: Wallet;
+  let wallet: Wallet;
   const fixture = async () => {
     const { createPool, token0, token1, swapTargetCallee: swapTarget } = await loadFixture(poolFixture);
     const pool = await createPool();
@@ -548,7 +630,7 @@ describe('AlgebraPool swap tests', () => {
   };
 
   before('get signers', async () => {
-    [wallet, other] = await (ethers as any).getSigners();
+    [wallet] = await (ethers as any).getSigners();
   });
 
   for (const poolCase of TEST_POOLS) {
@@ -558,6 +640,7 @@ describe('AlgebraPool swap tests', () => {
 
       if (poolCase.tickSpacing != 60) await pool.setTickSpacing(poolCase.tickSpacing);
       await pool.setFee(poolCase.feeAmount);
+      if (poolCase.feeMode !== undefined) await pool.setFeeMode(poolCase.feeMode);
       // mint all positions
       let _positions = [];
       for (const position of poolCase.positions) {

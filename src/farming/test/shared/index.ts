@@ -3,7 +3,6 @@ export * from './external/v3-periphery/ticks';
 export * from './external/v3-periphery/tokenSort';
 export * from './fixtures';
 export * from './actors';
-export * from './ticks';
 
 import { provider } from './provider';
 import { BigNumberish, Contract, ContractTransactionResponse, ContractTransaction } from 'ethers';
@@ -14,9 +13,8 @@ import bn from 'bignumber.js';
 import { expect, use } from 'chai';
 import { jestSnapshotPlugin } from 'mocha-chai-jest-snapshot';
 
-import { IAlgebraPool, TestERC20 } from '../../typechain';
-import { isArray, isString } from 'lodash';
-import { ethers } from 'hardhat';
+import { IAlgebraPool } from '../../typechain';
+import { isArray } from 'lodash';
 
 export const blockTimestamp = async () => {
   const block = await provider.getBlock('latest');
@@ -40,9 +38,6 @@ export const encodePriceSqrt = (reserve1: BigNumberish, reserve0: BigNumberish):
 export const BN = BigInt;
 export const BNe = (n: BigNumberish, exponent: BigNumberish) => BN(n) * 10n ** BigInt(exponent);
 export const BNe18 = (n: BigNumberish) => BNe(n, 18);
-
-export const divE18 = (n: bigint) => Number(n / BNe18('1'));
-export const ratioE18 = (a: bigint, b: bigint) => (divE18(a) / divE18(b)).toFixed(2);
 
 const bigNumberSum = (arr: Array<bigint>) => arr.reduce((acc, item) => acc + item, BN('0'));
 
@@ -86,9 +81,6 @@ export function encodePath(path: string[]): string {
   return encoded.toLowerCase();
 }
 
-export const MIN_SQRT_RATIO = BigInt('4295128739');
-export const MAX_SQRT_RATIO = BigInt('1461446703485210103287273052203988822378723970342');
-
 export const MAX_GAS_LIMIT = 12_450_000;
 export const maxGas = {
   gasLimit: MAX_GAS_LIMIT,
@@ -107,14 +99,6 @@ export const getCurrentTick = async (pool: IAlgebraPool): Promise<number> => Num
 export const arrayWrap = (x: any) => {
   if (!isArray(x)) {
     return [x];
-  }
-  return x;
-};
-
-export const erc20Wrap = async (x: string | TestERC20): Promise<TestERC20> => {
-  if (isString(x)) {
-    const factory = await ethers.getContractFactory('TestERC20');
-    return factory.attach(x) as any as TestERC20;
   }
   return x;
 };

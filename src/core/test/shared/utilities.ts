@@ -10,9 +10,6 @@ export const MAX_TICK = -MIN_TICK;
 export const getMinTick = (tickSpacing: number) => Math.ceil(-887272 / tickSpacing) * tickSpacing;
 export const getMaxTick = (tickSpacing: number) => Math.floor(887272 / tickSpacing) * tickSpacing;
 
-export const getMaxLiquidityPerTick = (tickSpacing: number) =>
-  (2n ** 128n - 1n) / (BigInt(getMaxTick(tickSpacing) - getMinTick(tickSpacing)) / BigInt(tickSpacing) + 1n);
-
 export const MIN_SQRT_RATIO = BigInt('4295128739');
 export const MAX_SQRT_RATIO = BigInt('1461446703485210103287273052203988822378723970342');
 
