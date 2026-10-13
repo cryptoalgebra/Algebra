@@ -1,32 +1,32 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Base64 #encode gas cost of encode(<some html>) [ @skip-on-coverage ] 1`] = `1600`;
+exports[`Base64 #encode gas cost of encode(<some html>) [ @skip-on-coverage ] 1`] = `1449`;
 
-exports[`Base64 #encode gas cost of encode(aLpHaBeT) [ @skip-on-coverage ] 1`] = `1371`;
+exports[`Base64 #encode gas cost of encode(aLpHaBeT) [ @skip-on-coverage ] 1`] = `1244`;
 
-exports[`Base64 #encode gas cost of encode(alphabet soup) [ @skip-on-coverage ] 1`] = `1833`;
+exports[`Base64 #encode gas cost of encode(alphabet soup) [ @skip-on-coverage ] 1`] = `1658`;
 
-exports[`Base64 #encode gas cost of encode(f) [ @skip-on-coverage ] 1`] = `917`;
+exports[`Base64 #encode gas cost of encode(f) [ @skip-on-coverage ] 1`] = `838`;
 
-exports[`Base64 #encode gas cost of encode(fo) [ @skip-on-coverage ] 1`] = `913`;
+exports[`Base64 #encode gas cost of encode(fo) [ @skip-on-coverage ] 1`] = `834`;
 
-exports[`Base64 #encode gas cost of encode(foo) [ @skip-on-coverage ] 1`] = `908`;
+exports[`Base64 #encode gas cost of encode(foo) [ @skip-on-coverage ] 1`] = `829`;
 
-exports[`Base64 #encode gas cost of encode(foob) [ @skip-on-coverage ] 1`] = `1146`;
+exports[`Base64 #encode gas cost of encode(foob) [ @skip-on-coverage ] 1`] = `1043`;
 
-exports[`Base64 #encode gas cost of encode(fooba) [ @skip-on-coverage ] 1`] = `1142`;
+exports[`Base64 #encode gas cost of encode(fooba) [ @skip-on-coverage ] 1`] = `1039`;
 
-exports[`Base64 #encode gas cost of encode(foobar) [ @skip-on-coverage ] 1`] = `1137`;
+exports[`Base64 #encode gas cost of encode(foobar) [ @skip-on-coverage ] 1`] = `1034`;
 
 exports[`Base64 #encode gas cost of encode(includes
-newlines) [ @skip-on-coverage ] 1`] = `2058`;
+newlines) [ @skip-on-coverage ] 1`] = `1859`;
 
-exports[`Base64 #encode gas cost of encode(test string) [ @skip-on-coverage ] 1`] = `1600`;
+exports[`Base64 #encode gas cost of encode(test string) [ @skip-on-coverage ] 1`] = `1449`;
 
-exports[`Base64 #encode gas cost of encode(this is a test) [ @skip-on-coverage ] 1`] = `1829`;
+exports[`Base64 #encode gas cost of encode(this is a test) [ @skip-on-coverage ] 1`] = `1654`;
 
-exports[`Base64 #encode gas cost of encode(this is a very long string that should cost a lot of gas to encode :)) [ @skip-on-coverage ] 1`] = `5958`;
+exports[`Base64 #encode gas cost of encode(this is a very long string that should cost a lot of gas to encode :)) [ @skip-on-coverage ] 1`] = `5345`;
 
-exports[`Base64 #encode gas cost of encode(😀) [ @skip-on-coverage ] 1`] = `1146`;
+exports[`Base64 #encode gas cost of encode(😀) [ @skip-on-coverage ] 1`] = `1043`;
 
-exports[`Base64 #encode max size string (24kB) gas cost [ @skip-on-coverage ] 1`] = `3547718`;
+exports[`Base64 #encode max size string (24kB) gas cost [ @skip-on-coverage ] 1`] = `3173226`;

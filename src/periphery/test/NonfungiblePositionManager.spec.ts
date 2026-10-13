@@ -1070,7 +1070,7 @@ describe('NonfungiblePositionManager', () => {
 
   describe('#getApproved', async () => {
     it('cannot get approved for nonexistent  token', async () => {
-      await expect(nft.getApproved(1)).to.be.revertedWith('ERC721: invalid token ID');
+      await expect(nft.getApproved(1)).to.be.revertedWithCustomError(nft, 'ERC721NonexistentToken').withArgs(1);
     });
   });
 
@@ -1092,7 +1092,7 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('cannot be asked about a nonexistent token', async () => {
-      await expect(nft.isApprovedOrOwner(wallet.address, 2)).to.be.revertedWith('ERC721: invalid token ID');
+      await expect(nft.isApprovedOrOwner(wallet.address, 2)).to.be.revertedWithCustomError(nft, 'ERC721NonexistentToken').withArgs(2);
     });
   });
 
@@ -1101,9 +1101,7 @@ describe('NonfungiblePositionManager', () => {
     beforeEach('create a position', () => createPosition());
 
     it('can only be called by authorized or owner', async () => {
-      await expect(nft.transferFrom(other.getAddress(), wallet.address, tokenId)).to.be.revertedWith(
-        'ERC721: caller is not token owner or approved'
-      );
+      await expect(nft.transferFrom(other.getAddress(), wallet.address, tokenId)).to.be.revertedWithCustomError(nft, 'ERC721InsufficientApproval').withArgs(wallet.address, tokenId);
     });
 
     it('changes the owner', async () => {
@@ -1116,6 +1114,14 @@ describe('NonfungiblePositionManager', () => {
       expect(await nft.getApproved(tokenId)).to.eq(wallet.address);
       await nft.transferFrom(other.getAddress(), wallet.address, tokenId);
       expect(await nft.getApproved(tokenId)).to.eq(ZeroAddress);
+    });
+
+    it('removes the farming approval', async () => {
+      await nft.setFarmingCenter(wallet.address);
+      await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
+      expect(await nft.farmingApprovals(tokenId)).to.eq(wallet.address);
+      await nft.connect(other).transferFrom(other.getAddress(), wallet.address, tokenId);
+      expect(await nft.farmingApprovals(tokenId)).to.eq(ZeroAddress);
     });
 
     it('gas [ @skip-on-coverage ]', async () => {
@@ -1316,7 +1322,7 @@ describe('NonfungiblePositionManager', () => {
     beforeEach('create a position', () => createPosition());
 
     it('reverts for invalid token id', async () => {
-      await expect(nft.tokenURI(tokenId + 1)).to.be.revertedWith('ERC721: invalid token ID');
+      await expect(nft.tokenURI(tokenId + 1)).to.be.revertedWithCustomError(nft, 'ERC721NonexistentToken').withArgs(tokenId + 1);
     });
 
     it('returns a data URI with correct mime type', async () => {

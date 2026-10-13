@@ -83,14 +83,14 @@ const completeFixture: () => Promise<{
       NFTDescriptor: await nftDescriptorLibrary.getAddress(),
     },
   });
-  const ProxyFactory = await ethers.getContractFactory('TransparentUpgradeableProxy');
+  const ProxyFactory = await ethers.getContractFactory('NonfungibleTokenPositionDescriptorProxy');
 
   const nftDescriptor = (await positionDescriptorFactory.deploy(
     tokens[0],
     'MATIC',
     DEFAULT_TOKENS_RATIONS_DATA
   )) as any as NonfungibleTokenPositionDescriptor;
-  const proxy = await ProxyFactory.deploy(nftDescriptor, '0xDeaD1F5aF792afc125812E875A891b038f888258', '0x');
+  const proxy = await ProxyFactory.deploy(nftDescriptor, '0xDeaD1F5aF792afc125812E875A891b038f888258');
 
   const nftDescriptorProxied = positionDescriptorFactory.attach(proxy) as any as NonfungibleTokenPositionDescriptor;
   const positionManagerFactory = await ethers.getContractFactory('MockTimeNonfungiblePositionManager');

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.20;
+pragma solidity =0.8.37;
 
 import './libraries/Constants.sol';
 
@@ -13,8 +13,8 @@ import './AlgebraCommunityVault.sol';
 import './AlgebraPoolExtension.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
-import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
-import {ReentrancyGuard as OZReentrancyGuard} from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol';
+import {ReentrancyGuard as OZReentrancyGuard} from '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
@@ -61,9 +61,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0xf265da6771f3ce1cdbd38f9755acecc7035928b7ba5ed76fffaef41bcaf14228;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x546b39cd618d38b211188efbc58fd84661e15ec184161b70fa9df474c55cb206;
 
-  constructor(address _poolDeployer) {
+  constructor(address _poolDeployer) Ownable(msg.sender) {
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
     poolExtension = address(new AlgebraPoolExtension());

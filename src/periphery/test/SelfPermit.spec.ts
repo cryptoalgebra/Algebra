@@ -82,9 +82,7 @@ describe('SelfPermit', () => {
       );
       expect(await token.allowance(wallet.address, await selfPermitTest.getAddress())).to.be.eq(value);
 
-      await expect(selfPermitTest.selfPermit(await token.getAddress(), value, MaxUint256, v, r, s)).to.be.revertedWith(
-        'ERC20Permit: invalid signature'
-      );
+      await expect(selfPermitTest.selfPermit(await token.getAddress(), value, MaxUint256, v, r, s)).to.be.revertedWithCustomError(token, 'ERC2612InvalidSigner');
     });
   });
 

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.20;
+pragma solidity =0.8.37;
 
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
-import '@openzeppelin/contracts/utils/Address.sol';
 
 import '../interfaces/external/IERC1271.sol';
 import '../interfaces/IERC721Permit.sol';
@@ -75,7 +74,7 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
         address owner = ownerOf(tokenId);
         require(spender != owner, 'Approval to current owner');
 
-        if (Address.isContract(owner)) {
+        if (owner.code.length > 0) {
             _checkAuthorization(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
         } else {
             address recoveredAddress = ecrecover(digest, v, r, s);
@@ -83,7 +82,8 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
             _checkAuthorization(recoveredAddress == owner);
         }
 
-        _approve(spender, tokenId);
+        // the signature is the authorization, so no `auth` check
+        _approve(spender, tokenId, address(0));
     }
 
     function _checkAuthorization(bool isAuthorized) private pure {

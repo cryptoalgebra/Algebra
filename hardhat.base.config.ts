@@ -8,7 +8,7 @@ export default {
     hardhat: {
       allowUnlimitedContractSize: true,
       loggingEnabled: false,
-      evm: 'paris',
+      evm: 'cancun',
     },
     localHardhat: {
       url: `http://127.0.0.1:8545`,

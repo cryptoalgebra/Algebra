@@ -50,7 +50,8 @@ jobs:
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@f7e374e42bf7131f7307a92f5549ed6b2fd17c9d # v2.0.2
         with:
-          solc-version: 0.8.20
+          solc-version: 0.8.37
+          echidna-version: v2.3.3
           files: ./src/core/contracts/test/echidna/PoolMockEchidna/${{ matrix.testName }}.sol
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile
@@ -90,7 +91,8 @@ jobs:
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@f7e374e42bf7131f7307a92f5549ed6b2fd17c9d # v2.0.2
         with:
-          solc-version: 0.8.20
+          solc-version: 0.8.37
+          echidna-version: v2.3.3
           files: ./src/core/contracts/test/echidna/PoolMockEchidna/${{ matrix.testName }}.sol
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile
@@ -138,7 +140,8 @@ jobs:
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@f7e374e42bf7131f7307a92f5549ed6b2fd17c9d # v2.0.2
         with:
-          solc-version: 0.8.20
+          solc-version: 0.8.37
+          echidna-version: v2.3.3
           files: ./src/core/contracts/test/echidna/${{ matrix.testName }}.sol
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile
