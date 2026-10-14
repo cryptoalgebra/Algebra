@@ -10,8 +10,8 @@ exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost just below bound
 
 exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost on boundary 1`] = `12605`;
 
-exports[`TickTree #toggleTick gas cost of flipping a tick that results in deleting a word  [ @skip-on-coverage ] 1`] = `29759`;
+exports[`TickTree #toggleTick gas cost of flipping a tick that results in deleting a word  [ @skip-on-coverage ] 1`] = `29760`;
 
-exports[`TickTree #toggleTick gas cost of flipping first tick in word to initialized  [ @skip-on-coverage ] 1`] = `88510`;
+exports[`TickTree #toggleTick gas cost of flipping first tick in word to initialized  [ @skip-on-coverage ] 1`] = `88511`;
 
-exports[`TickTree #toggleTick gas cost of flipping second tick in word to initialized  [ @skip-on-coverage ] 1`] = `29192`;
+exports[`TickTree #toggleTick gas cost of flipping second tick in word to initialized  [ @skip-on-coverage ] 1`] = `29193`;

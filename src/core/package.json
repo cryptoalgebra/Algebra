@@ -45,6 +45,6 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "5.7.0"
+    "@openzeppelin/contracts": "5.4.0"
   }
 }

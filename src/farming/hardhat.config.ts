@@ -10,7 +10,7 @@ import { SolcUserConfig } from 'hardhat/types';
 import baseConfig from '../../hardhat.base.config';
 
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.37',
+  version: '0.8.26',
   settings: {
     evmVersion: 'cancun',
     optimizer: {
@@ -24,7 +24,7 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
 };
 
 const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.37',
+  version: '0.8.26',
   settings: {
     evmVersion: 'cancun',
     optimizer: {

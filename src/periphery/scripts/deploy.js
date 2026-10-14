@@ -88,8 +88,8 @@ async function main() {
   deploysData.nftDescriptor = NonfungibleTokenPositionDescriptor.target;
 
 
-  const ProxyFactory = await hre.ethers.getContractFactory('NonfungibleTokenPositionDescriptorProxy');
-  const Proxy = await ProxyFactory.deploy(NonfungibleTokenPositionDescriptor.target, ProxyAdminOwner);
+  const ProxyFactory = await hre.ethers.getContractFactory('TransparentUpgradeableProxy');
+  const Proxy = await ProxyFactory.deploy(NonfungibleTokenPositionDescriptor.target, ProxyAdminOwner, '0x');
 
   await Proxy.waitForDeployment();
 

@@ -48,7 +48,7 @@ jobs:
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@f7e374e42bf7131f7307a92f5549ed6b2fd17c9d # v2.0.2
         with:
-          solc-version: 0.8.37
+          solc-version: 0.8.26
           echidna-version: v2.3.3
           files: ./src/farming/
           contract: ${{ matrix.testName }}

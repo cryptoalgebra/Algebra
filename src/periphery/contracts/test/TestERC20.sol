@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.37;
+pragma solidity =0.8.26;
 pragma abicoder v1;
 
 import '@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol';

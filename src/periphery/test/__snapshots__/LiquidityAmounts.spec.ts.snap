@@ -4,11 +4,11 @@ exports[`LiquidityAmounts #getAmount0ForLiquidity gas [ @skip-on-coverage ] 1`] 
 
 exports[`LiquidityAmounts #getAmount1ForLiquidity gas [ @skip-on-coverage ] 1`] = `362`;
 
-exports[`LiquidityAmounts #getAmountsForLiquidity gas for price above [ @skip-on-coverage ] 1`] = `473`;
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price above [ @skip-on-coverage ] 1`] = `474`;
 
-exports[`LiquidityAmounts #getAmountsForLiquidity gas for price below [ @skip-on-coverage ] 1`] = `494`;
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price below [ @skip-on-coverage ] 1`] = `495`;
 
-exports[`LiquidityAmounts #getAmountsForLiquidity gas for price inside [ @skip-on-coverage ] 1`] = `826`;
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price inside [ @skip-on-coverage ] 1`] = `827`;
 
 exports[`LiquidityAmounts #getLiquidityForAmount0 gas [ @skip-on-coverage ] 1`] = `553`;
 

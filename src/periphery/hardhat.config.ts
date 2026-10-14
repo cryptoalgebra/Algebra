@@ -7,7 +7,7 @@ import { subtask, task } from 'hardhat/config';
 import { TASK_COMPILE_SOLIDITY_GET_COMPILATION_JOB_FOR_FILE } from 'hardhat/builtin-tasks/task-names';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.8.37',
+  version: '0.8.26',
   settings: {
     evmVersion: 'cancun',
     optimizer: {
@@ -21,7 +21,7 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
 };
 
 const ZERO_RUNS_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.8.37',
+  version: '0.8.26',
   settings: {
     evmVersion: 'cancun',
     optimizer: {
@@ -35,7 +35,7 @@ const ZERO_RUNS_OPTIMIZER_COMPILER_SETTINGS = {
 };
 
 const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.8.37',
+  version: '0.8.26',
   settings: {
     evmVersion: 'cancun',
     viaIR: true,
@@ -50,7 +50,7 @@ const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
 };
 
 const DEFAULT_COMPILER_SETTINGS = {
-  version: '0.8.37',
+  version: '0.8.26',
   settings: {
     evmVersion: 'cancun',
     optimizer: {

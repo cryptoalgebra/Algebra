@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] with one cross otz 1`] = `93596`;
+exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] with one cross otz 1`] = `93599`;
 
-exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] with one cross zto 1`] = `59440`;
+exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] with one cross zto 1`] = `59443`;
 
-exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] with two crosses otz 1`] = `140492`;
+exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] with two crosses otz 1`] = `140496`;
 
-exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] with two crosses zto 1`] = `71977`;
+exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] with two crosses zto 1`] = `71981`;
 
-exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] without cross otz 1`] = `29665`;
+exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] without cross otz 1`] = `29667`;
 
-exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] without cross zto 1`] = `30045`;
+exports[`unit/EternalVirtualPool #crossTo gas checks [ @skip-on-coverage ] without cross zto 1`] = `30047`;

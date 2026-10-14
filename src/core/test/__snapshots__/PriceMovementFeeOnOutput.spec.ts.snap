@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap one for zero exact in capped 1`] = `1432`;
+exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap one for zero exact in capped 1`] = `1434`;
 
-exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap one for zero exact in partial 1`] = `2033`;
+exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap one for zero exact in partial 1`] = `2035`;
 
-exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap one for zero exact out capped 1`] = `1721`;
+exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap one for zero exact out capped 1`] = `1723`;
 
-exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap one for zero exact out partial 1`] = `2814`;
+exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap one for zero exact out partial 1`] = `2816`;
 
-exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap zero for one exact in capped 1`] = `1426`;
+exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap zero for one exact in capped 1`] = `1428`;
 
-exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap zero for one exact in partial 1`] = `2118`;
+exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap zero for one exact in partial 1`] = `2120`;
 
-exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap zero for one exact out capped 1`] = `1715`;
+exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap zero for one exact out capped 1`] = `1717`;
 
-exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap zero for one exact out partial 1`] = `2523`;
+exports[`PriceMovementMath with fee on output gas  [ @skip-on-coverage ] swap zero for one exact out partial 1`] = `2525`;

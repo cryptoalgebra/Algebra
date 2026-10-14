@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.37;
+pragma solidity =0.8.26;
 
 import './libraries/Constants.sol';
 
@@ -61,7 +61,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0x546b39cd618d38b211188efbc58fd84661e15ec184161b70fa9df474c55cb206;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x7ff8fb4508c0bc6b10e334cb09dbf8f24aaab2512b7732147f46e95dd2e6634c;
 
   constructor(address _poolDeployer) Ownable(msg.sender) {
     require(_poolDeployer != address(0));
