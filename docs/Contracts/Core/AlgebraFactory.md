@@ -7,9 +7,9 @@ Algebra factory
 
 Is used to deploy pools and its plugins
 
-*Developer note: Version: Algebra Integral 1.2.2*
+*Developer note: Version: Algebra Integral 1.3*
 
-**Inherits:** [IAlgebraFactory](interfaces/IAlgebraFactory.md) [Ownable2Step](https://docs.openzeppelin.com/contracts/4.x/) [AccessControlEnumerable](https://docs.openzeppelin.com/contracts/4.x/) [ReentrancyGuard](https://docs.openzeppelin.com/contracts/4.x/)
+**Inherits:** [IAlgebraFactory](interfaces/IAlgebraFactory.md) [Ownable2Step](https://docs.openzeppelin.com/contracts/5.x/) [AccessControlEnumerable](https://docs.openzeppelin.com/contracts/5.x/) [ReentrancyGuard](https://docs.openzeppelin.com/contracts/5.x/)
 
 ## Public variables
 ### POOLS_ADMINISTRATOR_ROLE
@@ -37,6 +37,15 @@ address immutable poolDeployer
 **Selector**: `0x3119049a`
 
 Returns the current poolDeployerAddress
+
+
+### poolExtension
+```solidity
+address immutable poolExtension
+```
+**Selector**: `0x0d2077ca`
+
+Returns the shared pool extension contract address
 
 
 ### defaultCommunityFee
@@ -117,7 +126,7 @@ Returns the custom pool address for a customDeployer and a given pair of tokens,
 
 ### POOL_INIT_CODE_HASH
 ```solidity
-bytes32 constant POOL_INIT_CODE_HASH = 0x62441ebe4e4315cf3d49d5957f94d66b253dbabe7006f34ad7f70947e60bf15c
+bytes32 constant POOL_INIT_CODE_HASH = 0x7ff8fb4508c0bc6b10e334cb09dbf8f24aaab2512b7732147f46e95dd2e6634c
 ```
 **Selector**: `0xdc6fd8ab`
 
@@ -183,7 +192,7 @@ function defaultConfigurationForPool() external view returns (uint16 communityFe
 ```
 **Selector**: `0x25b355d6`
 
-Returns the default communityFee, tickspacing, fee and communityFeeVault for pool
+Returns the default communityFee, tickspacing and fee for pool
 
 **Returns:**
 

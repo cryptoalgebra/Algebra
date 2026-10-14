@@ -122,7 +122,8 @@ function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 
 
 Swap token0 for token1, or token1 for token0
 
-*Developer note: The caller of this method receives a callback in the form of [IAlgebraSwapCallback#algebraSwapCallback](../callback/IAlgebraSwapCallback.md#algebraSwapCallback)*
+*Developer note: The caller of this method receives a callback in the form of [IAlgebraSwapCallback#algebraSwapCallback](../callback/IAlgebraSwapCallback.md#algebraSwapCallback)
+The amounts include plugin deltas. On exactOut the input is not limited by the pool, check it in the callback*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -136,8 +137,8 @@ Swap token0 for token1, or token1 for token0
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amount0 | int256 | The delta of the balance of token0 of the pool, exact when negative, minimum when positive |
-| amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
+| amount0 | int256 | The amount of token0 paid by the caller (positive) or sent to the recipient (negative) |
+| amount1 | int256 | The amount of token1 paid by the caller (positive) or sent to the recipient (negative) |
 
 ### swapWithPaymentInAdvance
 
@@ -150,7 +151,8 @@ Swap token0 for token1, or token1 for token0 with prepayment
 
 *Developer note: The caller of this method receives a callback in the form of [IAlgebraSwapCallback#algebraSwapCallback](../callback/IAlgebraSwapCallback.md#algebraSwapCallback)
 caller must send tokens in callback before swap calculation
-the actually sent amount of tokens is used for further calculations*
+the actually sent amount of tokens is used for further calculations
+The amounts include plugin deltas and do not include the leftovers*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -165,8 +167,8 @@ the actually sent amount of tokens is used for further calculations*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amount0 | int256 | The delta of the balance of token0 of the pool, exact when negative, minimum when positive |
-| amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
+| amount0 | int256 | The amount of token0 spent by the caller (positive) or sent to the recipient (negative) |
+| amount1 | int256 | The amount of token1 spent by the caller (positive) or sent to the recipient (negative) |
 
 ### flash
 

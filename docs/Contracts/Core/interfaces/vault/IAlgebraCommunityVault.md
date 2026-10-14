@@ -5,7 +5,7 @@
 
 The interface for the Algebra community fee vault
 
-Community fee from pools is sent here, if it is enabled
+Community fee from pools is claimed here, if it is enabled
 
 *Developer note: Version: Algebra Integral*
 
@@ -134,6 +134,21 @@ struct WithdrawTokensParams {
 
 
 ## Functions
+### claimCommunityFees
+
+```solidity
+function claimCommunityFees(address[] pools) external
+```
+**Selector**: `0xf4f7e6a6`
+
+Claims the accumulated community fees from pools to this vault
+
+*Developer note: Anyone can call it, the fees can only be sent to this vault*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pools | address[] | The pools to claim from, each must have this vault set as the community vault |
+
 ### withdraw
 
 ```solidity
@@ -143,7 +158,7 @@ function withdraw(address token, uint256 amount) external
 
 Withdraw protocol fees from vault
 
-*Developer note: Can only be called by algebraFeeManager or communityFeeReceiver*
+*Developer note: Can only be called by algebraFeeManager, factory owner or COMMUNITY_FEE_WITHDRAWER_ROLE role*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -159,7 +174,7 @@ function withdrawTokens(struct IAlgebraCommunityVault.WithdrawTokensParams[] par
 
 Withdraw protocol fees from vault. Used to claim fees for multiple tokens
 
-*Developer note: Can be called by algebraFeeManager or communityFeeReceiver*
+*Developer note: Can only be called by algebraFeeManager, factory owner or COMMUNITY_FEE_WITHDRAWER_ROLE role*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -174,7 +189,7 @@ function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external
 
 Accepts the proposed new Algebra fee
 
-*Developer note: Can only be called by the factory owner.
+*Developer note: Can only be called by factory owner or COMMUNITY_FEE_VAULT_ADMINISTRATOR role.
 The new value will also be used for previously accumulated tokens that have not yet been withdrawn*
 
 | Name | Type | Description |
@@ -190,7 +205,7 @@ function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external
 
 Change community fee receiver address
 
-*Developer note: Can only be called by the factory owner*
+*Developer note: Can only be called by factory owner or COMMUNITY_FEE_VAULT_ADMINISTRATOR role*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

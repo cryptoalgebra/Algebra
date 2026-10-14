@@ -65,15 +65,6 @@ error invalidAmountRequired()
 
 Emitted if invalid amount is passed as amountRequired to swap function
 
-## incorrectPluginFee
-
-```solidity
-error incorrectPluginFee()
-```
-**Selector**: `0x15b2afa9`
-
-Emitted if plugin fee param greater than fee/override fee
-
 ## insufficientInputAmount
 
 ```solidity
@@ -164,6 +155,15 @@ error invalidNewCommunityFee()
 
 Emitted if new community fee exceeds max allowed value
 
+## invalidNewFeeMode
+
+```solidity
+error invalidNewFeeMode()
+```
+**Selector**: `0x8f44d650`
+
+Emitted if new fee mode is not a known value or is equal to the current one
+
 ## dynamicFeeActive
 
 ```solidity
@@ -180,7 +180,16 @@ error dynamicFeeDisabled()
 ```
 **Selector**: `0x3a4528ef`
 
-Emitted if an attempt is made by plugin to change the fee value, but dynamic fee is disabled
+Emitted if plugin returns non-zero overrideFee, but dynamic fee is disabled
+
+## invalidOverrideFee
+
+```solidity
+error invalidOverrideFee()
+```
+**Selector**: `0x09ea3517`
+
+Emitted if plugin returns overrideFee that is &gt;&#x3D; 100% (FEE_DENOMINATOR)
 
 ## pluginIsNotConnected
 
@@ -190,6 +199,16 @@ error pluginIsNotConnected()
 **Selector**: `0x9e727ce3`
 
 Emitted if an attempt is made to change the plugin configuration, but the plugin is not connected
+
+## invalidNewPluginConfig
+
+```solidity
+error invalidNewPluginConfig()
+```
+**Selector**: `0x7cdbcb57`
+
+Emitted if new plugin config enables the dynamic fee without the beforeSwap hook,
+or the amount deltas without the beforeSwap or afterSwapCalculation hook
 
 ## invalidHookResponse
 
@@ -203,6 +222,42 @@ Emitted if a plugin returns invalid selector after hook call
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | expectedSelector | bytes4 | The expected selector |
+
+## amountDeltasDisabled
+
+```solidity
+error amountDeltasDisabled()
+```
+**Selector**: `0xbb65cefa`
+
+Emitted if plugin returns non-zero amount deltas, but they are disabled in the plugin config
+
+## invalidAmountInDecrease
+
+```solidity
+error invalidAmountInDecrease()
+```
+**Selector**: `0x877dd168`
+
+Emitted if plugin returns non-zero amountInDecrease for exactOut swap, or amountInDecrease &gt;&#x3D; amountRequired
+
+## invalidAmountOutDecrease
+
+```solidity
+error invalidAmountOutDecrease()
+```
+**Selector**: `0x92ce1c25`
+
+Emitted if plugin returns invalid amountOutDecrease (exactOut or exceeds output amount)
+
+## invalidAmountInIncrease
+
+```solidity
+error invalidAmountInIncrease()
+```
+**Selector**: `0x6664c521`
+
+Emitted if plugin returns non-zero amountInIncrease for exactIn swap
 
 ## liquiditySub
 

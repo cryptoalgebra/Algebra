@@ -5,7 +5,7 @@ const remappings = [
   ['&#x3D;&gt;', '=>'],
   ['../@cryptoalgebra/integral-core/contracts', '../Core'],
   ['../@cryptoalgebra/integral-periphery/contracts', '../Periphery'],
-  [/\([^\(]+@openzeppelin\/contracts[^\(]+\)/g, '(https://docs.openzeppelin.com/contracts/4.x/)'],
+  [/\([^\(]+@openzeppelin\/contracts[^\(]+\)/g, '(https://docs.openzeppelin.com/contracts/5.x/)'],
 ];
 
 function cleanDirectoryRecursively(currentPath, directory) {

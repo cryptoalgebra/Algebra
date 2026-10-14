@@ -23,7 +23,8 @@ Called to &#x60;msg.sender&#x60; after executing a swap via [IAlgebraPool#swap](
 
 *Developer note: In the implementation you must pay the pool tokens owed for the swap.
 The caller of this method _must_ be checked to be a AlgebraPool deployed by the canonical AlgebraFactory.
-amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
+amount0Delta and amount1Delta can both be 0 if no tokens were swapped.
+The positive amount includes the part that goes to the plugin, if any.*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

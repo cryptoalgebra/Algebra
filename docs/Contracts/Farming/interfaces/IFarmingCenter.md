@@ -186,7 +186,7 @@ Exits from incentive (eternal farming) with NFT-position token
 ### collectRewards
 
 ```solidity
-function collectRewards(struct IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)
+function collectRewards(struct IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward, bool forfeited)
 ```
 **Selector**: `0x6af00aee`
 
@@ -203,6 +203,7 @@ Used to collect reward from eternal farming. Then reward can be claimed.
 | ---- | ---- | ----------- |
 | reward | uint256 | The amount of collected reward |
 | bonusReward | uint256 | The amount of collected bonus reward |
+| forfeited | bool | True if the collected reward was forfeited to the protocol-owned bucket instead of the owner |
 
 ### claimReward
 

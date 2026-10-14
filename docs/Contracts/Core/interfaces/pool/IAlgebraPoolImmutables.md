@@ -57,6 +57,21 @@ The second of the two tokens of the pool, sorted by address
 | ---- | ---- | ----------- |
 | [0] | address | The token contract address |
 
+### deployer
+
+```solidity
+function deployer() external view returns (address)
+```
+**Selector**: `0xd5f39488`
+
+The custom deployer the pool was created with, part of the pool address computation for custom pools
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The custom deployer address, or zero for standard pools |
+
 ### maxLiquidityPerTick
 
 ```solidity

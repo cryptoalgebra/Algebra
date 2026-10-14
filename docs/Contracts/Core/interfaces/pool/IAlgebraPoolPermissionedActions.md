@@ -25,6 +25,21 @@ Set the community&#x27;s % share of the fees. Only factory owner or POOLS_ADMINI
 | ---- | ---- | ----------- |
 | newCommunityFee | uint16 | The new community fee percent in thousandths (1e-3) |
 
+### setFeeMode
+
+```solidity
+function setFeeMode(uint8 newFeeMode) external
+```
+**Selector**: `0x5e6f1cb8`
+
+Set the token in which the swap fee is collected. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
+
+*Developer note: The fee growth already accrued in the other token is not migrated, positions can still collect it*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newFeeMode | uint8 | The new fee mode: 0 - the input token of each swap, 1 - always token0, 2 - always token1 |
+
 ### setTickSpacing
 
 ```solidity
@@ -54,15 +69,15 @@ Set the new plugin address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 ### setPluginConfig
 
 ```solidity
-function setPluginConfig(uint8 newConfig) external
+function setPluginConfig(uint16 newConfig) external
 ```
-**Selector**: `0xbca57f81`
+**Selector**: `0x54884e9d`
 
 Set new plugin config. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newConfig | uint8 | In the new configuration of the plugin, each bit of which is responsible for a particular hook. |
+| newConfig | uint16 | In the new configuration of the plugin, each bit of which is responsible for a particular hook. |
 
 ### setCommunityVault
 
@@ -115,4 +130,22 @@ function skim() external
 Forces balances to match reserves. Excessive tokens will be sent to msg.sender
 
 *Developer note: Only plugin can call this function*
+
+### claimCommunityFee
+
+```solidity
+function claimCommunityFee() external returns (uint128 amount0, uint128 amount1)
+```
+**Selector**: `0x5dddf3e6`
+
+Sends the accumulated community fees to the community vault
+
+*Developer note: Only the community vault can call this function*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount0 | uint128 | The amount of token0 sent |
+| amount1 | uint128 | The amount of token1 sent |
 

@@ -37,7 +37,7 @@ struct GlobalState {
   uint160 price;
   int24 tick;
   uint16 lastFee;
-  uint8 pluginConfig;
+  uint16 pluginConfig;
   uint16 communityFee;
   bool unlocked;
 }
@@ -47,8 +47,8 @@ struct GlobalState {
 | ---- | ----------- |
 | price | The square root of the current price in Q64.96 format |
 | tick | The current tick (price(tick) <= current price). May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary |
-| lastFee | The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). May be obsolete if using dynamic fee plugin |
-| pluginConfig | The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic |
+| lastFee | The pool fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). Not applied to swaps that get the fee from the dynamic fee plugin |
+| pluginConfig | The current plugin config as bitmap. Each bit enables a hook or a feature (dynamic fee, amount deltas), see `Plugins` |
 | communityFee | The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%) |
 | unlocked | Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
 
@@ -92,6 +92,24 @@ address immutable token1
 The second of the two tokens of the pool, sorted by address
 
 
+### deployer
+```solidity
+address immutable deployer
+```
+**Selector**: `0xd5f39488`
+
+The custom deployer the pool was created with, part of the pool address computation for custom pools
+
+
+### algebraPoolExtension
+```solidity
+address immutable algebraPoolExtension
+```
+**Selector**: `0xfdd68635`
+
+The address of the pool extension contract used for delegatecall
+
+
 ### totalFeeGrowth0Token
 ```solidity
 uint256 totalFeeGrowth0Token
@@ -132,15 +150,6 @@ mapping(int24 => struct TickManagement.Tick) ticks
 Look up information about a specific tick in the pool
 
 *Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
-
-### lastFeeTransferTimestamp
-```solidity
-uint32 lastFeeTransferTimestamp
-```
-**Selector**: `0x77f8c3a9`
-
-The timestamp of the last sending of tokens to vault/plugin
-
 
 ### plugin
 ```solidity
@@ -215,12 +224,22 @@ e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., 
 However, tickspacing can be changed after the ticks have been initialized.
 This value is an int24 to avoid casting even though it is always positive.*
 
+### feeMode
+```solidity
+uint8 feeMode
+```
+**Selector**: `0xb188c70d`
+
+The token in which the swap fee is collected: 0 - the input token of each swap, 1 - always token0, 2 - always token1
+
+*Developer note: Not in &#x60;globalState&#x60; to keep its interface as in 1.2, this slot is read on each swap anyway*
+
 
 ## Functions
 ### safelyGetStateOfAMM
 
 ```solidity
-function safelyGetStateOfAMM() external view returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
+function safelyGetStateOfAMM() external view returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint16 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
 ```
 **Selector**: `0x97ce1c51`
 
@@ -234,8 +253,8 @@ Safely get most important state values of Algebra Integral AMM
 | ---- | ---- | ----------- |
 | sqrtPrice | uint160 | The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value |
 | tick | int24 | The current global tick of the pool. May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary |
-| lastFee | uint16 | The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). May be obsolete if using dynamic fee plugin |
-| pluginConfig | uint8 | The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic |
+| lastFee | uint16 | The pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). Not applied to swaps that get the fee from the dynamic fee plugin |
+| pluginConfig | uint16 | The current plugin config as bitmap. Each bit enables a hook or a feature (dynamic fee, amount deltas), see `Plugins` |
 | activeLiquidity | uint128 | The currently in-range liquidity available to the pool |
 | nextTick | int24 | The next initialized tick after current global tick |
 | previousTick | int24 | The previous initialized tick before (or at) current global tick |
@@ -265,27 +284,9 @@ function getCommunityFeePending() external view returns (uint128, uint128)
 ```
 **Selector**: `0x7bd78025`
 
-The amounts of token0 and token1 that will be sent to the vault
+The amounts of token0 and token1 accumulated for the vault
 
-*Developer note: Will be sent FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp*
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint128 |  |
-| [1] | uint128 |  |
-
-### getPluginFeePending
-
-```solidity
-function getPluginFeePending() external view returns (uint128, uint128)
-```
-**Selector**: `0xa1eded87`
-
-The amounts of token0 and token1 that will be sent to the plugin
-
-*Developer note: Will be sent FEE_TRANSFER_FREQUENCY after feeLastTransferTimestamp*
+*Developer note: The vault claims them with &#x60;claimCommunityFee&#x60;*
 
 **Returns:**
 
@@ -294,23 +295,34 @@ The amounts of token0 and token1 that will be sent to the plugin
 | [0] | uint128 |  |
 | [1] | uint128 |  |
 
-### fee
+### getSwapFee
 
 ```solidity
-function fee() external view returns (uint16 currentFee)
+function getSwapFee(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bool withPaymentInAdvance, bytes data) external view returns (uint24 fee)
 ```
-**Selector**: `0xddca3f43`
+**Selector**: `0xd67f0f1d`
 
-The current pool fee value
+The fee for a swap with the given parameters: the one from the dynamic fee plugin if enabled, otherwise the pool fee
 
-*Developer note: In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
-If the plugin implements complex fee logic, this method may return an incorrect value or revert.
-In this case, see the plugin implementation and related documentation.
+*Developer note: The parameters are the ones the &#x60;beforeSwap&#x60; hook gets. The dynamic fee may differ from the fee of the actual swap
+if the plugin changes its state in the &#x60;beforeSwap&#x60; hook, see the &#x60;SwapFee&#x60; event for the fee applied to each swap.
+Swaps by the plugin itself (&#x60;sender&#x60; is the plugin) pay the pool fee, as the hook is not called for them.
+Reverts if the dynamic fee is enabled but the plugin does not implement &#x60;IAlgebraDynamicFeePlugin&#x60;
 **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| sender | address | The address that would call the swap |
+| recipient | address | The address to receive the output of the swap |
+| zeroToOne | bool | The direction of the swap, true for token0 to token1, false for token1 to token0 |
+| amountRequired | int256 | The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative) |
+| limitSqrtPrice | uint160 | The Q64.96 sqrt price limit |
+| withPaymentInAdvance | bool | The flag indicating whether the `swapWithPaymentInAdvance` method would be called |
+| data | bytes | Data that would be passed through the callback |
+
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| currentFee | uint16 | The current pool fee value in hundredths of a bip, i.e. 1e-6 |
+| fee | uint24 | The swap fee in hundredths of a bip, i.e. 1e-6 |
 

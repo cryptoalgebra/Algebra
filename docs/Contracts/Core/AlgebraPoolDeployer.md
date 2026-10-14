@@ -7,7 +7,7 @@ Algebra pool deployer
 
 Is used by AlgebraFactory to deploy pools
 
-*Developer note: Version: Algebra Integral 1.2.2*
+*Developer note: Version: Algebra Integral 1.3*
 
 **Inherits:** [IAlgebraPoolDeployer](interfaces/IAlgebraPoolDeployer.md)
 
@@ -15,7 +15,7 @@ Is used by AlgebraFactory to deploy pools
 ### constructor
 
 ```solidity
-constructor(address _factory) public
+constructor(address _factory, address _extension) public
 ```
 
 
@@ -23,11 +23,12 @@ constructor(address _factory) public
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _factory | address |  |
+| _extension | address |  |
 
 ### getDeployParameters
 
 ```solidity
-function getDeployParameters() external view returns (address _plugin, address _factory, address _token0, address _token1)
+function getDeployParameters() external view returns (address _plugin, address _factory, address _token0, address _token1, address _extension, address _deployer)
 ```
 **Selector**: `0x04889e26`
 
@@ -43,6 +44,8 @@ Get the parameters to be used in constructing the pool, set transiently during p
 | _factory | address |  |
 | _token0 | address |  |
 | _token1 | address |  |
+| _extension | address |  |
+| _deployer | address |  |
 
 ### deploy
 
@@ -60,7 +63,7 @@ function deploy(address plugin, address token0, address token1, address deployer
 | plugin | address | The pool associated plugin (if any) |
 | token0 | address | The first token of the pool by address sort order |
 | token1 | address | The second token of the pool by address sort order |
-| deployer | address |  |
+| deployer | address | The custom deployer address (or zero for standard pools) |
 
 **Returns:**
 

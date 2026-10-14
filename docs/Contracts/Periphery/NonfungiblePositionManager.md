@@ -3,7 +3,7 @@
 # NonfungiblePositionManager
 
 
-Algebra Integral 1.2.2 NFT positions
+Algebra Integral 1.3 NFT positions
 
 Wraps Algebra positions in the ERC721 non-fungible token interface
 
@@ -302,31 +302,6 @@ function tokenURI(uint256 tokenId) public view returns (string)
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | string |  |
-
-### getApproved
-
-```solidity
-function getApproved(uint256 tokenId) public view returns (address)
-```
-**Selector**: `0x081812fc`
-
-
-
-*Developer note: Returns the account approved for &#x60;tokenId&#x60; token.
-
-Requirements:
-
-- &#x60;tokenId&#x60; must exist.*
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 |  |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address |  |
 
 ### isApprovedOrOwner
 

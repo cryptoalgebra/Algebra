@@ -7,7 +7,7 @@ Algebra concentrated liquidity pool
 
 This contract is responsible for liquidity positions, swaps and flashloans
 
-*Developer note: Version: Algebra Integral 1.2.2*
+*Developer note: Version: Algebra Integral 1.3*
 
 **Inherits:** [AlgebraPoolBase](base/AlgebraPoolBase.md) [TickStructure](base/TickStructure.md) ReentrancyGuard [Positions](base/Positions.md) SwapCalculation [ReservesManager](base/ReservesManager.md)
 
@@ -21,6 +21,25 @@ struct SwapEventParams {
   uint160 currentPrice;
   int24 currentTick;
   uint128 currentLiquidity;
+  uint24 fee;
+  uint256 pluginAmountIn;
+  uint256 pluginAmountOut;
+}
+```
+
+### SwapCache
+
+
+
+```solidity
+struct SwapCache {
+  address recipient;
+  bool zeroToOne;
+  int256 amountRequired;
+  uint160 limitSqrtPrice;
+  bytes data;
+  uint24 fee;
+  uint256 amountInDecrease;
 }
 ```
 
@@ -29,7 +48,7 @@ struct SwapEventParams {
 ### initialize
 
 ```solidity
-function initialize(uint160 initialPrice) external
+function initialize(uint160) external
 ```
 **Selector**: `0xf637731d`
 
@@ -40,7 +59,7 @@ Initialization should be done in one transaction with pool creation to avoid fro
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| initialPrice | uint160 | The initial sqrt price of the pool as a Q64.96 |
+|  | uint160 |  |
 
 ### mint
 
@@ -136,7 +155,8 @@ function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 
 
 Swap token0 for token1, or token1 for token0
 
-*Developer note: The caller of this method receives a callback in the form of [IAlgebraSwapCallback#algebraSwapCallback](interfaces/callback/IAlgebraSwapCallback.md#algebraSwapCallback)*
+*Developer note: The caller of this method receives a callback in the form of [IAlgebraSwapCallback#algebraSwapCallback](interfaces/callback/IAlgebraSwapCallback.md#algebraSwapCallback)
+The amounts include plugin deltas. On exactOut the input is not limited by the pool, check it in the callback*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -150,8 +170,8 @@ Swap token0 for token1, or token1 for token0
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amount0 | int256 | The delta of the balance of token0 of the pool, exact when negative, minimum when positive |
-| amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
+| amount0 | int256 | The amount of token0 paid by the caller (positive) or sent to the recipient (negative) |
+| amount1 | int256 | The amount of token1 paid by the caller (positive) or sent to the recipient (negative) |
 
 ### swapWithPaymentInAdvance
 
@@ -164,7 +184,8 @@ Swap token0 for token1, or token1 for token0 with prepayment
 
 *Developer note: The caller of this method receives a callback in the form of [IAlgebraSwapCallback#algebraSwapCallback](interfaces/callback/IAlgebraSwapCallback.md#algebraSwapCallback)
 caller must send tokens in callback before swap calculation
-the actually sent amount of tokens is used for further calculations*
+the actually sent amount of tokens is used for further calculations
+The amounts include plugin deltas and do not include the leftovers*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -179,8 +200,8 @@ the actually sent amount of tokens is used for further calculations*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amount0 | int256 | The delta of the balance of token0 of the pool, exact when negative, minimum when positive |
-| amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
+| amount0 | int256 | The amount of token0 spent by the caller (positive) or sent to the recipient (negative) |
+| amount1 | int256 | The amount of token1 spent by the caller (positive) or sent to the recipient (negative) |
 
 ### flash
 
@@ -205,7 +226,7 @@ If there are no in-range liquidity providers, the fee will be transferred to the
 ### setCommunityFee
 
 ```solidity
-function setCommunityFee(uint16 newCommunityFee) external
+function setCommunityFee(uint16) external
 ```
 **Selector**: `0x240a875a`
 
@@ -213,12 +234,27 @@ Set the community&#x27;s % share of the fees. Only factory owner or POOLS_ADMINI
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newCommunityFee | uint16 | The new community fee percent in thousandths (1e-3) |
+|  | uint16 |  |
+
+### setFeeMode
+
+```solidity
+function setFeeMode(uint8) external
+```
+**Selector**: `0x5e6f1cb8`
+
+Set the token in which the swap fee is collected. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
+
+*Developer note: The fee growth already accrued in the other token is not migrated, positions can still collect it*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+|  | uint8 |  |
 
 ### setTickSpacing
 
 ```solidity
-function setTickSpacing(int24 newTickSpacing) external
+function setTickSpacing(int24) external
 ```
 **Selector**: `0xf085a610`
 
@@ -226,12 +262,12 @@ Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newTickSpacing | int24 | The new tick spacing value |
+|  | int24 |  |
 
 ### setPlugin
 
 ```solidity
-function setPlugin(address newPluginAddress) external
+function setPlugin(address) external
 ```
 **Selector**: `0xcc1f97cf`
 
@@ -239,25 +275,25 @@ Set the new plugin address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newPluginAddress | address | The new plugin address |
+|  | address |  |
 
 ### setPluginConfig
 
 ```solidity
-function setPluginConfig(uint8 newConfig) external
+function setPluginConfig(uint16) external
 ```
-**Selector**: `0xbca57f81`
+**Selector**: `0x54884e9d`
 
 Set new plugin config. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newConfig | uint8 | In the new configuration of the plugin, each bit of which is responsible for a particular hook. |
+|  | uint16 |  |
 
 ### setCommunityVault
 
 ```solidity
-function setCommunityVault(address newCommunityVault) external
+function setCommunityVault(address) external
 ```
 **Selector**: `0xd8544cf3`
 
@@ -268,12 +304,12 @@ Set new community fee vault address. Only factory owner or POOLS_ADMINISTRATOR_R
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newCommunityVault | address | The address of new community fee vault |
+|  | address |  |
 
 ### setFee
 
 ```solidity
-function setFee(uint16 newFee) external
+function setFee(uint16) external
 ```
 **Selector**: `0x8e005553`
 
@@ -282,7 +318,7 @@ Called by the plugin if dynamic fee is enabled
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newFee | uint16 | The new fee value |
+|  | uint16 |  |
 
 ### sync
 
@@ -305,4 +341,22 @@ function skim() external
 Forces balances to match reserves. Excessive tokens will be sent to msg.sender
 
 *Developer note: Only plugin can call this function*
+
+### claimCommunityFee
+
+```solidity
+function claimCommunityFee() external returns (uint128 amount0, uint128 amount1)
+```
+**Selector**: `0x5dddf3e6`
+
+Sends the accumulated community fees to the community vault
+
+*Developer note: Only the community vault can call this function*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount0 | uint128 | The amount of token0 sent |
+| amount1 | uint128 | The amount of token1 sent |
 

@@ -81,19 +81,6 @@ Emitted when a position&#x27;s liquidity is removed
 | amount0 | uint256 | The amount of token0 withdrawn |
 | amount1 | uint256 | The amount of token1 withdrawn |
 
-### BurnFee
-
-```solidity
-event BurnFee(address owner, uint24 pluginFee)
-```
-
-Emitted when a plugin fee is applied during a burn
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| owner | address | The owner of the position |
-| pluginFee | uint24 | The fee to be sent to the plugin |
-
 ### Swap
 
 ```solidity
@@ -115,7 +102,7 @@ Emitted by the pool for any swaps between token0 and token1
 ### SwapFee
 
 ```solidity
-event SwapFee(address sender, uint24 overrideFee, uint24 pluginFee)
+event SwapFee(address sender, uint24 fee, uint256 pluginAmountIn, uint256 pluginAmountOut)
 ```
 
 Emitted by the pool after any swaps
@@ -123,8 +110,9 @@ Emitted by the pool after any swaps
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | sender | address | The address that initiated the swap |
-| overrideFee | uint24 | The fee to be applied to the trade |
-| pluginFee | uint24 | The fee to be sent to the plugin |
+| fee | uint24 | The fee applied to the swap: the one returned by the plugin if the dynamic fee is enabled, otherwise the pool fee |
+| pluginAmountIn | uint256 | The part of the input sent to the plugin (amountInDecrease or amountInIncrease), included in the `Swap` amounts |
+| pluginAmountOut | uint256 | The part of the output sent to the plugin (amountOutDecrease), excluded from the `Swap` amounts |
 
 ### Flash
 
@@ -171,6 +159,18 @@ Emitted when the community fee is changed by the pool
 | ---- | ---- | ----------- |
 | communityFeeNew | uint16 | The updated value of the community fee in thousandths (1e-3) |
 
+### FeeMode
+
+```solidity
+event FeeMode(uint8 feeModeNew)
+```
+
+Emitted when the token in which the swap fee is collected is changed by the pool
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| feeModeNew | uint8 | The updated value of the fee mode: 0 - the input token of each swap, 1 - always token0, 2 - always token1 |
+
 ### TickSpacing
 
 ```solidity
@@ -198,14 +198,14 @@ Emitted when the plugin address changes
 ### PluginConfig
 
 ```solidity
-event PluginConfig(uint8 newPluginConfig)
+event PluginConfig(uint16 newPluginConfig)
 ```
 
 Emitted when the plugin config changes
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newPluginConfig | uint8 | New plugin config |
+| newPluginConfig | uint16 | New plugin config |
 
 ### Fee
 
@@ -230,6 +230,20 @@ Emitted when the community vault address changes
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newCommunityVault | address | New community vault |
+
+### CommunityFeeTransfer
+
+```solidity
+event CommunityFeeTransfer(address communityVault, uint256 communityFeeAmount0, uint256 communityFeeAmount1)
+```
+
+Emitted when community fees are distributed from the pool
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| communityVault | address | The address of the community vault |
+| communityFeeAmount0 | uint256 | The amount of token0 sent to communityVault |
+| communityFeeAmount1 | uint256 | The amount of token1 sent to communityVault |
 
 ### Skim
 

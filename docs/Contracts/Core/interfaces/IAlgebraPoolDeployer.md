@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ### getDeployParameters
 
 ```solidity
-function getDeployParameters() external view returns (address plugin, address factory, address token0, address token1)
+function getDeployParameters() external view returns (address plugin, address factory, address token0, address token1, address extension, address deployer)
 ```
 **Selector**: `0x04889e26`
 
@@ -33,6 +33,8 @@ Get the parameters to be used in constructing the pool, set transiently during p
 | factory | address | The Algebra Factory address |
 | token0 | address | The first token of the pool by address sort order |
 | token1 | address | The second token of the pool by address sort order |
+| extension | address | The pool extension contract address |
+| deployer | address | The custom deployer address (or zero for standard pools) |
 
 ### deploy
 
@@ -50,7 +52,7 @@ function deploy(address plugin, address token0, address token1, address deployer
 | plugin | address | The pool associated plugin (if any) |
 | token0 | address | The first token of the pool by address sort order |
 | token1 | address | The second token of the pool by address sort order |
-| deployer | address |  |
+| deployer | address | The custom deployer address (or zero for standard pools) |
 
 **Returns:**
 

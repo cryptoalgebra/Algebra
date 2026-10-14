@@ -7,7 +7,7 @@ Interface for WNativeToken
 
 
 
-**Inherits:** [IERC20](https://docs.openzeppelin.com/contracts/4.x/)
+**Inherits:** [IERC20](https://docs.openzeppelin.com/contracts/5.x/)
 
 ## Functions
 ### deposit

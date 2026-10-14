@@ -55,7 +55,10 @@ Emitted when a process of ownership renounce finished
 event Pool(address token0, address token1, address pool)
 ```
 
-Emitted when a pool is created
+Emitted when any pool is created, including custom pools
+
+*Developer note: Also emitted for custom pools, alongside CustomPool, so that indexers watching only
+this event still discover the pool*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -69,7 +72,7 @@ Emitted when a pool is created
 event CustomPool(address deployer, address token0, address token1, address pool)
 ```
 
-Emitted when a pool is created
+Emitted when a custom pool is created, in addition to Pool event
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -222,6 +225,21 @@ Returns the current poolDeployerAddress
 | ---- | ---- | ----------- |
 | [0] | address | The address of the poolDeployer |
 
+### poolExtension
+
+```solidity
+function poolExtension() external view returns (address)
+```
+**Selector**: `0x0d2077ca`
+
+Returns the shared pool extension contract address
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The address of the pool extension |
+
 ### defaultCommunityFee
 
 ```solidity
@@ -308,7 +326,7 @@ function defaultConfigurationForPool() external view returns (uint16 communityFe
 ```
 **Selector**: `0x25b355d6`
 
-Returns the default communityFee, tickspacing, fee and communityFeeVault for pool
+Returns the default communityFee, tickspacing and fee for pool
 
 **Returns:**
 

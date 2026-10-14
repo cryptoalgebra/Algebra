@@ -115,8 +115,10 @@ export default {
   },
   docgen: {
     outputDir: '../../docs/Contracts/Periphery',
+    // test contracts are not documented
     pages: (x: any, buildInfo: any) => {
-      return `${buildInfo.relativePath}`.replace('.sol', '.md');
+      const path = `${buildInfo.relativePath}`;
+      return /^test[\\/]/.test(path) ? undefined : path.replace('.sol', '.md');
     },
     templates: '../../docs/doc_templates/public',
     collapseNewlines: true,

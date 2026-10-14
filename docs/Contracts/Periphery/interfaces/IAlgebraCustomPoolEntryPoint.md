@@ -85,9 +85,9 @@ Changes the plugin address in the Algebra Integral custom pool
 ### setPluginConfig
 
 ```solidity
-function setPluginConfig(address pool, uint8 newConfig) external
+function setPluginConfig(address pool, uint16 newConfig) external
 ```
-**Selector**: `0x054bee3d`
+**Selector**: `0xd55b6743`
 
 Changes the plugin configuration in the Algebra Integral custom pool
 
@@ -96,7 +96,7 @@ Changes the plugin configuration in the Algebra Integral custom pool
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | pool | address | The address of the Algebra Integral custom pool |
-| newConfig | uint8 | The new plugin configuration bitmap |
+| newConfig | uint16 | The new plugin configuration bitmap |
 
 ### setFee
 
