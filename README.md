@@ -56,7 +56,7 @@ Farming: [https://www.npmjs.com/package/@cryptoalgebra/integral-farming](https:/
 
 ## Build
 
-*Requires npm >= 8.0.0*
+*Requires Node.js 24 and npm >= 10.0.0.* The versions are enforced (`engine-strict` in `.npmrc`), so with another Node.js version the install fails.
 
 To install dependencies, you need to run the command in the root directory:
 ```
