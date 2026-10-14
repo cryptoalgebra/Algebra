@@ -2069,7 +2069,7 @@ describe('unit/EternalFarms', () => {
 
     describe('fails if', () => {
       it('farm has already been exitFarming', async () => {
-        await expect(subject(lpUser0)).to.revertedWith('ERC721: invalid token ID');
+        await expect(subject(lpUser0)).to.be.revertedWithCustomError(context.nft, 'ERC721NonexistentToken').withArgs(tokenId);
       });
 
       it('if reentrancy lock in pool is locked', async () => {

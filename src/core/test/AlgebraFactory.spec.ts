@@ -138,9 +138,7 @@ describe('AlgebraFactory', () => {
     it('cannot reenter from default plugin factory', async () => {
       const reentrant = await (await ethers.getContractFactory('MockReentrantPluginFactory')).deploy();
       await factory.setDefaultPluginFactory(reentrant);
-      await expect(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x')).to.be.revertedWith(
-        'ReentrancyGuard: reentrant call'
-      );
+      await expect(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x')).to.be.revertedWithCustomError(factory, 'ReentrancyGuardReentrantCall');
     });
 
     it('succeeds if tokens are passed in reverse', async () => {
@@ -328,7 +326,7 @@ describe('AlgebraFactory', () => {
       const CUSTOM_POOL_DEPLOYER = await factory.CUSTOM_POOL_DEPLOYER();
       await factory.grantRole(CUSTOM_POOL_DEPLOYER, await reentrant.getAddress());
       // the tests happen in solidity
-      await expect(reentrant.createCustomPool(factory, TEST_ADDRESSES[1], TEST_ADDRESSES[2], '0x')).to.be.revertedWith('ReentrancyGuard: reentrant call');
+      await expect(reentrant.createCustomPool(factory, TEST_ADDRESSES[1], TEST_ADDRESSES[2], '0x')).to.be.revertedWithCustomError(factory, 'ReentrancyGuardReentrantCall');
     });
 
     it('sets vault in pool', async () => {
@@ -402,16 +400,10 @@ describe('AlgebraFactory', () => {
 
   describe('#transferOwnership', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).transferOwnership(wallet.address)).to.be.revertedWith(
-        'Ownable: caller is not the owner'
-      );
-      await expect(factory.connect(other).startRenounceOwnership()).to.be.revertedWith(
-        'Ownable: caller is not the owner'
-      );
-      await expect(factory.connect(other).renounceOwnership()).to.be.revertedWith('Ownable: caller is not the owner');
-      await expect(factory.connect(other).stopRenounceOwnership()).to.be.revertedWith(
-        'Ownable: caller is not the owner'
-      );
+      await expect(factory.connect(other).transferOwnership(wallet.address)).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
+      await expect(factory.connect(other).startRenounceOwnership()).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
+      await expect(factory.connect(other).renounceOwnership()).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
+      await expect(factory.connect(other).stopRenounceOwnership()).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
     });
 
     it('updates owner and emits event', async () => {
@@ -425,7 +417,7 @@ describe('AlgebraFactory', () => {
     it('cannot be called by original owner', async () => {
       await factory.transferOwnership(other.address);
       await factory.connect(other).acceptOwnership();
-      await expect(factory.transferOwnership(wallet.address)).to.be.revertedWith('Ownable: caller is not the owner');
+      await expect(factory.transferOwnership(wallet.address)).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(wallet.address);
     });
 
     it('renounceOwner works only once the delay has passed, emitting an event at the start and at the finish', async () => {
@@ -482,9 +474,7 @@ describe('AlgebraFactory', () => {
 
   describe('#setDefaultCommunityFee', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setDefaultCommunityFee(30)).to.be.revertedWith(
-        'Ownable: caller is not the owner'
-      );
+      await expect(factory.connect(other).setDefaultCommunityFee(30)).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
     });
 
     it('fails if new community fee is greater than max fee or equals the current one', async () => {
@@ -509,7 +499,7 @@ describe('AlgebraFactory', () => {
 
   describe('#setDefaultFee', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setDefaultFee(200)).to.be.revertedWith('Ownable: caller is not the owner');
+      await expect(factory.connect(other).setDefaultFee(200)).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
     });
 
     it('fails if new default fee greater than max fee', async () => {
@@ -531,9 +521,7 @@ describe('AlgebraFactory', () => {
 
   describe('#setDefaultTickspacing', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setDefaultTickspacing(30)).to.be.revertedWith(
-        'Ownable: caller is not the owner'
-      );
+      await expect(factory.connect(other).setDefaultTickspacing(30)).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
     });
 
     it('fails if new default tickspacing is out of range or equals the current one', async () => {
@@ -554,9 +542,7 @@ describe('AlgebraFactory', () => {
 
   describe('#setDefaultPluginFactory', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setDefaultPluginFactory(other.address)).to.be.revertedWith(
-        'Ownable: caller is not the owner'
-      );
+      await expect(factory.connect(other).setDefaultPluginFactory(other.address)).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
     });
 
     it('fails if equals current value', async () => {
@@ -573,9 +559,7 @@ describe('AlgebraFactory', () => {
 
   describe('#setVaultFactory', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setVaultFactory(other.address)).to.be.revertedWith(
-        'Ownable: caller is not the owner'
-      );
+      await expect(factory.connect(other).setVaultFactory(other.address)).to.be.revertedWithCustomError(factory, 'OwnableUnauthorizedAccount').withArgs(other.address);
     });
 
     it('fails if equals current value', async () => {

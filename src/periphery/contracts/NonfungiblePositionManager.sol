@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.20;
+pragma solidity =0.8.26;
 
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
@@ -458,24 +458,17 @@ contract NonfungiblePositionManager is
 
     /// @inheritdoc IERC721Metadata
     function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {
-        _requireMinted(tokenId);
+        _requireOwned(tokenId);
         return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
-    }
-
-    /// @inheritdoc IERC721
-    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        _requireMinted(tokenId);
-        return _positions[tokenId].operator;
     }
 
     /// @inheritdoc INonfungiblePositionManager
     function isApprovedOrOwner(address spender, uint256 tokenId) external view override returns (bool) {
-        _requireMinted(tokenId);
-        return _isApprovedOrOwner(spender, tokenId);
+        return _isAuthorized(_requireOwned(tokenId), spender, tokenId);
     }
 
     function _checkAuthorizationForToken(uint256 tokenId) private view {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+        require(_isAuthorized(_requireOwned(tokenId), msg.sender, tokenId), 'Not approved');
     }
 
     function _applyLiquidityDeltaInFarming(uint256 tokenId, int256 liquidityDelta) private {
@@ -505,20 +498,27 @@ contract NonfungiblePositionManager is
         }
     }
 
-    /// @dev Overrides to clear operator and farming approval before any transfer (including burn, but not including mint)
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batch) internal override {
+    /// @dev Overrides to clear the farming approval on any transfer (including burn, but not including mint).
+    /// The operator is cleared by `ERC721._update` itself through `_approve`, after the authorization check
+    function _update(address to, uint256 tokenId, address auth) internal override returns (address from) {
+        from = super._update(to, tokenId, auth);
         // transfer from address(0) is mint
-        if (from != address(0)) {
-            // clear approvals
-            _positions[tokenId].operator = address(0);
-            delete farmingApprovals[tokenId];
-        }
-        super._beforeTokenTransfer(from, to, tokenId, batch);
+        if (from != address(0)) delete farmingApprovals[tokenId];
     }
 
-    /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-    function _approve(address to, uint256 tokenId) internal override(ERC721) {
+    /// @dev Overrides to read the operator from the position, which is packed with the position permit nonce
+    function _getApproved(uint256 tokenId) internal view override returns (address) {
+        return _positions[tokenId].operator;
+    }
+
+    /// @dev Overrides to store the operator in the position, which is packed with the position permit nonce
+    function _approve(address to, uint256 tokenId, address auth, bool emitEvent) internal override {
+        // the same checks as in `ERC721._approve`, only the storage of the operator differs
+        if (emitEvent || auth != address(0)) {
+            address owner = _requireOwned(tokenId);
+            if (auth != address(0) && owner != auth && !isApprovedForAll(owner, auth)) revert ERC721InvalidApprover(auth);
+            if (emitEvent) emit Approval(owner, to, tokenId);
+        }
         _positions[tokenId].operator = to;
-        emit Approval(ownerOf(tokenId), to, tokenId);
     }
 }

@@ -1,11 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PositionValue #fees when price is above the position range gas [ @skip-on-coverage ] 1`] = `54035`;
+exports[`PositionValue #fees when price is above the position range gas [ @skip-on-coverage ] 1`] = `54034`;
 
-exports[`PositionValue #fees when price is below the position range gas [ @skip-on-coverage ] 1`] = `54101`;
+exports[`PositionValue #fees when price is below the position range gas [ @skip-on-coverage ] 1`] = `54100`;
 
-exports[`PositionValue #fees when price is within the position range gas [ @skip-on-coverage ] 1`] = `60481`;
+exports[`PositionValue #fees when price is within the position range gas [ @skip-on-coverage ] 1`] = `60473`;
 
-exports[`PositionValue #principal gas [ @skip-on-coverage ] 1`] = `26316`;
+exports[`PositionValue #principal gas [ @skip-on-coverage ] 1`] = `26310`;
 
-exports[`PositionValue #total gas [ @skip-on-coverage ] 1`] = `63572`;
+exports[`PositionValue #total gas [ @skip-on-coverage ] 1`] = `63548`;

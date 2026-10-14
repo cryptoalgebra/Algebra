@@ -11,7 +11,8 @@ async function main() {
   // WNativeTokenAddress
   const WNativeTokenAddress = '0x4200000000000000000000000000000000000006';
   const signers = await hre.ethers.getSigners();
-  const ProxyAdmin = signers[0].address;
+  // the owner of the ProxyAdmin that the descriptor proxy deploys
+  const ProxyAdminOwner = signers[0].address;
 
   deploysData.wrapped = WNativeTokenAddress;
 
@@ -88,12 +89,17 @@ async function main() {
 
 
   const ProxyFactory = await hre.ethers.getContractFactory('TransparentUpgradeableProxy');
-  const Proxy = await ProxyFactory.deploy(NonfungibleTokenPositionDescriptor.target, ProxyAdmin, '0x');
+  const Proxy = await ProxyFactory.deploy(NonfungibleTokenPositionDescriptor.target, ProxyAdminOwner, '0x');
 
   await Proxy.waitForDeployment();
 
+  // the proxy deploys its own ProxyAdmin, its address is in the ERC-1967 admin slot
+  const adminSlot = '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103';
+  const ProxyAdmin = ethers.getAddress('0x' + (await hre.ethers.provider.getStorage(Proxy.target, adminSlot)).slice(26));
+
   deploysData.proxy = Proxy.target;
   deploysData.admin = ProxyAdmin;
+  deploysData.adminOwner = ProxyAdminOwner;
   console.log('Proxy deployed to:', Proxy.target);
 
 
