@@ -1,5 +1,0 @@
-{
-    "hooks": {
-      "pre-commit": "lerna run precommit --concurrency 1 --stream"
-    }
-  }
