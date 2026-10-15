@@ -110,15 +110,11 @@ interface IAlgebraPoolEvents {
   /// @param newCommunityVault New community vault
   event CommunityVault(address newCommunityVault);
 
-  /// @notice Emitted when community fees are distributed from the pool
+  /// @notice Emitted when the community vault claims the community fees
   /// @param communityVault The address of the community vault
   /// @param communityFeeAmount0 The amount of token0 sent to communityVault
   /// @param communityFeeAmount1 The amount of token1 sent to communityVault
-  event CommunityFeeTransfer(
-    address communityVault,
-    uint256 communityFeeAmount0,
-    uint256 communityFeeAmount1
-  );
+  event CommunityFeeTransfer(address communityVault, uint256 communityFeeAmount0, uint256 communityFeeAmount1);
 
   /// @notice Emitted when the plugin does skim the excess of tokens
   /// @param to THe receiver of tokens (plugin)
