@@ -169,7 +169,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     return IAlgebraFactory(factory).defaultConfigurationForPool();
   }
 
-  /// @dev Uses the standard OZ Proxy._delegate() 
+  /// @dev Uses the standard OZ Proxy._delegate()
   function _delegateToExtension() internal {
     address _extension = algebraPoolExtension;
     assembly {
@@ -188,10 +188,10 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
       switch result
       // delegatecall returns 0 on error.
       case 0 {
-        revert(0, returndatasize()) 
+        revert(0, returndatasize())
       }
-      default { 
-        return(0, returndatasize()) 
+      default {
+        return(0, returndatasize())
       }
     }
   }

@@ -220,7 +220,11 @@ library NFTSVG {
         int24 tickSpacing,
         int8 overRange
     ) private pure returns (string memory svg) {
-        string memory fade = overRange == 1 ? '#fade-up' : overRange == -1 ? '#fade-down' : '#none';
+        string memory fade = overRange == 1
+            ? '#fade-up'
+            : overRange == -1
+                ? '#fade-down'
+                : '#none';
         string memory curve = getCurve(tickLower, tickUpper, tickSpacing);
         svg = string(
             abi.encodePacked(

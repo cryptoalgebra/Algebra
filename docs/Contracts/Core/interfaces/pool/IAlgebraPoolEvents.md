@@ -237,7 +237,7 @@ Emitted when the community vault address changes
 event CommunityFeeTransfer(address communityVault, uint256 communityFeeAmount0, uint256 communityFeeAmount1)
 ```
 
-Emitted when community fees are distributed from the pool
+Emitted when the community vault claims the community fees
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

@@ -299,8 +299,8 @@ function setCommunityVault(address) external
 
 Set new community fee vault address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
-*Developer note: Community fee vault receives collected community fees.
-**accumulated but not yet sent to the vault community fees once will be sent to the &#x60;newCommunityVault&#x60; address***
+*Developer note: The vault claims community fees with &#x60;claimCommunityFee&#x60;, unclaimed ones only by the &#x60;newCommunityVault&#x60;.
+The zero address also sets the community fee to zero*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -313,8 +313,7 @@ function setFee(uint16) external
 ```
 **Selector**: `0x8e005553`
 
-Set new pool fee. Can be called by owner if dynamic fee is disabled.
-Called by the plugin if dynamic fee is enabled
+Set new pool fee if dynamic fee is disabled. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

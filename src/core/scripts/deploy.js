@@ -66,6 +66,7 @@ async function main() {
   deploysData.factory = factory.target;
   deploysData.poolExtension = await factory.poolExtension();
   deploysData.vault = vault.target;
+  deploysData.algebraFeeManager = deployer.address;
   deploysData.vaultFactory = vaultFactoryStub.target;
   fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 }

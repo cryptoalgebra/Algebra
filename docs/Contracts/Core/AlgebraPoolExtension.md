@@ -7,9 +7,7 @@ Algebra pool extension
 
 Contains pool initialization and permissioned setter logic, called via delegatecall from pool
 
-*Developer note: IMPORTANT: This extension is currently designed only for logic that does not require token0/token1 or other pool immutables.
-If additional logic that depends on token addresses needs to be moved here (e.g. flash),
-getDeployParameters must be updated to provide those values
+*Developer note: The pool immutables except &#x60;factory&#x60; are zero here, see &#x60;_getDeployParameters&#x60;
 Version: Algebra Integral 1.3*
 
 **Inherits:** [AlgebraPoolBase](base/AlgebraPoolBase.md) ReentrancyGuard
@@ -367,8 +365,8 @@ function setCommunityVault(address newCommunityVault) external
 
 Set new community fee vault address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
-*Developer note: Community fee vault receives collected community fees.
-**accumulated but not yet sent to the vault community fees once will be sent to the &#x60;newCommunityVault&#x60; address***
+*Developer note: The vault claims community fees with &#x60;claimCommunityFee&#x60;, unclaimed ones only by the &#x60;newCommunityVault&#x60;.
+The zero address also sets the community fee to zero*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -381,8 +379,7 @@ function setFee(uint16 newFee) external
 ```
 **Selector**: `0x8e005553`
 
-Set new pool fee. Can be called by owner if dynamic fee is disabled.
-Called by the plugin if dynamic fee is enabled
+Set new pool fee if dynamic fee is disabled. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

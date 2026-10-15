@@ -1,23 +1,15 @@
-# Property mode: every `echidna_*` view function must keep returning true.
-# Used for the stateful pool invariants.
-#
-#   echidna . --contract PropFeeTokenIsolationEchidnaTest --config echidna.property.yaml
-#   echidna . --contract PropReservesEchidnaTest          --config echidna.property.yaml
-#   echidna . --contract PropBalancesEchidnaTest          --config echidna.property.yaml
-#
-# IMPORTANT: run `npx hardhat clean && npx hardhat compile` before a campaign, not a plain recompile.
-# Hardhat keeps old build-info files around on an incremental build and crytic-compile reads all of them,
-# so a stale copy of a test contract can be the one that actually gets fuzzed. The symptom is a counterexample
-# that contradicts a `require` in the current source.
+# Property mode for the stateful pool suites. Run per file as in CI, `echidna .` fails on them (crytic/echidna#1118):
+#   echidna contracts/test/echidna/PoolMockEchidna/PropReservesEchidnaTest.sol --contract PropReservesEchidnaTest \
+#     --config echidna.property.yaml --solc-args '--evm-version cancun'
+# The same for PropBalancesEchidnaTest and PropFeeTokenIsolationEchidnaTest
 
 testMode: property
 testLimit: 500000
 seqLen: 100
 shrinkLimit: 5000
 
-# The fee token is pinned per suite, so the setters that could move it and the raw `flash`, which pays fees in both tokens, stay out.
-# The entry has to name the contract under test even though both functions are inherited: a bare signature,
-# or the declaring contract, is silently ignored. Entries that match nothing are harmless for the other suites
+# the fee token is pinned, so the fee mode setters and `flash` (fees in both tokens) are excluded;
+# the entries must name the contract under test, the other suites ignore them
 filterFunctions: ["PropFeeTokenIsolationEchidnaTest.setFeeMode(uint8)", "PropFeeTokenIsolationEchidnaTest.setFeeModeWrapped(uint8)", "PropFeeTokenIsolationEchidnaTest.flash(address,uint256,uint256,bytes)"]
 filterBlacklist: true
 
@@ -25,11 +17,8 @@ filterBlacklist: true
 balanceContract: 0
 balanceAddr: 0
 
-# the pool mocks inherit the full AlgebraPool and exceed the 24576 byte mainnet limit,
-# so the deploy-time code size check has to be lifted
+# the pool mocks exceed the 24576 byte code size limit
 codeSize: 0xffffffff
 
 corpusDir: echidna-corpus-property
 coverage: true
-
-cryticArgs: ['--hardhat-ignore-compile']

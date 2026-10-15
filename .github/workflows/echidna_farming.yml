@@ -53,5 +53,4 @@ jobs:
           files: ./src/farming/
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile
-          solc-args: --evm-version paris
           config: ./src/farming/contracts/test/echidna/echidna.config.yml

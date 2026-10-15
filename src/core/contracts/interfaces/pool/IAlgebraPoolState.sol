@@ -41,10 +41,7 @@ interface IAlgebraPoolState {
   /// @return pluginConfig The current plugin config as bitmap. Each bit enables a hook or a feature (dynamic fee, amount deltas), see `Plugins`
   /// @return communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
   /// @return unlocked Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
-  function globalState()
-    external
-    view
-    returns (uint160 price, int24 tick, uint16 lastFee, uint16 pluginConfig, uint16 communityFee, bool unlocked);
+  function globalState() external view returns (uint160 price, int24 tick, uint16 lastFee, uint16 pluginConfig, uint16 communityFee, bool unlocked);
 
   /// @notice The token in which the swap fee is collected: 0 - the input token of each swap, 1 - always token0, 2 - always token1
   /// @return The fee mode

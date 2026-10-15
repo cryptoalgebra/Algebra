@@ -216,7 +216,11 @@ library TickMath {
       int24 tickLow = int24((log_sqrt10001 - 3402992956809132418596140100660247210) >> 128);
       int24 tickHi = int24((log_sqrt10001 + 291339464771989622907027621153398088495) >> 128);
 
-      tick = tickLow == tickHi ? tickLow : getSqrtRatioAtTick(tickHi) <= price ? tickHi : tickLow;
+      tick = tickLow == tickHi
+        ? tickLow
+        : getSqrtRatioAtTick(tickHi) <= price
+          ? tickHi
+          : tickLow;
     }
   }
 }

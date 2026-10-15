@@ -17,7 +17,14 @@ contract MockSilentRevertPlugin is IAlgebraPlugin {
         return IAlgebraPlugin.afterInitialize.selector;
     }
 
-    function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external pure returns (bytes4) {
+    function beforeModifyPosition(
+        address,
+        address,
+        int24,
+        int24,
+        int128,
+        bytes calldata
+    ) external pure returns (bytes4) {
         return IAlgebraPlugin.beforeModifyPosition.selector;
     }
 

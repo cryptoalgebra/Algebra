@@ -6,14 +6,9 @@
   ],
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.1",
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
-    "@typescript-eslint/parser": "^8.46.2",
     "bignumber.js": "^9.3.1",
     "decimal.js": "^10.6.0",
     "dotenv": "^17.2.3",
-    "eslint": "^9.17.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-unused-imports": "^4.3.0",
     "hardhat": "^2.29.1",
     "hardhat-contract-sizer": "^2.10.1",
     "hardhat-dependency-compiler": "^1.2.1",
@@ -32,7 +27,7 @@
   },
   "scripts": {
     "prepare": "husky",
-    "lint": "prettier \"src/**/contracts/**/*.sol\"",
+    "lint": "prettier --check \"src/**/contracts/**/*.sol\"",
     "solhint": "npm run solhint --workspace=src/core --if-present && npm run solhint --workspace=src/periphery --if-present && npm run solhint --workspace=src/farming --if-present",
     "bootstrap": "npm install && npm run compile",
     "compile": "cd src/core && hardhat compile && cd ../periphery && hardhat compile && cd ../farming && hardhat compile",

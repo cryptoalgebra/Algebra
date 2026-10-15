@@ -88,6 +88,8 @@ $ npm run coverage
 ```
 
 ## Deploy
+The contracts are compiled for the Cancun EVM version (`MCOPY` opcode), so the network must support Cancun.
+
 Firstly you need to create `.env` file in the root directory of project as in `env.example`.
 
 To deploy all modules in specific network:

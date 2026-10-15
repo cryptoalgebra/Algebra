@@ -99,12 +99,7 @@ contract PriceMovementMathEchidnaTest {
   /// @notice Both fee modes have to agree whenever the fee itself is zero
   /// @dev Compares what the trader gives and gets, not the raw amounts: the fee on the input books the rounding
   /// remainder as a fee even at a zero rate, so the split differs while `paid` does not
-  function checkFeeModesAgreeWithoutFee(
-    uint160 sqrtPriceRaw,
-    uint160 sqrtPriceTargetRaw,
-    uint128 liquidity,
-    int256 amountRemaining
-  ) external pure {
+  function checkFeeModesAgreeWithoutFee(uint160 sqrtPriceRaw, uint160 sqrtPriceTargetRaw, uint128 liquidity, int256 amountRemaining) external pure {
     _requireReachablePrices(sqrtPriceRaw, sqrtPriceTargetRaw);
 
     StepResult memory onInput = _run(true, sqrtPriceRaw, sqrtPriceTargetRaw, liquidity, amountRemaining, 0);

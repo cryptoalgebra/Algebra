@@ -36,12 +36,14 @@ contract AlgebraInterfaceMulticall3 {
         uint256 length = calls.length;
         returnData = new bytes[](length);
         Call calldata call;
-        for (uint256 i = 0; i < length;) {
+        for (uint256 i = 0; i < length; ) {
             bool success;
             call = calls[i];
             (success, returnData[i]) = call.target.call(call.callData);
-            require(success, "Multicall3: call failed");
-            unchecked { ++i; }
+            require(success, 'Multicall3: call failed');
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -50,16 +52,21 @@ contract AlgebraInterfaceMulticall3 {
     /// @param requireSuccess If true, require all calls to succeed
     /// @param calls An array of Call structs
     /// @return returnData An array of Result structs
-    function tryAggregate(bool requireSuccess, Call[] calldata calls) public payable returns (Result[] memory returnData) {
+    function tryAggregate(
+        bool requireSuccess,
+        Call[] calldata calls
+    ) public payable returns (Result[] memory returnData) {
         uint256 length = calls.length;
         returnData = new Result[](length);
         Call calldata call;
-        for (uint256 i = 0; i < length;) {
+        for (uint256 i = 0; i < length; ) {
             Result memory result = returnData[i];
             call = calls[i];
             (result.success, result.returnData) = call.target.call(call.callData);
-            if (requireSuccess) require(result.success, "Multicall3: call failed");
-            unchecked { ++i; }
+            if (requireSuccess) require(result.success, 'Multicall3: call failed');
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -69,7 +76,10 @@ contract AlgebraInterfaceMulticall3 {
     /// @return blockNumber The block number where the calls were executed
     /// @return blockHash The hash of the block where the calls were executed
     /// @return returnData An array of Result structs
-    function tryBlockAndAggregate(bool requireSuccess, Call[] calldata calls) public payable returns (uint256 blockNumber, bytes32 blockHash, Result[] memory returnData) {
+    function tryBlockAndAggregate(
+        bool requireSuccess,
+        Call[] calldata calls
+    ) public payable returns (uint256 blockNumber, bytes32 blockHash, Result[] memory returnData) {
         blockNumber = block.number;
         blockHash = blockhash(block.number);
         returnData = tryAggregate(requireSuccess, calls);
@@ -81,7 +91,9 @@ contract AlgebraInterfaceMulticall3 {
     /// @return blockNumber The block number where the calls were executed
     /// @return blockHash The hash of the block where the calls were executed
     /// @return returnData An array of Result structs
-    function blockAndAggregate(Call[] calldata calls) public payable returns (uint256 blockNumber, bytes32 blockHash, Result[] memory returnData) {
+    function blockAndAggregate(
+        Call[] calldata calls
+    ) public payable returns (uint256 blockNumber, bytes32 blockHash, Result[] memory returnData) {
         (blockNumber, blockHash, returnData) = tryBlockAndAggregate(true, calls);
     }
 
@@ -92,7 +104,7 @@ contract AlgebraInterfaceMulticall3 {
         uint256 length = calls.length;
         returnData = new Result[](length);
         Call3 calldata calli;
-        for (uint256 i = 0; i < length;) {
+        for (uint256 i = 0; i < length; ) {
             Result memory result = returnData[i];
             calli = calls[i];
             (result.success, result.returnData) = calli.target.call(calli.callData);
@@ -111,7 +123,9 @@ contract AlgebraInterfaceMulticall3 {
                     revert(0x00, 0x64)
                 }
             }
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -124,13 +138,15 @@ contract AlgebraInterfaceMulticall3 {
         uint256 length = calls.length;
         returnData = new Result[](length);
         Call3Value calldata calli;
-        for (uint256 i = 0; i < length;) {
+        for (uint256 i = 0; i < length; ) {
             Result memory result = returnData[i];
             calli = calls[i];
             uint256 val = calli.value;
             // Humanity will be a Type V Kardashev Civilization before this overflows - andreas
             // ~ 10^25 Wei in existence << ~ 10^76 size uint fits in a uint256
-            unchecked { valAccumulator += val; }
+            unchecked {
+                valAccumulator += val;
+            }
             (result.success, result.returnData) = calli.target.call{value: val}(calli.callData);
             assembly {
                 // Revert if the call fails and failure is not allowed
@@ -147,10 +163,12 @@ contract AlgebraInterfaceMulticall3 {
                     revert(0x00, 0x84)
                 }
             }
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
         // Finally, make sure the msg.value = SUM(call[0...i].value)
-        require(msg.value == valAccumulator, "Multicall3: value mismatch");
+        require(msg.value == valAccumulator, 'Multicall3: value mismatch');
     }
 
     /// @notice Returns the block hash for the given block number

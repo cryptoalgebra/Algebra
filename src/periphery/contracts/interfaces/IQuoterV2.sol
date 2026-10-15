@@ -18,7 +18,7 @@ interface IQuoterV2 {
     /// @return sqrtPriceX96AfterList List of the sqrt price after the swap for each pool in the path
     /// @return initializedTicksCrossedList List of the initialized ticks that the swap crossed for each pool in the path
     /// @return gasEstimate The estimate of the gas that the swap consumes
-    /// @return feeList List of the fee values used for swaps in the path
+    /// @return feeList The pool fees (`lastFee`), the applied ones may differ with dynamic fee
     function quoteExactInput(
         bytes memory path,
         uint256 amountInRequired
@@ -52,7 +52,7 @@ interface IQuoterV2 {
     /// @return sqrtPriceX96After The sqrt price of the pool after the swap
     /// @return initializedTicksCrossed The number of initialized ticks that the swap crossed
     /// @return gasEstimate The estimate of the gas that the swap consumes
-    /// @return fee The fee value used for swap in the pool
+    /// @return fee The pool fee (`lastFee`), the applied one may differ with dynamic fee
     function quoteExactInputSingle(
         QuoteExactInputSingleParams memory params
     )
@@ -74,7 +74,7 @@ interface IQuoterV2 {
     /// @return sqrtPriceX96AfterList List of the sqrt price after the swap for each pool in the path
     /// @return initializedTicksCrossedList List of the initialized ticks that the swap crossed for each pool in the path
     /// @return gasEstimate The estimate of the gas that the swap consumes
-    /// @return feeList List of the fee values used for swaps in the path
+    /// @return feeList The pool fees (`lastFee`), the applied ones may differ with dynamic fee
     function quoteExactOutput(
         bytes memory path,
         uint256 amountOutRequired
@@ -108,7 +108,7 @@ interface IQuoterV2 {
     /// @return sqrtPriceX96After The sqrt price of the pool after the swap
     /// @return initializedTicksCrossed The number of initialized ticks that the swap crossed
     /// @return gasEstimate The estimate of the gas that the swap consumes
-    /// @return fee The fee value used for swap in the pool
+    /// @return fee The pool fee (`lastFee`), the applied one may differ with dynamic fee
     function quoteExactOutputSingle(
         QuoteExactOutputSingleParams memory params
     )

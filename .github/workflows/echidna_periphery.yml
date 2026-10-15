@@ -52,5 +52,4 @@ jobs:
           echidna-version: v2.3.3
           files: ./src/periphery/
           contract: ${{ matrix.testName }}
-          solc-args: --evm-version paris
           config: ./src/periphery/contracts/test/echidna/echidna.config.yml

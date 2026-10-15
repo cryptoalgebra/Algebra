@@ -34,7 +34,11 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
   constructor() {
     deltaPlugin = new MockDeltaPlugin();
     _setPlugin(address(deltaPlugin));
-    _setPluginConfig(uint16(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.AFTER_SWAP_CALCULATION_FLAG | Plugins.DYNAMIC_FEE | Plugins.AMOUNT_DELTAS_FLAG));
+    _setPluginConfig(
+      uint16(
+        Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.AFTER_SWAP_CALCULATION_FLAG | Plugins.DYNAMIC_FEE | Plugins.AMOUNT_DELTAS_FLAG
+      )
+    );
 
     globalState.price = uint160(Constants.Q96);
     globalState.tick = 0;

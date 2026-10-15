@@ -113,7 +113,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           cache.amountCalculated = cache.amountCalculated.add(step.input.toInt256()); // increase calculated input amount
         }
 
-        uint256 stepFeeAmount = step.feeAmount; // save before community/plugin fee deduction
+        uint256 stepFeeAmount = step.feeAmount; // save before community fee deduction
 
         if (cache.communityFee > 0) {
           uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
@@ -147,8 +147,16 @@ abstract contract SwapCalculation is AlgebraPoolBase {
             (currentTick, cache.prevInitializedTick) = (step.nextTick, step.nextTick);
           }
           // the step input without the fee, as the fee may be in the output token
-          if (_afterCross(zeroToOne, cache.feeOnInput ? step.input - stepFeeAmount : step.input, stepFeeAmount, step.nextTick, liquidityDelta, currentLiquidity))
-            fees.feeAmount = 0; // the plugin has got the fee up to this tick
+          if (
+            _afterCross(
+              zeroToOne,
+              cache.feeOnInput ? step.input - stepFeeAmount : step.input,
+              stepFeeAmount,
+              step.nextTick,
+              liquidityDelta,
+              currentLiquidity
+            )
+          ) fees.feeAmount = 0; // the plugin has got the fee up to this tick
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         } else if (currentPrice != step.stepSqrtPrice) {
           currentTick = TickMath.getTickAtSqrtRatio(currentPrice); // the price has changed but hasn't reached the target

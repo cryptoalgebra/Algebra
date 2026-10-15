@@ -54,8 +54,7 @@ jobs:
           echidna-version: v2.3.3
           files: ./src/core/contracts/test/echidna/PoolMockEchidna/${{ matrix.testName }}.sol
           contract: ${{ matrix.testName }}
-          crytic-args: --hardhat-ignore-compile
-          solc-args: --evm-version paris
+          solc-args: --evm-version cancun
           config: ./src/core/contracts/test/echidna/PoolMockEchidna/echidna-property.config.yml
 
   IntegrationAsserts:
@@ -95,8 +94,7 @@ jobs:
           echidna-version: v2.3.3
           files: ./src/core/contracts/test/echidna/PoolMockEchidna/${{ matrix.testName }}.sol
           contract: ${{ matrix.testName }}
-          crytic-args: --hardhat-ignore-compile
-          solc-args: --evm-version paris
+          solc-args: --evm-version cancun
           config: ./src/core/contracts/test/echidna/PoolMockEchidna/echidna-assert.config.yml
 
   UnitAsserts:
@@ -144,6 +142,5 @@ jobs:
           echidna-version: v2.3.3
           files: ./src/core/contracts/test/echidna/${{ matrix.testName }}.sol
           contract: ${{ matrix.testName }}
-          crytic-args: --hardhat-ignore-compile
-          solc-args: --evm-version paris
+          solc-args: --evm-version cancun
           config: ./src/core/contracts/test/echidna/echidna.config.yml

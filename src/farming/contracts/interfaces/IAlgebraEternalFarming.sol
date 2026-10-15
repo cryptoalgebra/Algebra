@@ -210,14 +210,7 @@ interface IAlgebraEternalFarming {
   )
     external
     view
-    returns (
-      uint128 liquidity,
-      int24 tickLower,
-      int24 tickUpper,
-      uint64 enteredTimestamp,
-      uint256 innerRewardGrowth0,
-      uint256 innerRewardGrowth1
-    );
+    returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint64 enteredTimestamp, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1);
 
   /// @notice Returns connected to pool incentive key
   function incentiveKeys(

@@ -129,8 +129,7 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     bytes calldata data
   ) external override returns (bytes4) {
     emit BeforeModifyPosition(sender, recipient, bottomTick, topTick, desiredLiquidityDelta, data);
-    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG))
-      return IAlgebraPlugin.beforeModifyPosition.selector;
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG)) return IAlgebraPlugin.beforeModifyPosition.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
 
@@ -165,8 +164,7 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     bytes calldata data
   ) external override returns (uint256, bytes4, uint24) {
     emit BeforeSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, withPaymentInAdvance, data);
-    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG))
-      return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, dynamicFee);
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG)) return (amountInDecrease, IAlgebraPlugin.beforeSwap.selector, dynamicFee);
     return (0, IAlgebraPlugin.defaultPluginConfig.selector, dynamicFee);
   }
 

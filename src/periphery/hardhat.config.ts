@@ -121,7 +121,8 @@ export default {
       return /^test[\\/]/.test(path) ? undefined : path.replace('.sol', '.md');
     },
     templates: '../../docs/doc_templates/public',
-    collapseNewlines: true,
+    // off: CRLF templates are not collapsed, so the output would depend on the line endings
+    collapseNewlines: false,
   },
   outputValidator: {
     runOnCompile: false,

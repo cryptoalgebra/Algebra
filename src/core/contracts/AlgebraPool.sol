@@ -19,7 +19,6 @@ import './libraries/Plugins.sol';
 import './interfaces/plugin/IAlgebraPlugin.sol';
 import './interfaces/IAlgebraFactory.sol';
 
-
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
 /// @dev Version: Algebra Integral 1.3
@@ -30,7 +29,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   using Plugins for bytes4;
 
   /// @inheritdoc IAlgebraPoolActions
-  function initialize(uint160) external override { _delegateToExtension(); }
+  function initialize(uint160) external override {
+    _delegateToExtension();
+  }
 
   /// @inheritdoc IAlgebraPoolActions
   function mint(
@@ -141,13 +142,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     return msg.sender == plugin;
   }
 
-  function _beforeModifyPos(
-    address owner,
-    int24 bottomTick,
-    int24 topTick,
-    int128 liquidityDelta,
-    bytes calldata data
-  ) internal {
+  function _beforeModifyPos(address owner, int24 bottomTick, int24 topTick, int128 liquidityDelta, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
       if (_isPlugin()) return;
       bytes4 selector = IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data);
@@ -226,9 +221,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   ) external override returns (int256 amount0, int256 amount1) {
     SwapCache memory _cache = SwapCache(recipient, zeroToOne, amountRequired, limitSqrtPrice, data, 0, 0);
 
-    // amountInDecrease is either in token0 or token1 depending on zeroToOne
-    // can only be non-zero if exactIn!
-    // can only decrease the input token affecting the amount passed to the swap calculation
+    // amountInDecrease is the plugin part of the input (exactIn only), it is not swapped
     (_cache.amountInDecrease, _cache.fee) = _beforeSwap(
       _cache.recipient,
       _cache.zeroToOne,
@@ -249,9 +242,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         _cache.limitSqrtPrice
       );
 
-      // amountInIncrease, amountOutDecrease is either in token0 or token1 respectively depending on zeroToOne
-      // can only increase the input (for the exactOut case)
-      // can only decrease the output (for the exactIn case)
+      // the plugin parts: amountInIncrease is added to the input (exactOut only), amountOutDecrease is taken from the output (exactIn only)
       (uint256 amountInIncrease, uint256 amountOutDecrease) = _afterSwapCalculation(
         _cache.recipient,
         _cache.zeroToOne,
@@ -265,12 +256,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
 
       if (_cache.zeroToOne) {
-        // These amounts are representing pool <-> user payments
-        // Increase because amount1 is negative. It makes the pool send less to the user
+        // the amounts become the user payments: the plugin deltas lower the output (negative) and raise the input
         amount1 += int256(amountOutDecrease);
-        // Increase amount0. It makes the user send more to the pool (this excess part will go to a plugin)
-        // amountInIncrease (exactOut) or amountInDecrease (exactIn), only one of them can be non-zero
-        uint256 pluginAmountIn = amountInIncrease + _cache.amountInDecrease;
+        uint256 pluginAmountIn = amountInIncrease + _cache.amountInDecrease; // at most one of them is non-zero
         amount0 += int256(pluginAmountIn);
         unchecked {
           if (amount1 < 0) _transfer(token1, _cache.recipient, uint256(-amount1)); // amount1 cannot be > 0
@@ -279,16 +267,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
 
         _transferToPlugin(token0, token1, pluginAmountIn, amountOutDecrease);
-        // reflect reserve change and accumulate communityFee
+        // the reserves change by the swapped amounts, without the plugin deltas
         if (fees.inToken0) _changeReserves(amount0 - int256(pluginAmountIn), amount1 - int256(amountOutDecrease), fees.communityFeeAmount, 0);
         else _changeReserves(amount0 - int256(pluginAmountIn), amount1 - int256(amountOutDecrease), 0, fees.communityFeeAmount);
       } else {
-        // These amounts are representing pool <-> user payments
-        // Increase because amount0 is negative. It makes the pool send less to the user
+        // the amounts become the user payments: the plugin deltas lower the output (negative) and raise the input
         amount0 += int256(amountOutDecrease);
-        // Increase amount1. It makes the user send more to the pool (this excess part will go to a plugin)
-        // amountInIncrease (exactOut) or amountInDecrease (exactIn), only one of them can be non-zero
-        uint256 pluginAmountIn = amountInIncrease + _cache.amountInDecrease;
+        uint256 pluginAmountIn = amountInIncrease + _cache.amountInDecrease; // at most one of them is non-zero
         amount1 += int256(pluginAmountIn);
 
         unchecked {
@@ -298,12 +283,16 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
 
         _transferToPlugin(token1, token0, pluginAmountIn, amountOutDecrease);
-        // reflect reserve change and accumulate communityFee
+        // the reserves change by the swapped amounts, without the plugin deltas
         if (fees.inToken0) _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(pluginAmountIn), fees.communityFeeAmount, 0);
         else _changeReserves(amount0 - int256(amountOutDecrease), amount1 - int256(pluginAmountIn), 0, fees.communityFeeAmount);
       }
 
-      (eventParams.fee, eventParams.pluginAmountIn, eventParams.pluginAmountOut) = (_cache.fee, amountInIncrease + _cache.amountInDecrease, amountOutDecrease);
+      (eventParams.fee, eventParams.pluginAmountIn, eventParams.pluginAmountOut) = (
+        _cache.fee,
+        amountInIncrease + _cache.amountInDecrease,
+        amountOutDecrease
+      );
       _emitSwapEvent(_cache.recipient, amount0, amount1, eventParams);
     }
 
@@ -368,28 +357,24 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       // the pool keeps only the swapped amounts, the plugin deltas are not swapped
       // the fees are in the fee token, not necessarily the input one
       if (zeroToOne) {
-        // reflect reserve change and accumulate communityFee
         if (fees.inToken0) _changeReserves(amount0 - amountToSell, amount1, fees.communityFeeAmount, 0);
         else _changeReserves(amount0 - amountToSell, amount1, 0, fees.communityFeeAmount);
 
-        // These amounts are representing pool <-> user payments, as in `swap`
+        // the amounts become the user payments, as in `swap`
         (amount0, amount1) = (amount0 + int256(amountInDecrease), amount1 + int256(amountOutDecrease));
 
-        // transfer to the recipient and return the leftovers
         if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount0);
         if (leftover != 0) _transfer(token0, leftoversRecipient, leftover);
 
         _transferToPlugin(token0, token1, amountInDecrease, amountOutDecrease);
       } else {
-        // reflect reserve change and accumulate communityFee
         if (fees.inToken0) _changeReserves(amount0, amount1 - amountToSell, fees.communityFeeAmount, 0);
         else _changeReserves(amount0, amount1 - amountToSell, 0, fees.communityFeeAmount);
 
-        // These amounts are representing pool <-> user payments, as in `swap`
+        // the amounts become the user payments, as in `swap`
         (amount0, amount1) = (amount0 + int256(amountOutDecrease), amount1 + int256(amountInDecrease));
 
-        // transfer to the recipient and return the leftovers
         if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount1);
         if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
@@ -491,7 +476,16 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
   }
 
-  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, uint256 feeAmount, bytes calldata data) internal {
+  function _afterSwap(
+    address recipient,
+    bool zto,
+    int256 amount,
+    uint160 limitPrice,
+    int256 amount0,
+    int256 amount1,
+    uint256 feeAmount,
+    bytes calldata data
+  ) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       if (_isPlugin()) return;
       IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, feeAmount, data).shouldReturn(
@@ -556,25 +550,39 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   // Setters are called rarely, so the additional gas overhead of delegatecall is acceptable
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint16) external override { _delegateToExtension(); }
+  function setCommunityFee(uint16) external override {
+    _delegateToExtension();
+  }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setFeeMode(uint8) external override { _delegateToExtension(); }
+  function setFeeMode(uint8) external override {
+    _delegateToExtension();
+  }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setTickSpacing(int24) external override { _delegateToExtension(); }
+  function setTickSpacing(int24) external override {
+    _delegateToExtension();
+  }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPlugin(address) external override { _delegateToExtension(); }
+  function setPlugin(address) external override {
+    _delegateToExtension();
+  }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPluginConfig(uint16) external override { _delegateToExtension(); }
+  function setPluginConfig(uint16) external override {
+    _delegateToExtension();
+  }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityVault(address) external override { _delegateToExtension(); }
+  function setCommunityVault(address) external override {
+    _delegateToExtension();
+  }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setFee(uint16) external override { _delegateToExtension(); }
+  function setFee(uint16) external override {
+    _delegateToExtension();
+  }
 
   /// @dev using function to save bytecode
   function _checkIfPlugin() private view {

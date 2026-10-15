@@ -202,5 +202,4 @@ interface IAlgebraFactory {
 
   /// @notice Stops process of renounceOwnership and removes timer.
   function stopRenounceOwnership() external;
-
 }
