@@ -71,7 +71,7 @@ Returns the amount out received for a given exact input but for a swap of a sing
 | sqrtPriceX96After | uint160 | The sqrt price of the pool after the swap |
 | initializedTicksCrossed | uint32 | The number of initialized ticks that the swap crossed |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
-| fee | uint16 | The fee value used for swap in the pool |
+| fee | uint16 | The pool fee (`lastFee`), the applied one may differ with dynamic fee |
 
 ### quoteExactInput
 
@@ -96,7 +96,7 @@ Returns the amount out received for a given exact input swap without executing t
 | sqrtPriceX96AfterList | uint160[] | List of the sqrt price after the swap for each pool in the path |
 | initializedTicksCrossedList | uint32[] | List of the initialized ticks that the swap crossed for each pool in the path |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
-| feeList | uint16[] | List of the fee values used for swaps in the path |
+| feeList | uint16[] | The pool fees (`lastFee`), the applied ones may differ with dynamic fee |
 
 ### quoteExactOutputSingle
 
@@ -120,7 +120,7 @@ Returns the amount in required to receive the given exact output amount but for 
 | sqrtPriceX96After | uint160 | The sqrt price of the pool after the swap |
 | initializedTicksCrossed | uint32 | The number of initialized ticks that the swap crossed |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
-| fee | uint16 | The fee value used for swap in the pool |
+| fee | uint16 | The pool fee (`lastFee`), the applied one may differ with dynamic fee |
 
 ### quoteExactOutput
 
@@ -145,5 +145,5 @@ Returns the amount in required for a given exact output swap without executing t
 | sqrtPriceX96AfterList | uint160[] | List of the sqrt price after the swap for each pool in the path |
 | initializedTicksCrossedList | uint32[] | List of the initialized ticks that the swap crossed for each pool in the path |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
-| feeList | uint16[] | List of the fee values used for swaps in the path |
+| feeList | uint16[] | The pool fees (`lastFee`), the applied ones may differ with dynamic fee |
 

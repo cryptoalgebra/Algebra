@@ -24,7 +24,7 @@ Returns plugin config
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint16 | config Each bit of the config is responsible for enabling/disabling the hooks. The last bit indicates whether the plugin contains dynamic fees logic |
+| [0] | uint16 | config Bitmap of enabled hooks and features, see `Plugins` |
 
 ### beforeInitialize
 
