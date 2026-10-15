@@ -5,8 +5,7 @@ pragma solidity >=0.5.0;
 /// @dev The plugin will be called by the pool using hook methods depending on the current pool settings
 interface IAlgebraPlugin {
   /// @notice Returns plugin config
-  /// @return config Each bit of the config is responsible for enabling/disabling the hooks.
-  /// The last bit indicates whether the plugin contains dynamic fees logic
+  /// @return config Bitmap of enabled hooks and features, see `Plugins`
   function defaultPluginConfig() external view returns (uint16);
 
   /// @notice The hook called before the state of a pool is initialized

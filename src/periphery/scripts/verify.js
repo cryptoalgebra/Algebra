@@ -50,10 +50,19 @@ async function main() {
         address: deploysData.proxy,
         constructorArguments: [
             deploysData.nftDescriptor,
-            deploysData.admin,
+            deploysData.adminOwner,
             "0x"
         ],
         });   
+
+    // deployed by the proxy in its constructor
+    await hre.run("verify:verify", {
+        contract: "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol:ProxyAdmin",
+        address: deploysData.admin,
+        constructorArguments: [
+            deploysData.adminOwner
+        ],
+        });
     
     await hre.run("verify:verify", {
         address: deploysData.nftDescriptor,

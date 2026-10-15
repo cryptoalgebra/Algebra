@@ -1,7 +1,6 @@
 const path = require('path');
 const config = require('dotenv').config({ path: path.resolve(__dirname, '.env'), quiet: true });
-const { ETHERSCAN_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
-  config.parsed || {};
+const { ETHERSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } = config.parsed || {};
 
 export default {
   networks: {
@@ -105,9 +104,9 @@ export default {
     },
   },
   etherscan: {
-    // Your API key for Etherscan
+    // Your API key for Etherscan (v2 API, one for all chains)
     // Obtain one at https://etherscan.io/
-    apiKey: `${POLYGONSCAN_API_KEY}`,
+    apiKey: `${ETHERSCAN_API_KEY}`,
     customChains: [
       {
         network: 'seiTestnet',
