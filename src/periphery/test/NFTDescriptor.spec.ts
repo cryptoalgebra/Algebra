@@ -36,7 +36,6 @@ describe('NFTDescriptor', () => {
       },
     });
     const nftDescriptor = (await NFTDescriptorFactory.deploy()) as any as NFTDescriptorTest;
-    tokenFactory.deploy(MaxUint256 / 2n, 'Test ERC20', 'TEST1');
     const tokens: [
       TestERC20MetadataWithAddress,
       TestERC20MetadataWithAddress,
