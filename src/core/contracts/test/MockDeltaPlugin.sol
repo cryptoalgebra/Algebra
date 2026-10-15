@@ -92,7 +92,8 @@ contract MockDeltaPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     bytes calldata
   ) external override returns (bytes4, uint256 amountInIncrease, uint256 amountOutDecrease) {
     afterSwapCalculationCalls++;
-    if (reenter) IAlgebraPoolActions(msg.sender).swap(address(this), zeroToOne, 1, zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1, '');
+    if (reenter)
+      IAlgebraPoolActions(msg.sender).swap(address(this), zeroToOne, 1, zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1, '');
     (seenCalc0, seenCalc1, seenCalcAmountRequired) = (amount0, amount1, amountRequired);
     (int256 amountIn, int256 amountOut) = zeroToOne ? (amount0, amount1) : (amount1, amount0);
     amountInIncrease = _apply(inIncrease, amountIn > 0 ? uint256(amountIn) : 0);

@@ -31,3 +31,18 @@ jobs:
           check_filenames: true
           skip: package-lock.json,node_modules,Base64.spec.ts.snap
           only_warn: 1
+
+  Prettier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm run ci-install
+      - run: npm run lint

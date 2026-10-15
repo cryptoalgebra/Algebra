@@ -117,16 +117,14 @@ library PositionValue {
                     poolFeeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
                     position.liquidity,
                     Constants.Q128
-                ) +
-                position.tokensOwed0;
+                ) + position.tokensOwed0;
 
             amount1 =
                 FullMath.mulDiv(
                     poolFeeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
                     position.liquidity,
                     Constants.Q128
-                ) +
-                position.tokensOwed1;
+                ) + position.tokensOwed1;
         }
     }
 

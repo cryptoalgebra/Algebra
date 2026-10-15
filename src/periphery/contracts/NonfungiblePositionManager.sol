@@ -516,7 +516,8 @@ contract NonfungiblePositionManager is
         // the same checks as in `ERC721._approve`, only the storage of the operator differs
         if (emitEvent || auth != address(0)) {
             address owner = _requireOwned(tokenId);
-            if (auth != address(0) && owner != auth && !isApprovedForAll(owner, auth)) revert ERC721InvalidApprover(auth);
+            if (auth != address(0) && owner != auth && !isApprovedForAll(owner, auth))
+                revert ERC721InvalidApprover(auth);
             if (emitEvent) emit Approval(owner, to, tokenId);
         }
         _positions[tokenId].operator = to;

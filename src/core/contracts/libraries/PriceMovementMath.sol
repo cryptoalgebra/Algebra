@@ -164,7 +164,8 @@ library PriceMovementMath {
             resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
 
             // should be always true if the price is in the allowed range
-            if (targetPrice != resultPrice) output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
+            if (targetPrice != resultPrice)
+              output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
 
             // cap the output amount to not exceed the remaining output amount
             if (output > uint256(amountAvailable)) output = uint256(amountAvailable);
@@ -174,7 +175,8 @@ library PriceMovementMath {
           feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
         } else {
           // amountAvailable is net, so the pool releases it grossed up by the fee
-          uint256 grossRequired = uint256(amountAvailable) + FullMath.mulDivRoundingUp(uint256(amountAvailable), fee, Constants.FEE_DENOMINATOR - fee);
+          uint256 grossRequired = uint256(amountAvailable) +
+            FullMath.mulDivRoundingUp(uint256(amountAvailable), fee, Constants.FEE_DENOMINATOR - fee);
           // the sum overflows at fee >= 50%, saturate instead of wrapping
           if (grossRequired < uint256(amountAvailable)) grossRequired = type(uint256).max;
           output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(targetPrice, currentPrice, liquidity);
@@ -185,7 +187,8 @@ library PriceMovementMath {
             output -= feeAmount;
           } else {
             resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, grossRequired, zeroToOne);
-            if (targetPrice != resultPrice) output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
+            if (targetPrice != resultPrice)
+              output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
             // cap the released amount to the grossed up requirement
             if (output > grossRequired) output = grossRequired;
             // the fee is the remainder, a second rounded share would leave the recipient short
@@ -199,5 +202,4 @@ library PriceMovementMath {
       }
     }
   }
-
 }

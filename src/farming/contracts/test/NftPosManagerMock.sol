@@ -4,7 +4,6 @@ pragma solidity =0.8.26;
 import '../interfaces/IAlgebraEternalVirtualPool.sol';
 import '@cryptoalgebra/integral-periphery/contracts/interfaces/IPositionFollower.sol';
 
-
 /// @dev Test contract for virtual pool onlyPool methods
 contract NftPosManagerMock {
   struct Position {

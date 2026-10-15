@@ -40,7 +40,15 @@ contract MockPlugin is IAlgebraPlugin {
         return IAlgebraPlugin.afterModifyPosition.selector;
     }
 
-    function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external pure returns (uint256, bytes4, uint24) {
+    function beforeSwap(
+        address,
+        address,
+        bool,
+        int256,
+        uint160,
+        bool,
+        bytes calldata
+    ) external pure returns (uint256, bytes4, uint24) {
         return (0, IAlgebraPlugin.beforeSwap.selector, 0);
     }
 
@@ -87,14 +95,7 @@ contract MockPlugin is IAlgebraPlugin {
         return (IAlgebraPlugin.afterSwapCalculation.selector, 0, 0);
     }
 
-    function afterCross(
-        bool,
-        uint256,
-        uint256,
-        int24,
-        int128,
-        uint128
-    ) external pure returns (bytes4) {
+    function afterCross(bool, uint256, uint256, int24, int128, uint128) external pure returns (bytes4) {
         return IAlgebraPlugin.afterCross.selector;
     }
 }

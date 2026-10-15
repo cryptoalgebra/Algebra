@@ -84,7 +84,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   /// @inheritdoc IAlgebraEternalFarming
   uint256 public numOfIncentives;
-  
+
   /// @inheritdoc IAlgebraEternalFarming
   uint64 public override defaultFarmingBuffer;
 

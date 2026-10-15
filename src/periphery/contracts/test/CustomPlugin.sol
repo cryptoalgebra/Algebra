@@ -128,14 +128,7 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
     }
 
     /// @dev unused
-    function afterCross(
-        bool,
-        uint256,
-        uint256,
-        int24,
-        int128,
-        uint128
-    ) external override returns (bytes4) {
+    function afterCross(bool, uint256, uint256, int24, int128, uint128) external override returns (bytes4) {
         _updatePluginConfigInPool(); // should not be called, reset config
         return IAlgebraPlugin.afterCross.selector;
     }

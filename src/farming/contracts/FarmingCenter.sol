@@ -92,11 +92,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
         _exitFarming(key, tokenId, tokenOwner); // nft burned or incentive deactivated, exit completely
       } else {
         // capture the position's pre-change liquidity/vesting timestamp
-        (, , , uint128 prevLiquidity, uint64 prevEnteredTimestamp) = IAlgebraEternalFarming(eternalFarming).exitFarming(
-          key,
-          tokenId,
-          tokenOwner
-        );
+        (, , , uint128 prevLiquidity, uint64 prevEnteredTimestamp) = IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
 
         if (
           IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key)) ||
