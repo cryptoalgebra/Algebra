@@ -3610,13 +3610,11 @@ describe('AlgebraPool', () => {
         expect(await pool.totalFeeGrowth0Token()).to.eq(0);
       });
 
-      it('dynamic fee cannot be enabled without beforeSwap hook', async () => {
+      it('dynamic fee cannot be enabled without beforeSwap hook, by the administrator or the plugin', async () => {
         await expect(pool.setPluginConfig(128)).to.be.revertedWithCustomError(pool, 'invalidNewPluginConfig');
         await expect(pool.setPluginConfig(255 & ~1)).to.be.revertedWithCustomError(pool, 'invalidNewPluginConfig');
-        await expect(pool.setPluginConfig(129)).to.not.be.reverted;
-      });
+        await expect(pool.setPluginConfig(129)).to.emit(pool, 'PluginConfig').withArgs(129);
 
-      it('the plugin cannot enable dynamic fee without beforeSwap hook either', async () => {
         // the plugin skips the administrator check, not this one
         await pool.setPlugin(other.address);
         await expect(pool.connect(other).setPluginConfig(128)).to.be.revertedWithCustomError(pool, 'invalidNewPluginConfig');

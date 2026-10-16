@@ -99,12 +99,9 @@ describe('AlgebraPool fee mode', () => {
       expect(await pool.feeMode()).to.eq(FEE_MODE_DEFAULT);
     });
 
-    it('rejects an unknown mode', async () => {
+    it('rejects an unknown mode and the current one', async () => {
       await expect(pool.setFeeMode(3)).to.be.revertedWithCustomError(pool, 'invalidNewFeeMode');
       await expect(pool.setFeeMode(255)).to.be.revertedWithCustomError(pool, 'invalidNewFeeMode');
-    });
-
-    it('rejects setting the same mode twice', async () => {
       await expect(pool.setFeeMode(FEE_MODE_DEFAULT)).to.be.revertedWithCustomError(pool, 'invalidNewFeeMode');
       await pool.setFeeMode(FEE_MODE_TOKEN0);
       await expect(pool.setFeeMode(FEE_MODE_TOKEN0)).to.be.revertedWithCustomError(pool, 'invalidNewFeeMode');

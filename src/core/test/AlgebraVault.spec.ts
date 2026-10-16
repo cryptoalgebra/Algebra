@@ -302,13 +302,10 @@ describe('AlgebraCommunityVault', () => {
       await expect(vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE)).to.not.be.reverted;
     });
 
-    it('can not accept invalid fee change proposal', async () => {
+    it('can not accept a fee that was not proposed', async () => {
+      await expect(vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE)).to.be.revertedWith('not proposed');
       await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
       await expect(vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE - 1n)).to.be.revertedWith('invalid new fee');
-    });
-
-    it('can not accept fee if nothing proposed', async () => {
-      await expect(vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE)).to.be.revertedWith('not proposed');
     });
 
     it('can change communityFeeReceiver', async () => {
