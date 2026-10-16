@@ -1,7 +1,7 @@
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { ethers } from 'hardhat';
 import { AbiCoder, ContractTransactionReceipt, Wallet, MaxUint256, ZeroAddress, keccak256 } from 'ethers';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, takeSnapshot } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from './shared/expect';
 
 import { poolFixture } from './shared/fixtures';
@@ -159,6 +159,26 @@ describe('AlgebraPool', () => {
         .withArgs(0);
       expect(await pool.tickSpacing()).to.eq(tickSpacing);
       expect((await pool.globalState()).communityFee).to.eq(0);
+    });
+    it('replaces the fee, tick spacing and community fee set before it with the factory defaults, keeps the rest', async () => {
+      // the setters do not require an initialized pool
+      const plugin = await (await ethers.getContractFactory('MockPoolPlugin')).deploy(pool);
+      await pool.setPlugin(plugin);
+      await pool.setPluginConfig(1);
+      await pool.setFee(1000);
+      await pool.setTickSpacing(10);
+      await pool.setCommunityFee(100);
+      // the defaults are read at initialize, not at pool creation
+      await factory.setDefaultFee(700);
+
+      await pool.initialize(encodePriceSqrt(1, 1));
+      const { lastFee, communityFee, pluginConfig } = await pool.globalState();
+      expect([lastFee, communityFee, await pool.tickSpacing()]).to.deep.eq([700n, 0n, BigInt(tickSpacing)]);
+      expect([await pool.plugin(), pluginConfig, await pool.communityVault()]).to.deep.eq([
+        await plugin.getAddress(),
+        1n,
+        vaultAddress,
+      ]);
     });
   });
 
@@ -2839,6 +2859,18 @@ describe('AlgebraPool', () => {
           .withArgs(wallet.address, encodePriceSqrt(1, 1));
       });
 
+      it('a config set by the plugin in beforeInitialize already applies to afterInitialize', async () => {
+        // real plugins set their config from beforeInitialize, while the pool still has none
+        const AFTER_INIT = 1 << 6;
+        const plugin = await (await ethers.getContractFactory('MockConfigOnInitializePlugin')).deploy(pool, AFTER_INIT);
+        await pool.setPlugin(plugin);
+        await expect(pool.initialize(encodePriceSqrt(1, 1)))
+          .to.emit(pool, 'PluginConfig')
+          .withArgs(AFTER_INIT)
+          .to.emit(plugin, 'AfterInitialize')
+          .withArgs(wallet.address, encodePriceSqrt(1, 1), 0);
+      });
+
       it('after initialize the hook is called', async () => {
         await expect(pool.initialize(encodePriceSqrt(1, 1)))
           .to.be.emit(poolPlugin, 'AfterInitialize')
@@ -3060,6 +3092,42 @@ describe('AlgebraPool', () => {
           .withArgs(selector);
       });
 
+      it('each flag alone calls only its own hook, beforeInitialize is called without a flag', async () => {
+        // the bits of the config are a part of the plugin interface
+        const rows: [string, number, string[]][] = [
+          ['no flags', 0, []],
+          ['BEFORE_SWAP', 1, ['BeforeSwap']],
+          ['AFTER_SWAP', 1 << 1, ['AfterSwap', 'AfterSwapFee']],
+          ['BEFORE_POSITION_MODIFY', 1 << 2, ['BeforeModifyPosition']],
+          ['AFTER_POSITION_MODIFY', 1 << 3, ['AfterModifyPosition']],
+          ['BEFORE_FLASH', 1 << 4, ['BeforeFlash']],
+          ['AFTER_FLASH', 1 << 5, ['AfterFlash']],
+          ['AFTER_INIT', 1 << 6, ['AfterInitialize']],
+          ['AFTER_CROSS', 1 << 8, ['AfterCross']],
+          ['AFTER_SWAP_CALCULATION', 1 << 9, ['AfterSwapCalculation']],
+        ];
+        const pluginAddress = await poolPlugin.getAddress();
+        const snapshot = await takeSnapshot();
+        for (const [label, config, hooks] of rows) {
+          await snapshot.restore();
+          await pool.setPluginConfig(config);
+          const txs = [
+            await pool.initialize(encodePriceSqrt(1, 1)),
+            await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1)),
+            // initialized ticks below the price for the swap to cross
+            await mint(wallet.address, -120, -60, expandTo18Decimals(1)),
+            await swapToLowerPrice(encodePriceSqrt(98, 100), wallet.address),
+            await pool.burn(minTick, maxTick, 1, '0x'),
+            await flash(100, 200, other.address),
+          ];
+          const emitted = new Set<string>();
+          for (const tx of txs)
+            for (const log of (await tx.wait())!.logs)
+              if (log.address == pluginAddress) emitted.add(poolPlugin.interface.parseLog(log)!.name);
+          expect([...emitted].sort(), label).to.deep.eq(['BeforeInitialize', ...hooks].sort());
+        }
+      });
+
       it('hooks are disabled after a config change', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
@@ -3270,6 +3338,40 @@ describe('AlgebraPool', () => {
           .withArgs(fees[2]);
       });
 
+      it('a swap stopped by the limit right on an initialized tick crosses it, so afterSwap gets no fee', async () => {
+        await pool.setPluginConfig(511 & ~128); // without the dynamic fee, so the pool fee is applied
+        await pool.initialize(encodePriceSqrt(1, 1));
+        const liquidity = expandTo18Decimals(3);
+        await mint(wallet.address, -60, 60, liquidity);
+        await mint(wallet.address, -120, -60, expandTo18Decimals(2));
+
+        const tickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as any as TickMathTest;
+        const priceMath = (await (
+          await ethers.getContractFactory('PriceMovementMathTest')
+        ).deploy()) as any as PriceMovementMathTest;
+        const limit = await tickMath.getSqrtRatioAtTick(-60);
+        const [, , , fee] = await priceMath.movePriceTowardsTarget(
+          encodePriceSqrt(1, 1),
+          limit,
+          liquidity,
+          expandTo18Decimals(1000),
+          500,
+        );
+
+        await expect(swapExact0For1(expandTo18Decimals(1000), wallet.address, limit))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(true, anyValue, fee, -60, anyValue, anyValue)
+          .to.emit(poolPlugin, 'AfterSwapFee')
+          .withArgs(0);
+        const { price, tick } = await pool.globalState();
+        expect([price, tick]).to.deep.eq([limit, -61n]);
+
+        // the swap back starts on the boundary and crosses the same tick first
+        await expect(swapExact1For0(1000, wallet.address))
+          .to.emit(poolPlugin, 'AfterCross')
+          .withArgs(false, anyValue, anyValue, -60, anyValue, anyValue);
+      });
+
       it('afterSwap gets the fee in the output token when the fee is taken from the output', async () => {
         await pool.setPluginConfig(511 & ~128 & ~256); // without the dynamic fee and afterCross
         await pool.initialize(encodePriceSqrt(1, 1));
@@ -3409,6 +3511,14 @@ describe('AlgebraPool', () => {
         await pool.setPlugin(other.address);
         await expect(pool.connect(other).setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1);
         expect((await pool.globalState()).pluginConfig).to.eq(1);
+      });
+      it('after the plugin is replaced, only the new one can change the config', async () => {
+        const newPlugin = (await ethers.getSigners())[2];
+        await pool.setPlugin(other.address);
+        await pool.connect(other).setPluginConfig(1);
+        await pool.setPlugin(newPlugin.address);
+        await expect(pool.connect(other).setPluginConfig(1)).to.be.revertedWithCustomError(pool, 'notAllowed');
+        await expect(pool.connect(newPlugin).setPluginConfig(1)).to.emit(pool, 'PluginConfig').withArgs(1);
       });
       it('reverts if admin sets non-zero pluginConfig in pool with zero plugin', async () => {
         await expect(pool.setPluginConfig(63)).to.be.revertedWithCustomError(pool, 'pluginIsNotConnected');
@@ -3600,6 +3710,27 @@ describe('AlgebraPool', () => {
         const reservesAfter = await pool.getReserves();
         expect(reserves[0]).to.be.eq(reservesAfter[0]);
         expect(reserves[1]).to.be.eq(reservesAfter[1]);
+      });
+
+      it('takes only the excess and leaves the pending community fee, a part of the reserves, to the vault', async () => {
+        await pool.setCommunityFee(500);
+        await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
+        const [pending0, pending1] = await pool.getCommunityFeePending();
+        expect(pending0).to.be.gt(0);
+        const reserves = await pool.getReserves();
+        const excess = 1000n;
+        await token0.transfer(pool, excess);
+
+        await pool.setPlugin(wallet);
+        await expect(pool.skim()).to.emit(pool, 'Skim').withArgs(wallet.address, excess, 0n);
+        expect(await pool.getCommunityFeePending()).to.deep.eq([pending0, pending1]);
+        expect(await pool.getReserves()).to.deep.eq(reserves);
+
+        const vault = await ethers.getContractAt('AlgebraCommunityVault', vaultAddress);
+        await expect(vault.claimCommunityFees([pool]))
+          .to.emit(pool, 'CommunityFeeTransfer')
+          .withArgs(vaultAddress, pending0, pending1);
+        expect(await pool.getReserves()).to.deep.eq([await token0.balanceOf(pool), await token1.balanceOf(pool)]);
       });
 
       it('can skim excess tokens', async () => {

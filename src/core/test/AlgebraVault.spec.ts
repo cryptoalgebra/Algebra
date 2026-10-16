@@ -404,6 +404,54 @@ describe('AlgebraCommunityVault', () => {
     });
   });
 
+  describe('#roles', async () => {
+    it('a holder of the withdrawer role can withdraw until the role is revoked', async () => {
+      await vault.changeCommunityFeeReceiver(third.address);
+      const role = await vault.COMMUNITY_FEE_WITHDRAWER_ROLE();
+      await factory.grantRole(role, other.address);
+
+      await expect(vault.connect(other).withdraw(token0, AMOUNT / 2n)).to.changeTokenBalance(
+        token0,
+        third,
+        AMOUNT / 2n,
+      );
+      await expect(vault.connect(other).withdrawTokens([{ token: token1, amount: AMOUNT / 2n }])).to.changeTokenBalance(
+        token1,
+        third,
+        AMOUNT / 2n,
+      );
+
+      await factory.revokeRole(role, other.address);
+      await expect(vault.connect(other).withdraw(token0, 1)).to.be.revertedWith('only withdrawer');
+      await expect(vault.connect(other).withdrawTokens([{ token: token1, amount: 1 }])).to.be.revertedWith(
+        'only withdrawer',
+      );
+    });
+
+    it('a holder of the vault administrator role can change the receiver and accept the fee until the role is revoked', async () => {
+      const ALGEBRA_FEE = 100n; // 10%
+      const role = await vault.COMMUNITY_FEE_VAULT_ADMINISTRATOR();
+      await factory.grantRole(role, other.address);
+
+      await expect(vault.connect(other).changeCommunityFeeReceiver(third.address))
+        .to.emit(vault, 'CommunityFeeReceiver')
+        .withArgs(third.address);
+      await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
+      await expect(vault.connect(other).acceptAlgebraFeeChangeProposal(ALGEBRA_FEE))
+        .to.emit(vault, 'AlgebraFee')
+        .withArgs(ALGEBRA_FEE);
+
+      await factory.revokeRole(role, other.address);
+      await expect(vault.connect(other).changeCommunityFeeReceiver(other.address)).to.be.revertedWith(
+        'only administrator',
+      );
+      await vault.proposeAlgebraFeeChange(ALGEBRA_FEE * 2n);
+      await expect(vault.connect(other).acceptAlgebraFeeChangeProposal(ALGEBRA_FEE * 2n)).to.be.revertedWith(
+        'only administrator',
+      );
+    });
+  });
+
   describe('#claimCommunityFees', async () => {
     async function createPool(tokenA: string, tokenB: string) {
       await factory.createPool(tokenA, tokenB, '0x');

@@ -172,6 +172,23 @@ describe('AlgebraPool fee mode', () => {
       expect(await pool.totalFeeGrowth0Token()).to.eq(0);
     });
 
+    it('a donation accrues in its own token, not in the fee token of the mode', async () => {
+      await initializeWithLiquidity(FEE_MODE_TOKEN1);
+      const donation = expandTo18Decimals(1) / 1000n;
+      await token0.transfer(pool, donation);
+      const liquidity = await pool.liquidity();
+
+      // the excess over the reserves goes to the fee growth of its own token at the next action
+      await expect(swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address))
+        .to.emit(pool, 'ExcessTokens')
+        .withArgs(donation, 0);
+      expect(await pool.totalFeeGrowth0Token()).to.eq((donation * 2n ** 128n) / liquidity);
+
+      await pool.burn(minTick, maxTick, 0, '0x');
+      const [amount0] = await pool.collect.staticCall(wallet.address, minTick, maxTick, MaxUint128, MaxUint128);
+      expect(amount0).to.be.within(donation - 1n, donation);
+    });
+
     it('a tick crossed up and back down under different modes flips both sides of its snapshot', async () => {
       const liquidity = expandTo18Decimals(2);
       await pool.initialize(encodePriceSqrt(1, 1));

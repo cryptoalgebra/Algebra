@@ -1074,6 +1074,40 @@ describe('NonfungiblePositionManager', () => {
     });
   });
 
+  describe('#approve', () => {
+    const tokenId = 1;
+    beforeEach('create a position', () => createPosition());
+
+    // `_approve` is overridden to keep the operator in the position, so it repeats the OZ checks by hand
+    it('the owner and an operator for all approve, the event names the owner, nobody else can', async () => {
+      const [operator, spender] = [wallets[2], wallets[3]];
+      await expect(nft.approve(spender.address, tokenId))
+        .to.be.revertedWithCustomError(nft, 'ERC721InvalidApprover')
+        .withArgs(wallet.address);
+
+      await expect(nft.connect(other).approve(wallet.address, tokenId))
+        .to.emit(nft, 'Approval')
+        .withArgs(other.address, wallet.address, tokenId);
+      expect(await nft.getApproved(tokenId)).to.eq(wallet.address);
+      // an approval for the token does not let its holder approve someone else
+      await expect(nft.approve(spender.address, tokenId))
+        .to.be.revertedWithCustomError(nft, 'ERC721InvalidApprover')
+        .withArgs(wallet.address);
+
+      await nft.connect(other).setApprovalForAll(operator.address, true);
+      await expect(nft.connect(operator).approve(spender.address, tokenId))
+        .to.emit(nft, 'Approval')
+        .withArgs(other.address, spender.address, tokenId);
+      expect(await nft.getApproved(tokenId)).to.eq(spender.address);
+    });
+
+    it('cannot approve a nonexistent token', async () => {
+      await expect(nft.connect(other).approve(wallet.address, tokenId + 1))
+        .to.be.revertedWithCustomError(nft, 'ERC721NonexistentToken')
+        .withArgs(tokenId + 1);
+    });
+  });
+
   describe('#isApprovedOrOwner', () => {
     const tokenId = 1;
     beforeEach('create a position', () => createPosition());

@@ -99,6 +99,52 @@ describe('SwapRouter with plugin amount deltas', () => {
     ({ tokens, addresses, plugins, router, quoter, quoterV2 } = await loadFixture(fixture));
   });
 
+  it('with the dynamic fee both quoters return the pool fee, the swap pays the dynamic one', async () => {
+    const DYNAMIC_FEE = 128;
+    const dynamicFee = 3000n;
+    const factory = await ethers.getContractAt('IAlgebraFactory', await quoter.factory());
+    const pool = (await ethers.getContractAt(
+      'IAlgebraPool',
+      await factory.poolByPair(addresses[0], addresses[1]),
+      wallet
+    )) as any as IAlgebraPool;
+    await pool.setPluginConfig(DELTAS_PLUGIN_CONFIG | DYNAMIC_FEE);
+    await plugins[0].setDynamicFee(dynamicFee);
+    const { lastFee } = await pool.globalState();
+    expect(lastFee).to.not.eq(dynamicFee);
+
+    const [amountOut, fee] = await quoter.quoteExactInputSingle.staticCall(
+      addresses[0],
+      addresses[1],
+      ZERO_ADDRESS,
+      AMOUNT,
+      0
+    );
+    const quoteV2 = await quoterV2.quoteExactInputSingle.staticCall({
+      tokenIn: addresses[0],
+      tokenOut: addresses[1],
+      deployer: ZERO_ADDRESS,
+      amountIn: AMOUNT,
+      limitSqrtPrice: 0,
+    });
+    expect([fee, quoteV2.fee]).to.deep.eq([lastFee, lastFee]);
+
+    const tx = router.connect(trader).exactInputSingle({
+      recipient: trader.address,
+      deadline: 2n ** 32n,
+      amountIn: AMOUNT,
+      amountOutMinimum: amountOut,
+      tokenIn: addresses[0],
+      tokenOut: addresses[1],
+      deployer: ZERO_ADDRESS,
+      limitSqrtPrice: 0,
+    });
+    await expect(tx)
+      .to.emit(pool, 'SwapFee')
+      .withArgs(await router.getAddress(), dynamicFee, 0, 0);
+    await expect(tx).to.changeTokenBalance(tokens[1], trader, amountOut);
+  });
+
   it('exactIn: both quoters return what the trader gets after the deltas, a higher minimum reverts', async () => {
     for (const plugin of plugins) {
       await plugin.setInDecrease(IN_DECREASE, false, 0);
