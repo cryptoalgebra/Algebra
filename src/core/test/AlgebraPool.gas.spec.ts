@@ -46,6 +46,9 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
   for (const communityFee of [0, 500]) {
     describe(communityFee > 0 ? 'fee is on' : 'fee is off', () => {
+      // the fixture is created on top of whatever ran before it, so start from a fresh chain for the same addresses
+      before('reset the chain', () => reset());
+
       const startingPrice = encodePriceSqrt(100001, 100000);
       const startingTick = 0;
       const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];

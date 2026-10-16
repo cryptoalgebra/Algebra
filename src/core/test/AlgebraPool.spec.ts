@@ -2187,8 +2187,13 @@ describe('AlgebraPool', () => {
       await swapExact1For0(10n**18n, wallet.address);
       await mint(wallet.address, -240, -60, initializeLiquidityAmount);
       await mint(wallet.address, -240, 6000, initializeLiquidityAmount);
-      expect((await pool.ticks(-60)).outerFeeGrowth0Token).to.be.gt(0)
-      expect((await pool.ticks(-240)).outerFeeGrowth0Token).to.be.gt(0)
+      // a tick initialized below the price takes all the fee growth so far as its outer one, one above it takes none
+      const growth = [await pool.totalFeeGrowth0Token(), await pool.totalFeeGrowth1Token()]
+      expect(growth[0]).to.be.gt(0)
+      for (const tick of [-60, -240]) {
+        const { outerFeeGrowth0Token, outerFeeGrowth1Token } = await pool.ticks(tick)
+        expect([outerFeeGrowth0Token, outerFeeGrowth1Token], `tick ${tick}`).to.deep.eq(growth)
+      }
       expect((await pool.ticks(6000)).outerFeeGrowth0Token).to.be.eq(0)
     });
   });

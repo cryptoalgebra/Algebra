@@ -349,6 +349,7 @@ describe('AlgebraCommunityVault', () => {
       await vault.transferAlgebraFeeManagerRole(other.address);
       await expect(vault.acceptAlgebraFeeManagerRole()).to.be.revertedWithoutReason();
       await expect(vault.connect(other).acceptAlgebraFeeManagerRole()).to.not.be.reverted;
+      expect(await vault.algebraFeeManager()).to.eq(other.address);
       // the pending manager is cleared, so the same address cannot accept again
       await expect(vault.connect(other).acceptAlgebraFeeManagerRole()).to.be.revertedWithoutReason();
     });

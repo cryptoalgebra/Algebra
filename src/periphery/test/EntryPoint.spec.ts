@@ -76,8 +76,25 @@ describe('CustomPoolEntryPoint', () => {
 
   describe('create custom pool via entry point', () => {
 
-    it('works correct', async () => {
-      await expect(await customPoolDeployer.createCustomPool(customPoolDeployer, wallet.address, tokens[0], tokens[1], "0x")).to.be.emit(factory, "CustomPool")
+    it('creates the pool with the plugin of the deployer and forwards both creation hooks to it', async () => {
+      const plugin = wallets[2].address
+      const deployerFactory = await ethers.getContractFactory('CustomPoolDeployerTest')
+      const deployer = (await deployerFactory.deploy(entryPoint, plugin)) as any as CustomPoolDeployerTest
+      const deployerAddress = await deployer.getAddress()
+      const [token0, token1] = [await tokens[0].getAddress(), await tokens[1].getAddress()].sort((a, b) =>
+        a.toLowerCase() < b.toLowerCase() ? -1 : 1
+      )
+      const data = "0x1234"
+
+      const tx = await deployer.createCustomPool(deployer, wallet.address, tokens[0], tokens[1], data)
+      const pool = await factory.customPoolByPair(deployer, tokens[0], tokens[1])
+
+      await expect(tx).to.emit(factory, "CustomPool").withArgs(deployerAddress, token0, token1, pool)
+      await expect(tx)
+        .to.emit(deployer, "BeforeCreatePoolHook")
+        .withArgs(pool, wallet.address, deployerAddress, token0, token1, data)
+      await expect(tx).to.emit(deployer, "AfterCreatePoolHook").withArgs(plugin, pool, deployerAddress)
+      expect(await new ethers.Contract(pool, IAlgebraPoolABI, wallet).plugin()).to.be.eq(plugin)
     });
 
     it('can be created only from poolDeployer contract', async () => {
@@ -94,13 +111,15 @@ describe('CustomPoolEntryPoint', () => {
 
       await customPoolDeployer.setTickSpacing(customPoolAddress, 10)
       await customPoolDeployer.setPlugin(customPoolAddress, entryPoint)
-      await customPoolDeployer.setPluginConfig(customPoolAddress, 65)
+      // the config is uint16, so a flag above the first byte must get through
+      const config = 65 | (1 << 8)
+      await customPoolDeployer.setPluginConfig(customPoolAddress, config)
       await customPoolDeployer.setFee(customPoolAddress, 300)
 
       expect(await pool.tickSpacing()).to.be.eq(10)
       expect(await pool.plugin()).to.be.eq(entryPoint)
       expect((await pool.globalState()).lastFee).to.be.eq(300)
-      expect((await pool.globalState()).pluginConfig).to.be.eq(65)
+      expect((await pool.globalState()).pluginConfig).to.be.eq(config)
     });
 
 
@@ -112,10 +131,22 @@ describe('CustomPoolEntryPoint', () => {
       const pool = new ethers.Contract(customPoolAddress, IAlgebraPoolABI, wallet);
       await pool.initialize(encodePriceSqrt(1, 1))
 
-      await expect(entryPoint.setTickSpacing(customPoolAddress, 10)).to.be.revertedWith("Only deployer")
-      await expect(entryPoint.setPlugin(customPoolAddress, entryPoint)).to.be.revertedWith("Only deployer")
-      await expect(entryPoint.setPluginConfig(customPoolAddress, 193)).to.be.revertedWith("Only deployer")
-      await expect(entryPoint.setFee(customPoolAddress, 300)).to.be.revertedWith("Only deployer")
+      await factory.createPool(tokens[0], tokens[1], "0x")
+      const standardPool = await factory.poolByPair(tokens[0], tokens[1])
+      const otherDeployer = await (await ethers.getContractFactory('CustomPoolDeployerTest')).deploy(entryPoint, ZERO_ADDRESS)
+
+      // the entry point is a pools administrator, so only its deployer check keeps other pools out of reach
+      const cases: [string, any, string][] = [
+        ['an EOA, the custom pool', entryPoint, customPoolAddress],
+        ['another deployer contract, the custom pool', otherDeployer, customPoolAddress],
+        ['the deployer, a standard pool of the same tokens', customPoolDeployer, standardPool],
+      ]
+      for (const [label, caller, target] of cases) {
+        await expect(caller.setTickSpacing(target, 10), label).to.be.revertedWith("Only deployer")
+        await expect(caller.setPlugin(target, entryPoint), label).to.be.revertedWith("Only deployer")
+        await expect(caller.setPluginConfig(target, 193), label).to.be.revertedWith("Only deployer")
+        await expect(caller.setFee(target, 300), label).to.be.revertedWith("Only deployer")
+      }
     });
 
   });
