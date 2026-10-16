@@ -56,6 +56,12 @@ describe('PriceMovementMath with fee on output', () => {
           expect(amountIn).to.be.lt(expandTo18Decimals(1));
         });
 
+        it('stops at the target when the budget is exactly the input it takes', async () => {
+          const capped = await run(false, price, near, liquidity, expandTo18Decimals(1), 600);
+          const exact = await run(false, price, near, liquidity, capped.amountIn, 600);
+          expect(exact).to.deep.eq(capped);
+        });
+
         it('takes the fee as a share of the gross output', async () => {
           for (const fee of [1n, 100n, 600n, 3000n, 100_000n, 999_999n]) {
             const { amountOut, feeAmount } = await run(false, price, far, liquidity, expandTo18Decimals(1), fee);
@@ -126,6 +132,25 @@ describe('PriceMovementMath with fee on output', () => {
           const { amountOut, sqrtQ } = await run(false, price, near, liquidity, -requested, 600);
           expect(sqrtQ).to.eq(near);
           expect(amountOut).to.be.lt(requested);
+        });
+
+        it('stops at the target when the grossed up request is exactly the output to it', async () => {
+          for (const fee of [600n, 3000n, 100_000n]) {
+            const capped = await run(false, price, near, liquidity, -expandTo18Decimals(1), fee);
+            const gross = capped.amountOut + capped.feeAmount;
+            // the net amount that grosses up to the capacity, not every capacity has one
+            let net = gross - feeOfGross(gross, fee) - 2n;
+            while (net + feeOfNet(net, fee) < gross) net++;
+            expect(net + feeOfNet(net, fee), `fee ${fee}`).to.eq(gross);
+
+            expect(await run(false, price, near, liquidity, -net, fee), `fee ${fee}`).to.deep.eq(capped);
+          }
+        });
+
+        it('with the fee on the input stops at the target when the request is exactly the output to it', async () => {
+          const capped = await run(true, price, near, liquidity, -expandTo18Decimals(1), 600);
+          const exact = await run(true, price, near, liquidity, -capped.amountOut, 600);
+          expect(exact).to.deep.eq(capped);
         });
 
         it('compares the step capacity against the grossed up amount', async () => {

@@ -395,7 +395,7 @@ describe('unit/EternalFarms', () => {
   describe('#incentiveKeys', async () => {
     let localNonce = 0n;
     let incentiveArgs;
-    let incentiveKey;
+    let incentiveKey: ContractParams.IncentiveKey;
 
     beforeEach(async () => {
       localNonce = await context.eternalFarming.numOfIncentives();
@@ -428,8 +428,8 @@ describe('unit/EternalFarms', () => {
       };
 
       incentiveKey = {
-        rewardToken: context.rewardToken,
-        bonusRewardToken: context.bonusRewardToken,
+        rewardToken: await context.rewardToken.getAddress(),
+        bonusRewardToken: await context.bonusRewardToken.getAddress(),
         pool: await context.poolObj.getAddress(),
         nonce: localNonce,
       }
@@ -1107,6 +1107,10 @@ describe('unit/EternalFarms', () => {
     it('can deactivate manually after indirect deactivation', async () => {
       await detachIncentiveIndirectly(localNonce);
       await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
+
+      const incentiveId = await helpers.getIncentiveId({ ...incentiveKey, poolAddress: incentiveKey.pool } as any);
+      expect((await context.eternalFarming.incentives(incentiveId)).deactivated).to.be.true;
+      expect(await virtualPool.deactivated()).to.be.true;
     });
 
     it('can deactivate manually after indirect deactivation and exit', async () => {
@@ -1183,6 +1187,10 @@ describe('unit/EternalFarms', () => {
       await context.pluginObj.connect(incentiveCreator).setIncentive(ZERO_ADDRESS);
 
       await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
+
+      const incentiveId = await helpers.getIncentiveId({ ...incentiveKey, poolAddress: incentiveKey.pool } as any);
+      expect((await context.eternalFarming.incentives(incentiveId)).deactivated).to.be.true;
+      expect(await virtualPool.deactivated()).to.be.true;
     });
 
     it('cross lower after deactivate', async () => {
@@ -1922,11 +1930,15 @@ describe('unit/EternalFarms', () => {
           nonce: localNonce,
         });
         await subject(lpUser0);
+        expect((await context.eternalFarming.farms(tokenId, incentiveId)).liquidity).to.eq(0);
+        expect(await context.nft.tokenFarmedIn(tokenId)).to.eq(ZERO_ADDRESS);
       });
 
       it('can exit from indirectly deactivated farming', async () => {
         await detachIncentiveIndirectly(localNonce);
         await subject(lpUser0);
+        expect((await context.eternalFarming.farms(tokenId, incentiveId)).liquidity).to.eq(0);
+        expect(await context.nft.tokenFarmedIn(tokenId)).to.eq(ZERO_ADDRESS);
       });
     });
 

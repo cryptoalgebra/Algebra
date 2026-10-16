@@ -44,35 +44,48 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
     try IAlgebraPool(msg.sender).flash(address(0), 0, 0, new bytes(0)) {} catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
+    // the callee is the administrator, the plugin and the vault here: without the lock the setters, sync and skim
+    // below would go through, so their probes fail on success
     // try to reenter setCommunityFee
-    try IAlgebraPool(msg.sender).setCommunityFee(10) {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).setCommunityFee(10) {
+      revert('setCommunityFee was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
     // try to reenter setTickSpacing
-    try IAlgebraPool(msg.sender).setTickSpacing(20) {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).setTickSpacing(20) {
+      revert('setTickSpacing was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
-    // try to reenter setFeeMode. Unlike the probes above, this one also fails if the call goes through:
-    // the callee holds the administrator role here, so a missing lock would let it succeed silently
+    // try to reenter setFeeMode
     try IAlgebraPool(msg.sender).setFeeMode(1) {
       revert('setFeeMode was not locked');
     } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
     // try to reenter setPlugin
-    try IAlgebraPool(msg.sender).setPlugin(address(this)) {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).setPlugin(address(this)) {
+      revert('setPlugin was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
     // try to reenter setPluginConfig
-    try IAlgebraPool(msg.sender).setPluginConfig(1) {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).setPluginConfig(1) {
+      revert('setPluginConfig was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
     // try to reenter setFee
-    try IAlgebraPool(msg.sender).setFee(120) {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).setFee(120) {
+      revert('setFee was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
     // try to reenter setCommunityVault
-    try IAlgebraPool(msg.sender).setCommunityVault(address(this)) {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).setCommunityVault(address(this)) {
+      revert('setCommunityVault was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
     // try to get AMM state
@@ -80,11 +93,15 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(bytes4(reason) == desiredSelector);
     }
     // try to reenter sync
-    try IAlgebraPool(msg.sender).sync() {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).sync() {
+      revert('sync was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
     // try to reenter skim
-    try IAlgebraPool(msg.sender).skim() {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).skim() {
+      revert('skim was not locked');
+    } catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
     // try to reenter claimCommunityFee. The callee is the community vault here, so a missing lock would let it succeed

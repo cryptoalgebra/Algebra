@@ -1,7 +1,7 @@
 # Assertion mode for the stateful pool suites. Run per file as in CI, `echidna .` fails on them (crytic/echidna#1118):
 #   echidna contracts/test/echidna/PoolMockEchidna/AssertSwapEchidnaTest.sol --contract AssertSwapEchidnaTest \
 #     --config echidna.assertion.yaml --solc-args '--evm-version cancun'
-# The same for AssertFeeModeSwapEchidnaTest and AssertDeltasEchidnaTest
+# The same for AssertFeeModeSwapEchidnaTest, AssertDeltasEchidnaTest and AssertFeeSplitEchidnaTest
 
 testMode: assertion
 testLimit: 500000

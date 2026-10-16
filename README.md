@@ -79,6 +79,8 @@ Tests for a specific module are run by the following command in the module folde
 $ npm run test
 ```
 
+The types of the tests are checked by `npm run typecheck`, after `npm run compile`, which generates them.
+
 ## Tests coverage
 
 To get a test coverage for specific module, you need to run the following command in the module folder:

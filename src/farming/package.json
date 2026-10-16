@@ -34,6 +34,7 @@
   },
   "scripts": {
     "compile": "npm --prefix ../periphery run compile && hardhat compile",
+    "typecheck": "tsc --noEmit",
     "size-contracts": "hardhat compile && hardhat size-contracts",
     "solhint": "solhint --config ../../.solhint.json \"contracts/**/*.sol\"",
     "test": "hardhat test --parallel",

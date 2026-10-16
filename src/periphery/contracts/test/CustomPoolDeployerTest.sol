@@ -24,21 +24,31 @@ contract CustomPoolDeployerTest {
         return IAlgebraCustomPoolEntryPoint(entryPoint).createCustomPool(deployer, creator, tokenA, tokenB, data);
     }
 
-    function beforeCreatePoolHook(
-        address,
-        address,
-        address,
-        address,
-        address,
-        bytes calldata
-    ) external view returns (address) {
-        require(msg.sender == entryPoint, 'Only entryPoint');
+    event BeforeCreatePoolHook(
+        address pool,
+        address creator,
+        address deployer,
+        address token0,
+        address token1,
+        bytes data
+    );
+    event AfterCreatePoolHook(address plugin, address pool, address deployer);
 
+    function beforeCreatePoolHook(
+        address pool,
+        address creator,
+        address deployer,
+        address token0,
+        address token1,
+        bytes calldata data
+    ) external returns (address) {
+        require(msg.sender == entryPoint, 'Only entryPoint');
+        emit BeforeCreatePoolHook(pool, creator, deployer, token0, token1, data);
         return plugin;
     }
 
-    function afterCreatePoolHook(address, address, address) external pure {
-        return;
+    function afterCreatePoolHook(address _plugin, address pool, address deployer) external {
+        emit AfterCreatePoolHook(_plugin, pool, deployer);
     }
 
     function setPluginForPool(address pool, address _plugin) external {

@@ -63,6 +63,7 @@ jobs:
         testName:
           - AssertDeltasEchidnaTest
           - AssertFeeModeSwapEchidnaTest
+          - AssertFeeSplitEchidnaTest
           - AssertSwapEchidnaTest
 
     runs-on: ubuntu-latest

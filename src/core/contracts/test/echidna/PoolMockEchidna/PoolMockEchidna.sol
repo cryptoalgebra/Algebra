@@ -123,6 +123,26 @@ contract PoolMockEchidna is AlgebraPool {
     communityVault = vault;
   }
 
+  /// @dev Only the plugin may sync and skim, so the pool stands in for it for the call, as for the claim above
+  function syncWrapped() public {
+    address _plugin = plugin;
+    plugin = address(this);
+    IAlgebraPool(this).sync();
+    plugin = _plugin;
+  }
+
+  function skimWrapped() public {
+    address _plugin = plugin;
+    plugin = address(this);
+    IAlgebraPool(this).skim();
+    plugin = _plugin;
+  }
+
+  function setFeeWrapped(uint16 newFee) public {
+    if (Plugins.hasFlag(globalState.pluginConfig, Plugins.DYNAMIC_FEE)) return;
+    IAlgebraPool(this).setFee(newFee);
+  }
+
   function hasRoleOrOwner(bytes32, address) public pure returns (bool) {
     return true;
   }

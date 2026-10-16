@@ -33,5 +33,7 @@ jobs:
       - run: npm run ci-install
       - run: npm run compile
         working-directory: ./src/core
+      - run: npm run typecheck
+        working-directory: ./src/core
       - run: npm run test
         working-directory: ./src/core

@@ -34,6 +34,7 @@
     "precommit": "npx pretty-quick --staged --pattern '**/*.sol' && npx hardhat compile && node ../../scripts/updatePoolHash.js",
     "solhint": "solhint --config ../../.solhint.json \"contracts/**/*.sol\"",
     "compile": "hardhat compile",
+    "typecheck": "tsc --noEmit",
     "build": "npx tsc",
     "test": "hardhat test --parallel",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js",

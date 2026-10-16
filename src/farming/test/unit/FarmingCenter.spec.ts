@@ -716,6 +716,55 @@ describe('unit/FarmingCenter', () => {
       expect(bonusBalanceAfter - bonusBalanceBefore).to.equal(0);
     });
 
+    it('a farmed NFT keeps farming after a transfer, its rewards go to the new owner', async () => {
+      const key = { rewardToken: context.rewardToken, bonusRewardToken: context.bonusRewardToken, pool: context.pool01, nonce };
+      const incentiveId = await helpers.getIncentiveId(createIncentiveResultEternal);
+      const newOwner = actors.lpUser1();
+      await erc20Helper.ensureBalancesAndApprovals(
+        incentiveCreator,
+        [context.rewardToken, context.bonusRewardToken],
+        BNe18(1),
+        await context.eternalFarming.getAddress()
+      );
+      await context.eternalFarming.connect(incentiveCreator).addRewards(key, BNe18(1), BNe18(1));
+      await Time.set(timestamps.endTime + 1000);
+      await helpers.makeTickGoFlow({ trader: actors.traderUser0(), direction: 'up', desiredValue: 10 });
+
+      // the transfer clears the farming approval, but the token stays farmed
+      await context.nft.connect(lpUser0).transferFrom(lpUser0.address, newOwner.address, tokenIdEternal);
+      expect(await context.nft.farmingApprovals(tokenIdEternal)).to.eq(ZERO_ADDRESS);
+      expect(await context.nft.tokenFarmedIn(tokenIdEternal)).to.eq(await context.farmingCenter.getAddress());
+
+      // the rewards accrued before the transfer are credited to the owner at the time of collecting
+      await expect(context.farmingCenter.connect(lpUser0).collectRewards(key, tokenIdEternal)).to.be.revertedWith('Not approved for token');
+      await context.farmingCenter.connect(newOwner).collectRewards(key, tokenIdEternal);
+      expect(await context.eternalFarming.rewards(newOwner.address, context.rewardToken)).to.be.gt(0);
+      expect(await context.eternalFarming.rewards(newOwner.address, context.bonusRewardToken)).to.be.gt(0);
+      expect(await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)).to.eq(0);
+
+      // a liquidity change by the new owner updates the farm
+      const liquidity = (await context.nft.positions(tokenIdEternal)).liquidity;
+      await expect(
+        context.nft.connect(newOwner).decreaseLiquidity({
+          tokenId: tokenIdEternal,
+          liquidity: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        })
+      )
+        .to.emit(context.eternalFarming, 'FarmEntered')
+        .withArgs(tokenIdEternal, incentiveId, liquidity - 100n);
+
+      // after exiting, the new owner needs its own farming approval to enter again
+      await context.farmingCenter.connect(newOwner).exitFarming(key, tokenIdEternal);
+      await expect(context.farmingCenter.connect(newOwner).enterFarming(key, tokenIdEternal)).to.be.revertedWith('Not approved for farming');
+      await context.nft.connect(newOwner).approveForFarming(tokenIdEternal, true, context.farmingCenter);
+      await expect(context.farmingCenter.connect(newOwner).enterFarming(key, tokenIdEternal))
+        .to.emit(context.eternalFarming, 'FarmEntered')
+        .withArgs(tokenIdEternal, incentiveId, liquidity - 100n);
+    });
+
     it('when requesting zero amount', async () => {
       await Time.set(timestamps.endTime + 10000);
       let balanceBeforeFirstCollect: bigint = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);

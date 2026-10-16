@@ -99,12 +99,9 @@ describe('AlgebraPool fee mode', () => {
       expect(await pool.feeMode()).to.eq(FEE_MODE_DEFAULT);
     });
 
-    it('rejects an unknown mode', async () => {
+    it('rejects an unknown mode and the current one', async () => {
       await expect(pool.setFeeMode(3)).to.be.revertedWithCustomError(pool, 'invalidNewFeeMode');
       await expect(pool.setFeeMode(255)).to.be.revertedWithCustomError(pool, 'invalidNewFeeMode');
-    });
-
-    it('rejects setting the same mode twice', async () => {
       await expect(pool.setFeeMode(FEE_MODE_DEFAULT)).to.be.revertedWithCustomError(pool, 'invalidNewFeeMode');
       await pool.setFeeMode(FEE_MODE_TOKEN0);
       await expect(pool.setFeeMode(FEE_MODE_TOKEN0)).to.be.revertedWithCustomError(pool, 'invalidNewFeeMode');
@@ -170,6 +167,23 @@ describe('AlgebraPool fee mode', () => {
       await swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address);
       expect(await pool.totalFeeGrowth1Token()).to.eq(17417840419052228883635560643094198n);
       expect(await pool.totalFeeGrowth0Token()).to.eq(0);
+    });
+
+    it('a donation accrues in its own token, not in the fee token of the mode', async () => {
+      await initializeWithLiquidity(FEE_MODE_TOKEN1);
+      const donation = expandTo18Decimals(1) / 1000n;
+      await token0.transfer(pool, donation);
+      const liquidity = await pool.liquidity();
+
+      // the excess over the reserves goes to the fee growth of its own token at the next action
+      await expect(swapExact1For0(expandTo18Decimals(1) / 10n, wallet.address))
+        .to.emit(pool, 'ExcessTokens')
+        .withArgs(donation, 0);
+      expect(await pool.totalFeeGrowth0Token()).to.eq((donation * 2n ** 128n) / liquidity);
+
+      await pool.burn(minTick, maxTick, 0, '0x');
+      const [amount0] = await pool.collect.staticCall(wallet.address, minTick, maxTick, MaxUint128, MaxUint128);
+      expect(amount0).to.be.within(donation - 1n, donation);
     });
 
     it('a tick crossed up and back down under different modes flips both sides of its snapshot', async () => {
