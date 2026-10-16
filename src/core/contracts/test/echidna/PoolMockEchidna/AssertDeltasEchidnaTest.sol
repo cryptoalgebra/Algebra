@@ -52,6 +52,14 @@ contract AssertDeltasEchidnaTest is PoolMockEchidna {
     deltas = Deltas(inDecreaseShare % 1e6, inIncreaseShare % 5e6, outDecreaseShare % (1e6 + 1), addend, target % 3);
   }
 
+  /// @dev Turns the dynamic fee and the amount deltas on and off, the hooks the checks rely on stay
+  function setPluginFeaturesWrapped(bool dynamicFee, bool amountDeltas) public {
+    uint256 config = Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.AFTER_SWAP_CALCULATION_FLAG;
+    if (dynamicFee) config |= Plugins.DYNAMIC_FEE;
+    if (amountDeltas) config |= Plugins.AMOUNT_DELTAS_FLAG;
+    IAlgebraPool(this).setPluginConfig(uint16(config));
+  }
+
   function setDynamicFeeWrapped(uint24 dynamicFee) public {
     deltaPlugin.setDynamicFee(dynamicFee % 1e6);
   }
