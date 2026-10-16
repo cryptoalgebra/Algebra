@@ -13,9 +13,7 @@ export enum FeeAmount {
 
 export const TICK_SPACINGS: { [amount in FeeAmount]: number } = {
   [FeeAmount.ONE]: 1,
-  [FeeAmount.LOW]: 60,
-  [FeeAmount.MEDIUM]: 60,
-  [FeeAmount.HIGH]: 60,
+  [FeeAmount.LOW]: 60, // MEDIUM and HIGH are the same fee
 };
 
 // polygon addresses

@@ -5,7 +5,7 @@ export * from './fixtures';
 export * from './actors';
 
 import { provider } from './provider';
-import { BigNumberish, Contract, ContractTransactionResponse, ContractTransaction } from 'ethers';
+import { BigNumberish, ContractTransactionResponse, ContractTransaction } from 'ethers';
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/abstract-provider';
 
 import bn from 'bignumber.js';
@@ -56,18 +56,13 @@ export async function snapshotGasCost(
     | TransactionReceipt
     | Promise<BigInt>
     | BigInt
-    | Contract
-    | Promise<Contract>
 ): Promise<void> {
   const resolved = await x;
   if (typeof resolved == 'bigint' || resolved instanceof Number || typeof resolved == 'number') {
     expect(Number(resolved)).toMatchSnapshot();
-  } else if ('deployTransaction' in resolved) {
-    const receipt = await resolved.deployTransaction.wait();
-    expect(receipt.gasUsed.toNumber()).toMatchSnapshot();
   } else if ('wait' in resolved) {
     const waited = await resolved.wait();
-    expect(Number(waited.gasUsed)).toMatchSnapshot();
+    expect(Number(waited!.gasUsed)).toMatchSnapshot();
   }
 }
 

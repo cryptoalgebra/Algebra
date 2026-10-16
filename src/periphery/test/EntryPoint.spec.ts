@@ -6,11 +6,11 @@ import {
   TestERC20,
   IWNativeToken,
   IAlgebraFactory,
-  IAccessControl,
   SwapRouter,
   AlgebraCustomPoolEntryPoint,
   CustomPoolDeployerTest,
 } from '../typechain';
+import { IAccessControl } from '@cryptoalgebra/integral-core/typechain';
 import completeFixture from './shared/completeFixture';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { expect } from './shared/expect';

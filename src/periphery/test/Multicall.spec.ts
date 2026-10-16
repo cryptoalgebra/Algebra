@@ -27,19 +27,19 @@ describe('Multicall', async () => {
 
   it('silent revert handled correctly', async () => {
     await expect(
-      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsSilently', [])])
+      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsSilently')])
     ).to.be.revertedWithoutReason();
   });
 
   it('custom error bubbles up', async () => {
     await expect(
-      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsWithCustomError', [])])
+      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsWithCustomError')])
     ).to.be.revertedWithCustomError(multicall, 'CustomError');
   });
 
   it('punic bubbles up', async () => {
     await expect(
-      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsWithPanic', [])])
+      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsWithPanic')])
     ).to.be.revertedWithPanic(0x11);
   });
 

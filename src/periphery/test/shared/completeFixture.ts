@@ -8,11 +8,11 @@ import {
   MockTimeSwapRouter,
   NonfungibleTokenPositionDescriptor,
   TestERC20,
-  AlgebraFactory,
   MockPluginFactory,
   AlgebraCustomPoolEntryPoint,
   CustomPoolDeployerTest,
 } from '../../typechain';
+import { AlgebraFactory } from '@cryptoalgebra/integral-core/typechain';
 
 type TestERC20WithAddress = TestERC20 & { address_: string | undefined };
 

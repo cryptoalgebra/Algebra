@@ -11,13 +11,13 @@ import SwapRouter from '@cryptoalgebra/integral-periphery/artifacts/contracts/Sw
 import WNativeToken from './external/WNativeToken.json';
 import { linkLibraries } from './linkLibraries';
 import { ISwapRouter, IWNativeToken, NFTDescriptor } from '@cryptoalgebra/integral-periphery/typechain';
+import { IAccessControl } from '@cryptoalgebra/integral-core/typechain';
 
 import {
   AlgebraEternalFarming,
   TestERC20,
   INonfungiblePositionManager,
   IAlgebraFactory,
-  IAccessControl,
   IAlgebraPoolDeployer,
   IAlgebraPool,
   TestIncentiveId,

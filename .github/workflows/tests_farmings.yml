@@ -37,4 +37,5 @@ jobs:
       - run: npm run bootstrap
         working-directory: ./
       - run: npm run compile
+      - run: npm run typecheck
       - run: npm run test

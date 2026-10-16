@@ -395,7 +395,7 @@ describe('unit/EternalFarms', () => {
   describe('#incentiveKeys', async () => {
     let localNonce = 0n;
     let incentiveArgs;
-    let incentiveKey;
+    let incentiveKey: ContractParams.IncentiveKey;
 
     beforeEach(async () => {
       localNonce = await context.eternalFarming.numOfIncentives();
@@ -428,8 +428,8 @@ describe('unit/EternalFarms', () => {
       };
 
       incentiveKey = {
-        rewardToken: context.rewardToken,
-        bonusRewardToken: context.bonusRewardToken,
+        rewardToken: await context.rewardToken.getAddress(),
+        bonusRewardToken: await context.bonusRewardToken.getAddress(),
         pool: await context.poolObj.getAddress(),
         nonce: localNonce,
       }
