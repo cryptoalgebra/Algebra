@@ -1,4 +1,1 @@
 typechain/
-# prettier-plugin-solidity fails on the comment in the empty interface body
-src/core/contracts/interfaces/IAlgebraPool.sol
-src/core/contracts/interfaces/IAlgebraPoolLegacy.sol

@@ -73,7 +73,7 @@ function setPluginConfig(uint16 newConfig) external
 ```
 **Selector**: `0x54884e9d`
 
-Set new plugin config. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
+Set new plugin config. Only factory owner, POOLS_ADMINISTRATOR_ROLE role or the connected plugin
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -86,7 +86,7 @@ function setCommunityVault(address newCommunityVault) external
 ```
 **Selector**: `0xd8544cf3`
 
-Set new community fee vault address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
+Set new community fee vault address. Only factory owner, POOLS_ADMINISTRATOR_ROLE role or the factory
 
 *Developer note: The vault claims community fees with &#x60;claimCommunityFee&#x60;, unclaimed ones only by the &#x60;newCommunityVault&#x60;.
 The zero address also sets the community fee to zero*

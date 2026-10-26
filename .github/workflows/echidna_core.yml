@@ -34,19 +34,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Use Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm run ci-install
-
-      - name: Compile contracts
-        run: npm run compile
-        working-directory: ./src/core
-
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@f7e374e42bf7131f7307a92f5549ed6b2fd17c9d # v2.0.2
         with:
@@ -74,19 +61,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-
-      - name: Use Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm run ci-install
-
-      - name: Compile contracts
-        run: npm run compile
-        working-directory: ./src/core
 
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@f7e374e42bf7131f7307a92f5549ed6b2fd17c9d # v2.0.2
@@ -122,19 +96,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-
-      - name: Use Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm run ci-install
-
-      - name: Compile contracts
-        run: npm run compile
-        working-directory: ./src/core
 
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@f7e374e42bf7131f7307a92f5549ed6b2fd17c9d # v2.0.2

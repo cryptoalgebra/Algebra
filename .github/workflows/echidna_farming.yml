@@ -52,5 +52,4 @@ jobs:
           echidna-version: v2.3.3
           files: ./src/farming/
           contract: ${{ matrix.testName }}
-          crytic-args: --hardhat-ignore-compile
           config: ./src/farming/contracts/test/echidna/echidna.config.yml

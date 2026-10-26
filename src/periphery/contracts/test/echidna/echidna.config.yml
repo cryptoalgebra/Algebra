@@ -1,6 +1,5 @@
 #format can be "text" or "json" for different output (human or machine readable)
 format: 'text'
-#checkAsserts checks assertions
 testMode: 'assertion'
 #coverage controls coverage guided testing
 coverage: false
@@ -13,7 +12,5 @@ cryticArgs:
   - '--compile-force-framework'
   - 'hardhat'
   - '--compile-libraries=(NFTDescriptor,0x10000),(NFTSVG,0x20000)'
-# Only test the specified contract, not all contracts in the compilation
-allContracts: false
-# #directory to save the corpus; by default is disabled
-# corpusDir: null
+  # the workflow compiles first, so crytic reads that build instead of compiling again
+  - '--hardhat-ignore-compile'

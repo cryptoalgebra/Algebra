@@ -9,7 +9,7 @@ import './pool/IAlgebraPoolEvents.sol';
 import './pool/IAlgebraPoolErrors.sol';
 
 /// @title The interface for a Algebra Pool
-/// @dev The pool interface is broken up into many smaller pieces.
+/// @dev The pool interface is broken up into many smaller pieces, this one is used only for combining them.
 /// This interface includes custom error definitions and cannot be used in older versions of Solidity.
 /// For older versions of Solidity use #IAlgebraPoolLegacy
 /// Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -21,6 +21,4 @@ interface IAlgebraPool is
   IAlgebraPoolPermissionedActions,
   IAlgebraPoolEvents,
   IAlgebraPoolErrors
-{
-  // used only for combining interfaces
-}
+{}

@@ -3,6 +3,9 @@
 #     --config echidna.assertion.yaml --solc-args '--evm-version cancun'
 # The same for AssertFeeModeSwapEchidnaTest, AssertDeltasEchidnaTest and AssertFeeSplitEchidnaTest
 
+# CI runs these suites shorter, with contracts/test/echidna/PoolMockEchidna/echidna-assert.config.yml.
+# Keep filterFunctions identical in both
+
 testMode: assertion
 testLimit: 500000
 seqLen: 50

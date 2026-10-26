@@ -3,6 +3,9 @@
 #     --config echidna.property.yaml --solc-args '--evm-version cancun'
 # The same for PropBalancesEchidnaTest and PropFeeTokenIsolationEchidnaTest
 
+# CI runs these suites shorter, with contracts/test/echidna/PoolMockEchidna/echidna-property.config.yml.
+# Keep filterFunctions identical in both
+
 testMode: property
 testLimit: 500000
 seqLen: 100
