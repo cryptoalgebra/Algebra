@@ -75,6 +75,7 @@ export default {
     compilers: [DEFAULT_COMPILER_SETTINGS],
     overrides: {
       'contracts/AlgebraFactory.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
+      'contracts/AlgebraPoolExtension.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/AlgebraPool.sol': HIGH_COMPILER_SETTINGS,
       'contracts/AlgebraPoolDeployer.sol': HIGH_COMPILER_SETTINGS,
     },
